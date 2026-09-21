@@ -113,7 +113,7 @@ edificios nuevos.
 
 ---
 
-## Contenido (los 8 documentos maestros)
+## Contenido (los 11 documentos maestros)
 
 Todos los documentos viven en la carpeta [`ESPECIFICACIONES DEL PROYECTO/`](./ESPECIFICACIONES%20DEL%20PROYECTO/),
 salvo el plano fundacional y este README, que están en la raíz.
@@ -128,6 +128,9 @@ salvo el plano fundacional y este README, que están en la raíz.
 | **5** | [`METODOLOGIA_DE_INGENIERIA_INVERSA_Y_DISENO.md`](./METODOLOGIA_DE_INGENIERIA_INVERSA_Y_DISENO.md) | **¿Cómo aplico esto a otro módulo?** | ✅ Manual de obra |
 | **6** | [`ESPECIFICACION_RESPONSIVA_Y_ERGONOMIA_TACTIL.md`](./ESPECIFICACION_RESPONSIVA_Y_ERGONOMIA_TACTIL.md) | **¿Cómo debe verse y tocarse en cualquier pantalla?** | ✅ Regla dura (A-06) |
 | **7** | [`ESPECIFICACION_DE_INTERFACES_POS.md`](./ESPECIFICACION_DE_INTERFACES_POS.md) | **¿Cómo se ve y se toca cada una de las 26 interfaces?** | ✅ Mapa visual y táctil |
+| **8** | [`MODELO_DE_DATOS_DEL_NUEVO_POS.md`](./MODELO_DE_DATOS_DEL_NUEVO_POS.md) | **¿Cómo se guardan los datos?** | ✅ Cimiento (17 tablas) |
+| **9** | [`CONTRATOS_ENTRE_MODULOS_DEL_NUEVO_POS.md`](./CONTRATOS_ENTRE_MODULOS_DEL_NUEVO_POS.md) | **¿Cómo se comunican los módulos sin leer tablas ajenas?** | ✅ 9 contratos |
+| **10** | [`CRITERIOS_DE_ACEPTACION_DEL_NUEVO_POS.md`](./CRITERIOS_DE_ACEPTACION_DEL_NUEVO_POS.md) | **¿Cuándo se considera terminado?** | ✅ 20 criterios |
 
 ### Documentos de soporte (no maestros)
 
@@ -153,6 +156,12 @@ salvo el plano fundacional y este README, que están en la raíz.
 6. RESPONSIVA (cómo se ve/toca) → la regla dura de toda pantalla
         ↓
 7. INTERFACES (cómo se ve cada una) → el mapa de las 26 interfaces
+        ↓
+8. MODELO DE DATOS (cómo se guarda) → el cimiento del edificio nuevo
+        ↓
+9. CONTRATOS (cómo se comunican)    → las fronteras entre módulos
+        ↓
+10. ACEPTACIÓN (cuándo está listo)  → la definición de "obra terminada"
 ```
 
 ---
@@ -182,6 +191,9 @@ PLANOS-ARQUITECTONICOS-DEL-NUEVO-POS/
 ├── METODOLOGIA_DE_INGENIERIA_INVERSA_Y_DISENO.md   # Manual de obra (reutilizable)
 ├── ESPECIFICACION_RESPONSIVA_Y_ERGONOMIA_TACTIL.md # Regla dura de toda pantalla
 ├── ESPECIFICACION_DE_INTERFACES_POS.md             # Mapa visual y táctil (26 interfaces)
+├── MODELO_DE_DATOS_DEL_NUEVO_POS.md                # Cimiento: 17 tablas, UUID/UTC/ledger
+├── CONTRATOS_ENTRE_MODULOS_DEL_NUEVO_POS.md        # Fronteras: 9 contratos entre módulos
+├── CRITERIOS_DE_ACEPTACION_DEL_NUEVO_POS.md        # Definición de "obra terminada" (20 criterios)
 ├── PLANO ARQUITECTONICO PARA EL NUEVO POS.md       # Documento fundacional
 └── ESPECIFICACIONES DEL PROYECTO/
     ├── GUIA_MAESTRA_PARA_COLABORADORES_NUEVO_POS.md      # Punto de entrada
@@ -197,7 +209,7 @@ PLANOS-ARQUITECTONICOS-DEL-NUEVO-POS/
 ├── 01-logica-del-negocio/
 │   ├── reglas-de-negocio.md                        # Las 81 reglas (RN-01 a RN-81)
 │   └── deudas-conocidas.md                         # Las 5 deudas (DEUDA-01 a DEUDA-05)
-├── 02-contratos/
+├── 02-contratos/                                   # ✅ Cubierto por el Documento 9
 │   ├── contrato-productos.md
 │   ├── contrato-almacenes.md
 │   ├── contrato-produccion.md
@@ -205,7 +217,7 @@ PLANOS-ARQUITECTONICOS-DEL-NUEVO-POS/
 │   ├── contrato-estadisticas.md
 │   ├── contrato-seguridad.md
 │   └── contrato-vision.md
-├── 03-modelo-de-datos/                             # (Etapa 2 — pendiente)
+├── 03-modelo-de-datos/                             # ✅ Cubierto por el Documento 8
 ├── 04-estructura-de-modulos/                       # (Etapa 3 — pendiente)
 └── 05-plan-de-construccion/                        # (Etapa 5 — pendiente)
 ```
