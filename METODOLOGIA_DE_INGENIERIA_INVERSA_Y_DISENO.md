@@ -50,12 +50,18 @@ El método tiene 6 fases secuenciales. Cada fase produce **un artefacto** y tien
 
 ```
 FASE 1  INGENIERÍA INVERSA      →  ESPECIFICACION_FUNCIONAL_<MODULO>.md
+                                →  ESPECIFICACION_DE_INTERFACES_<MODULO>.md
 FASE 2  DISEÑO DEL NUEVO        →  PLANO_<MODULO>.md
 FASE 3  PLAN DE ACCIÓN          →  PLAN_ACCION_<MODULO>.md
 FASE 4  MODELO DE DESPLIEGUE    →  (reutiliza el modelo global hub-and-spoke)
 FASE 5  PUNTO DE ENTRADA        →  GUIA_<MODULO>.md
 FASE 6  AUTOCRÍTICA             →  AUTOCRITICA_<MODULO>.md
 ```
+
+> **Nota sobre la Fase 1.** La Fase 1 produce **dos** artefactos: la especificación
+> funcional (qué hace el módulo, backend) y la especificación de interfaces (cómo se ve
+> y cómo se toca, frontend). Un módulo sin su mapa de interfaces es un módulo a medio
+> documentar: quien lo reconstruya sabrá qué calcular, pero no cómo debe sentirse.
 
 ---
 
@@ -65,18 +71,25 @@ FASE 6  AUTOCRÍTICA             →  AUTOCRITICA_<MODULO>.md
 
 ### 2.1 Paso 1.1 — Inventario de superficie
 
-Lista todos los archivos del módulo antes de leerlos:
+Lista todos los archivos del módulo antes de leerlos. **Un módulo tiene dos caras: el
+backend (`.py`) y el frontend (`.jsx`).** Inventaría ambas.
 
 ```
-apps/api/modules/<modulo>/
+apps/api/modules/<modulo>/          ← BACKEND (qué hace)
   ├── models.py      → el modelo de datos (qué se guarda)
   ├── schemas.py     → los contratos de entrada/salida (qué entra y sale)
   ├── service.py     → la lógica de negocio (qué se hace)
   ├── router.py      → los endpoints (qué se expone)
   └── <otros>.py     → helpers específicos (locks, auditoría, sync…)
+
+apps/<modulo>/                      ← FRONTEND (cómo se ve y se toca)
+  ├── <Modulo>UI.jsx          → pantallas raíz
+  ├── components/*.jsx        → modales, paneles, overlays, composición
+  └── <Modulo>Template.jsx    → plantillas de impresión (si aplica)
 ```
 
-**Criterio de salida:** sabes cuántos archivos hay y qué rol cumple cada uno.
+**Criterio de salida:** sabes cuántos archivos hay (backend **y** frontend) y qué rol
+cumple cada uno.
 
 ### 2.2 Paso 1.2 — Lectura completa del código
 
@@ -166,9 +179,51 @@ Clasifica **todo** lo que encontraste en 4 categorías con prefijos fijos:
 | **DB-XX** | Debilidad de diseño | Decisión que no escala o es frágil |
 | **RC-XX** | Riesgo de concurrencia | Condición de carrera o lock faltante |
 
+### 2.8 Paso 1.8 — Inventariar las interfaces (frontend)
+
+**El backend dice qué calcula el módulo; las interfaces dicen cómo se ve y cómo se toca.**
+Si solo documentas el backend, quien reconstruya el módulo sabrá qué debe calcular, pero
+no cómo debe sentirse en el mostrador. La ergonomía vive en los `.jsx`, no en los `.py`.
+
+**Qué hacer:**
+
+1. **Inventariar** cada interfaz del módulo y clasificarla por tipo:
+
+   | Tipo | Qué es | Ejemplo |
+   |------|--------|---------|
+   | **Pantalla raíz** | La vista completa que orquesta todo | `RetailVisionPOS` |
+   | **Modal** | Diálogo que bloquea y pide una decisión | `CheckoutScreen` |
+   | **Panel / overlay** | Zona fija o aviso global | `SalesReceipt`, `POSHeader` |
+   | **Composición** | Pieza reutilizable dentro de una pantalla | `ProductGrid`, `ProductCard` |
+   | **Impresión** | Plantilla de ancho fijo (ticket, corte) | `TicketTemplate` |
+
+2. **Documentar cada interfaz con una ficha de 7 puntos:**
+
+   ```
+   FICHA XX — <NombreDelComponente>
+     1. Propósito        → qué problema resuelve en el mostrador
+     2. Estructura visual → las zonas (header, cuerpo, panel lateral, acciones)
+     3. Controles        → cada botón, campo y tecla, con su handler
+     4. Estados          → vacío, cargando, error, éxito, offline
+     5. Navegación       → cómo se entra, cómo se sale, qué la abre
+     6. Modo responsivo  → Mostrador / Compacto / Móvil (según R-01 a R-04)
+     7. Anclaje al código → <archivo>:<línea>
+   ```
+
+3. **Anclar cada ficha a `archivo:línea`** (igual que las reglas RN-XX). Una ficha sin
+   ancla es una opinión, y las opiniones no se portan.
+
+4. **Registrar las observaciones de ergonomía** (O-XX) que surjan — **sin aplicarlas**.
+   Son notas para el módulo nuevo, no correcciones al módulo actual.
+
+**Artefacto:** `ESPECIFICACION_DE_INTERFACES_<MODULO>.md` (o un anexo de interfaces dentro
+de `ESPECIFICACION_FUNCIONAL_<MODULO>.md` si el módulo tiene pocas interfaces).
+
 **Criterio de salida de la Fase 1:** existe `ESPECIFICACION_FUNCIONAL_<MODULO>.md` con
 las reglas (RN-XX), las funcionalidades (F-XX), el modelo de datos, los flujos y los
-hallazgos catalogados — **todo anclado a `archivo:línea`**.
+hallazgos catalogados — **todo anclado a `archivo:línea`** — **y** existe
+`ESPECIFICACION_DE_INTERFACES_<MODULO>.md` con una ficha de 7 puntos por cada interfaz
+del frontend.
 
 ---
 
@@ -392,7 +447,9 @@ FASE 1 — INGENIERÍA INVERSA
 [ ] Modelo de datos documentado (¿PK es UUID o entero?)
 [ ] Flujos documentados con puntos de fallo
 [ ] Hallazgos catalogados (DEUDA / AC / DB / RC)
+[ ] Interfaces inventariadas (pantallas, modales, paneles, overlays, composición, impresión)
 [ ] Artefacto: ESPECIFICACION_FUNCIONAL_<MODULO>.md
+[ ] Artefacto: ESPECIFICACION_DE_INTERFACES_<MODULO>.md (ficha de 7 puntos por interfaz)
 
 FASE 2 — DISEÑO
 [ ] Opinión sobre el enfoque actual
@@ -400,6 +457,7 @@ FASE 2 — DISEÑO
 [ ] Contratos entre módulos definidos
 [ ] Modelo de datos nuevo (UUID, UTC, ledger)
 [ ] Estructura del repositorio nuevo
+[ ] Modo responsivo de cada interfaz verificado contra R-01 a R-04
 [ ] Artefacto: PLANO_<MODULO>.md
 
 FASE 3 — PLAN DE ACCIÓN
