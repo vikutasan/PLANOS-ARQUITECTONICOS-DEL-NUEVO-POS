@@ -64,6 +64,16 @@ composición o plantilla de impresión), lee antes el mapa visual y táctil. Doc
 > y anclaje al código. Cierra el círculo: el backend dice **qué calcula**, este documento
 > dice **cómo se ve y cómo se toca**.
 
+Y si vas a **arreglar el ERP módulo por módulo**, lee antes el compendio de directrices
+transversales. Son las reglas que **no pertenecen a un módulo**: pertenecen a todos.
+
+> ### 🧱 [DIRECTRICES TRANSVERSALES DEL ERP](./DIRECTRICES_TRANSVERSALES_DEL_ERP.md)
+>
+> El **compendio de reglas que atraviesan todos los módulos**: Tiempo (DT-01), Dinero
+> (DT-02), Identidad (DT-03), Inventario (DT-04) y Auditoría (DT-05). Cada directriz trae
+> su regla, su ancla al código, su verificación y una **matriz de cumplimiento por módulo**.
+> Una directriz transversal no se "aplica" a un módulo: se **verifica** contra un módulo.
+
 ---
 
 ## ¿Qué es este repositorio?
@@ -113,7 +123,7 @@ edificios nuevos.
 
 ---
 
-## Contenido (los 11 documentos maestros)
+## Contenido (los 12 documentos maestros)
 
 Todos los documentos viven en la carpeta [`ESPECIFICACIONES DEL PROYECTO/`](./ESPECIFICACIONES%20DEL%20PROYECTO/),
 salvo el plano fundacional y este README, que están en la raíz.
@@ -131,6 +141,7 @@ salvo el plano fundacional y este README, que están en la raíz.
 | **8** | [`MODELO_DE_DATOS_DEL_NUEVO_POS.md`](./MODELO_DE_DATOS_DEL_NUEVO_POS.md) | **¿Cómo se guardan los datos?** | ✅ Cimiento (17 tablas) |
 | **9** | [`CONTRATOS_ENTRE_MODULOS_DEL_NUEVO_POS.md`](./CONTRATOS_ENTRE_MODULOS_DEL_NUEVO_POS.md) | **¿Cómo se comunican los módulos sin leer tablas ajenas?** | ✅ 17 contratos |
 | **10** | [`CRITERIOS_DE_ACEPTACION_DEL_NUEVO_POS.md`](./CRITERIOS_DE_ACEPTACION_DEL_NUEVO_POS.md) | **¿Cuándo se considera terminado?** | ✅ 21 criterios |
+| **11** | [`DIRECTRICES_TRANSVERSALES_DEL_ERP.md`](./DIRECTRICES_TRANSVERSALES_DEL_ERP.md) | **¿Qué reglas unifican a todos los módulos?** | ✅ 5 directrices (DT-01 a DT-05) |
 
 ### Documentos de soporte (no maestros)
 
@@ -162,6 +173,8 @@ salvo el plano fundacional y este README, que están en la raíz.
 9. CONTRATOS (cómo se comunican)    → las fronteras entre módulos
         ↓
 10. ACEPTACIÓN (cuándo está listo)  → la definición de "obra terminada"
+        ↓
+11. DIRECTRICES (qué unifica todo)  → las reglas transversales + matriz por módulo
 ```
 
 ---
@@ -195,6 +208,7 @@ PLANOS-ARQUITECTONICOS-DEL-NUEVO-POS/
 ├── MODELO_DE_DATOS_DEL_NUEVO_POS.md                # Cimiento: 17 tablas, UUID/UTC/ledger
 ├── CONTRATOS_ENTRE_MODULOS_DEL_NUEVO_POS.md        # Fronteras: 17 contratos entre módulos
 ├── CRITERIOS_DE_ACEPTACION_DEL_NUEVO_POS.md        # Definición de "obra terminada" (21 criterios)
+├── DIRECTRICES_TRANSVERSALES_DEL_ERP.md            # Reglas transversales (DT-01 a DT-05) + matriz
 ├── PLANO ARQUITECTONICO PARA EL NUEVO POS.md       # Documento fundacional
 └── ESPECIFICACIONES DEL PROYECTO/
     ├── GUIA_MAESTRA_PARA_COLABORADORES_NUEVO_POS.md      # Punto de entrada
