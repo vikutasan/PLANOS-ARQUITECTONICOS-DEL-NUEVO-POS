@@ -487,9 +487,123 @@ replica **igual**: no hay nada que corregir aquí.
 
 ---
 
-## SECCIÓN 8 — CONTRATO DE VISIÓN (Visión → POS)
+## SECCIÓN 8 — CONTRATO DE PEDIDOS (POS ↔ Pedidos)
+
+> **Nota importante.** El **levantamiento de pedidos ya existe y funciona** en el ERP actual:
+> hay tabla, servicio, endpoints e interfaz. Lo que está **mal trazado es la frontera**: el POS
+> **importa la clase `Order` y escribe la tabla `orders` él mismo**. Eso viola P-01. Este
+> contrato define el sustituto correcto. A diferencia de Caja (que ya está bien), aquí sí hay
+> deuda que corregir.
 
 ### 8.1 Acoplamiento actual
+
+```
+Hoy el POS escribe la tabla de Pedidos directamente (INCORRECTO):
+  from modules.orders.models import Order  →  apps/api/modules/pos/service.py:11
+  _sync_order_from_ticket()                →  apps/api/modules/pos/service.py:306
+  Order(...) / db.add(new_order)           →  apps/api/modules/pos/service.py:332
+  Tabla orders                             →  apps/api/modules/orders/models.py:12
+  Endpoints de Pedidos                     →  apps/api/modules/orders/router.py:15
+  Frontend (levantamiento)                 →  apps/pos/components/ProgramacionPedidoModal.jsx:13
+```
+
+**Problema.** El POS **importa la clase `Order`** ([`pos/service.py`](../../apps/api/modules/pos/service.py:11))
+y hace `db.add(new_order)` ([línea 332](../../apps/api/modules/pos/service.py:332)). Es decir,
+el POS **escribe una tabla que no es suya**. Eso rompe P-01 y crea dos problemas concretos:
+
+1. **Doble dueño de la tabla.** Si Pedidos cambia su esquema (añade un estado, renombra una
+   columna), el POS se rompe en silencio porque comparte la clase.
+2. **Lógica de negocio duplicada.** El cálculo de `earliest_ready_at`, la validación de
+   `delivery_type` y el ciclo de 14 estados viven en Pedidos, pero el POS los salta al
+   escribir directo.
+
+**Lo que SÍ está bien y se conserva.** El puente es **automático y transaccional**: al guardar
+un ticket `PEDIDO`, el POS crea el pedido en la misma operación (ver
+[`create_ticket()`](../../apps/api/modules/pos/service.py:59)). Eso evita que un pedido quede
+sin registro. El POS nuevo conserva esa automaticidad, pero **pidiendo por contrato** en vez
+de escribir la tabla.
+
+### 8.2 Contrato nuevo — registrar el pedido desde el ticket
+
+```
+CONTRATO pedidos.registrar_desde_ticket
+  Consumidor:   POS
+  Proveedor:    Pedidos
+  Operación:    POST /orders/from-ticket
+  Entrada:      {
+                  ticket_id:       UUID,
+                  order_type:      String,   ← PEDIDO
+                  status_ticket:   String,   ← OPEN | PAID
+                  delivery_type:   String,   ← PICKUP | DOMICILIO
+                  customer_name:   String NULL,
+                  customer_phone:  String NULL,
+                  committed_at:    DateTime(timezone=True) NULL,
+                  packaging_type:  String,   ← PROPIO | VENTA
+                  delivery_address: Text NULL,
+                  notes:           Text NULL
+                }
+  Salida:       {
+                  order_id:        UUID,
+                  status:          String,   ← TENTATIVO | PAGADO
+                  earliest_ready_at: DateTime(timezone=True)
+                }
+  Garantías:
+    - Idempotente por `ticket_id`: si el pedido ya existe, lo ACTUALIZA (no duplica).
+    - El mapeo de estado es del proveedor: OPEN → TENTATIVO, PAID → PAGADO.
+    - Pedidos calcula `earliest_ready_at`; el POS no lo inventa.
+    - Se ejecuta en la MISMA transacción del guardado del ticket.
+  Errores:
+    - 404 si el ticket no existe.
+    - 409 si el ticket no es de tipo PEDIDO.
+```
+
+### 8.3 Contrato nuevo — leer el pedido de un ticket
+
+```
+CONTRATO pedidos.pedido_del_ticket
+  Consumidor:   POS (checkout y ticket impreso)
+  Proveedor:    Pedidos
+  Operación:    GET /orders/by-ticket/{ticket_id}
+  Entrada:      ticket_id (UUID)
+  Salida:       {
+                  order_id:          UUID,
+                  delivery_type:     String,
+                  status:            String,
+                  customer_name:     String NULL,
+                  customer_phone:    String NULL,
+                  committed_at:      DateTime(timezone=True) NULL,
+                  packaging_type:    String,
+                  delivery_address:  Text NULL,
+                  delivery_fee:      Numeric(12,2) NULL,
+                  notes:             Text NULL
+                }
+  Garantías:
+    - Devuelve el pedido asociado al ticket, o 404 si no tiene.
+    - Devuelve una PROYECCIÓN, no la fila completa (cumple O-23).
+  Errores:
+    - 404 si el ticket no existe o no tiene pedido.
+```
+
+### 8.4 Lo que el POS NO hace con Pedidos
+
+| Acción | Por qué NO |
+|--------|-----------|
+| `from modules.orders.models import Order` | El POS no importa modelos de Pedidos. |
+| `db.add(Order(...))` | El POS no escribe la tabla `orders`. |
+| Calcular `earliest_ready_at` | Es regla de negocio de Pedidos (tiempos de producción). |
+| Cambiar el `status` del pedido a estados de Producción/Pickup/Reparto | Esos 14 estados los gobierna Pedidos, no el POS. |
+| Leer `orders` para las suites de Producción | Esas suites son de Pedidos; el POS no las alimenta. |
+
+**Anclaje.** Hoy el puente vive en
+[`pos/service.py:306`](../../apps/api/modules/pos/service.py:306) y la tabla en
+[`orders/models.py:12`](../../apps/api/modules/orders/models.py:12). El POS nuevo mueve ese
+puente al módulo Pedidos y lo consume por endpoint.
+
+---
+
+## SECCIÓN 9 — CONTRATO DE VISIÓN (Visión → POS)
+
+### 9.1 Acoplamiento actual
 
 ```
 Hoy el POS llama a su propio motor de visión:
@@ -501,7 +615,7 @@ Hoy el POS llama a su propio motor de visión:
 responsabilidades: vender y reconocer imágenes. Si Visión crece (más modelos, más cámaras),
 arrastra al POS.
 
-### 8.2 Contrato nuevo
+### 9.2 Contrato nuevo
 
 ```
 CONTRATO vision.reconocer_producto
@@ -529,7 +643,7 @@ CONTRATO vision.reconocer_producto
 
 ---
 
-## SECCIÓN 9 — MATRIZ DE CONTRATOS
+## SECCIÓN 10 — MATRIZ DE CONTRATOS
 
 | # | Contrato | Consumidor | Proveedor | Reemplaza a | Estado hoy |
 |---|----------|-----------|-----------|-------------|------------|
@@ -547,19 +661,26 @@ CONTRATO vision.reconocer_producto
 | 12 | `caja.resumen_del_turno` | POS | Caja | (ya existe) | **Ya existe** |
 | 13 | `caja.cerrar_turno` | POS | Caja | (ya existe) | **Ya existe** |
 | 14 | `caja.reporte_diario` | POS / Estadísticas | Caja | (ya existe) | **Ya existe** |
-| 15 | `vision.reconocer_producto` | POS | Visión | Motor interno del POS | **Deuda** |
+| 15 | `pedidos.registrar_desde_ticket` | POS | Pedidos | Escritura directa de `orders` | **Deuda** |
+| 16 | `pedidos.pedido_del_ticket` | POS | Pedidos | Lectura de `orders` | **Deuda** |
+| 17 | `vision.reconocer_producto` | POS | Visión | Motor interno del POS | **Deuda** |
 
-**Lectura de la matriz.** De 15 contratos: **1 es cicatriz** (se conserva), **1 ya existe
+**Lectura de la matriz.** De 17 contratos: **1 es cicatriz** (se conserva), **1 ya existe
 parcial** (catálogo, se formaliza), **6 ya existen completos** (Caja, se documentan como
-referencia) y **7 son deuda** (se corrigen en el POS nuevo).
+referencia) y **9 son deuda** (se corrigen en el POS nuevo).
 
 **Lo notable:** el módulo de Caja es el **único módulo que ya cumple la Regla de Oro #5 al
 100%**. El POS nunca lee sus tablas. Es la prueba de que el patrón funciona y el modelo a
-imitar por Almacenes, Producción, Seguridad y Visión.
+imitar por Almacenes, Producción, Pedidos, Seguridad y Visión.
+
+**El caso de Pedidos es distinto al de Caja.** Pedidos **existe y funciona** (tabla, servicio,
+6 endpoints, interfaz), pero su frontera está **mal trazada**: el POS importa la clase `Order`
+y escribe la tabla. Por eso aparece como **deuda** y no como "ya existe": el módulo está, lo
+que falta es que el POS deje de escribir en él.
 
 ---
 
-## SECCIÓN 10 — OBSERVACIONES
+## SECCIÓN 11 — OBSERVACIONES
 
 | # | Observación | Acción |
 |---|-------------|--------|
@@ -571,15 +692,18 @@ imitar por Almacenes, Producción, Seguridad y Visión.
 | **O-24** | **El contrato de Caja YA EXISTE en el código** (ver §7). No es un pendiente: es un contrato completo y bien hecho. | Documentarlo como referencia (hecho en §7) y usarlo como modelo para los demás módulos. |
 | **O-25** | El cobro se enlaza a la caja por `tickets.cash_session_id`, no por una llamada por cobro. | Conservar este diseño: mantiene el cobro en una sola transacción. |
 | **O-26** | Caja es el único módulo que ya cumple la Regla de Oro #5 al 100%. | Usarlo como caso de referencia al migrar Almacenes, Producción, Seguridad y Visión. |
+| **O-27** | **El levantamiento de pedidos YA EXISTE** (tabla `orders`, 6 endpoints, `ProgramacionPedidoModal.jsx`), pero el POS **escribe la tabla `orders` directamente** (ver §8.1). | Mover el puente `_sync_order_from_ticket` al módulo Pedidos y consumirlo por `pedidos.registrar_desde_ticket`. |
+| **O-28** | El puente POS → Pedidos es **automático y transaccional** (se dispara al guardar el ticket PEDIDO). Eso es correcto y se conserva. | Mantener la automaticidad, pero por contrato: el POS pide, Pedidos escribe. |
+| **O-29** | El ciclo de **14 estados** del pedido (Producción → Pickup → Reparto → Final) lo gobierna Pedidos, no el POS. | El POS nunca cambia el `status` a estados de producción; solo registra y consulta. |
 
 ---
 
-## SECCIÓN 11 — CIERRE
+## SECCIÓN 12 — CIERRE
 
 **Lo que este documento deja claro:**
 
 1. El POS nuevo **no lee ni escribe** tablas de otros módulos. Pide por contrato.
-2. Los 7 acoplamientos de deuda quedan identificados con su sustituto exacto.
+2. Los 9 acoplamientos de deuda quedan identificados con su sustituto exacto.
 3. El único contrato donde el POS es proveedor es el de auditoría y el de estadísticas:
    el POS expone **resúmenes**, nunca tablas.
 4. El patrón Outbox (`evento_id`) garantiza que el descuento de stock sea idempotente.
