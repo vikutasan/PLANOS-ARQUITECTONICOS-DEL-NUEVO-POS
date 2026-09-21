@@ -42,6 +42,16 @@ Pedidos, Perfiles), lee la metodología:
 > por módulo, y los 8 errores que no se deben cometer. El POS fue el primer módulo
 > construido con este método; los demás se construyen igual.
 
+Y si vas a construir **cualquier pantalla del Nuevo POS**, lee antes la especificación
+responsiva. Es una **regla dura**: ningún componente se acepta si no la cumple.
+
+> ### 📱 [ESPECIFICACIÓN RESPONSIVA Y ERGONOMÍA TÁCTIL](./ESPECIFICACION_RESPONSIVA_Y_ERGONOMIA_TACTIL.md)
+>
+> Define los **3 modos de layout** (Mostrador / Compacto / Móvil), las **4 reglas duras**
+> (R-01 a R-04), el **estándar táctil de 44×44px**, y el inventario de contenedores de
+> ancho fijo a parametrizar. **La estética del POS v22 se preserva al 100%; la ergonomía
+> del mostrador es intocable.**
+
 ---
 
 ## ¿Qué es este repositorio?
@@ -91,7 +101,7 @@ edificios nuevos.
 
 ---
 
-## Contenido (los 6 documentos maestros)
+## Contenido (los 7 documentos maestros)
 
 Todos los documentos viven en la carpeta [`ESPECIFICACIONES DEL PROYECTO/`](./ESPECIFICACIONES%20DEL%20PROYECTO/),
 salvo el plano fundacional y este README, que están en la raíz.
@@ -104,6 +114,7 @@ salvo el plano fundacional y este README, que están en la raíz.
 | **3** | [`PLAN_ACCION_ARQUITECTONICO_NUEVO_POS.md`](./ESPECIFICACIONES%20DEL%20PROYECTO/PLAN_ACCION_ARQUITECTONICO_NUEVO_POS.md) | **¿Qué acciones concretas ejecutar?** | ✅ 5 acciones |
 | **4** | [`MODELO_DESPLIEGUE_Y_CONSOLIDACION_CENTRAL.md`](./ESPECIFICACIONES%20DEL%20PROYECTO/MODELO_DESPLIEGUE_Y_CONSOLIDACION_CENTRAL.md) | **¿Dónde vive y cómo se consolida?** | ✅ Topología |
 | **5** | [`METODOLOGIA_DE_INGENIERIA_INVERSA_Y_DISENO.md`](./METODOLOGIA_DE_INGENIERIA_INVERSA_Y_DISENO.md) | **¿Cómo aplico esto a otro módulo?** | ✅ Manual de obra |
+| **6** | [`ESPECIFICACION_RESPONSIVA_Y_ERGONOMIA_TACTIL.md`](./ESPECIFICACION_RESPONSIVA_Y_ERGONOMIA_TACTIL.md) | **¿Cómo debe verse y tocarse en cualquier pantalla?** | ✅ Regla dura (A-06) |
 
 ### Documentos de soporte (no maestros)
 
@@ -125,6 +136,8 @@ salvo el plano fundacional y este README, que están en la raíz.
 4. DESPLIEGUE (dónde)           → la topología
         ↓
 5. METODOLOGÍA (cómo replicar)  → el manual de obra para los demás módulos
+        ↓
+6. RESPONSIVA (cómo se ve/toca) → la regla dura de toda pantalla
 ```
 
 ---
@@ -152,6 +165,7 @@ salvo el plano fundacional y este README, que están en la raíz.
 PLANOS-ARQUITECTONICOS-DEL-NUEVO-POS/
 ├── README.md                                       # Este archivo
 ├── METODOLOGIA_DE_INGENIERIA_INVERSA_Y_DISENO.md   # Manual de obra (reutilizable)
+├── ESPECIFICACION_RESPONSIVA_Y_ERGONOMIA_TACTIL.md # Regla dura de toda pantalla
 ├── PLANO ARQUITECTONICO PARA EL NUEVO POS.md       # Documento fundacional
 └── ESPECIFICACIONES DEL PROYECTO/
     ├── GUIA_MAESTRA_PARA_COLABORADORES_NUEVO_POS.md      # Punto de entrada
