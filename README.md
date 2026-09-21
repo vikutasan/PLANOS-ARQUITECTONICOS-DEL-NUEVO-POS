@@ -70,9 +70,14 @@ transversales. Son las reglas que **no pertenecen a un módulo**: pertenecen a t
 > ### 🧱 [DIRECTRICES TRANSVERSALES DEL ERP](./DIRECTRICES_TRANSVERSALES_DEL_ERP.md)
 >
 > El **compendio de reglas que atraviesan todos los módulos**: Tiempo (DT-01), Dinero
-> (DT-02), Identidad (DT-03), Inventario (DT-04) y Auditoría (DT-05). Cada directriz trae
-> su regla, su ancla al código, su verificación y una **matriz de cumplimiento por módulo**.
-> Una directriz transversal no se "aplica" a un módulo: se **verifica** contra un módulo.
+> (DT-02), Identidad (DT-03), Inventario (DT-04), Auditoría (DT-05) y Configuración
+> (DT-06). Cada directriz trae su regla, su ancla al código, su verificación y una
+> **matriz de cumplimiento por módulo**. Una directriz transversal no se "aplica" a un
+> módulo: se **verifica** contra un módulo.
+>
+> **DT-06 declara el rol de Vista General:** es el módulo donde se **declaran** los valores
+> transversales (zona horaria, moneda, sucursal). Su especificación funcional se escribirá
+> cuando se reconstruya, pero su rol ya está decidido para que ningún otro módulo lo invada.
 
 ---
 
@@ -141,7 +146,7 @@ salvo el plano fundacional y este README, que están en la raíz.
 | **8** | [`MODELO_DE_DATOS_DEL_NUEVO_POS.md`](./MODELO_DE_DATOS_DEL_NUEVO_POS.md) | **¿Cómo se guardan los datos?** | ✅ Cimiento (17 tablas) |
 | **9** | [`CONTRATOS_ENTRE_MODULOS_DEL_NUEVO_POS.md`](./CONTRATOS_ENTRE_MODULOS_DEL_NUEVO_POS.md) | **¿Cómo se comunican los módulos sin leer tablas ajenas?** | ✅ 17 contratos |
 | **10** | [`CRITERIOS_DE_ACEPTACION_DEL_NUEVO_POS.md`](./CRITERIOS_DE_ACEPTACION_DEL_NUEVO_POS.md) | **¿Cuándo se considera terminado?** | ✅ 21 criterios |
-| **11** | [`DIRECTRICES_TRANSVERSALES_DEL_ERP.md`](./DIRECTRICES_TRANSVERSALES_DEL_ERP.md) | **¿Qué reglas unifican a todos los módulos?** | ✅ 5 directrices (DT-01 a DT-05) |
+| **11** | [`DIRECTRICES_TRANSVERSALES_DEL_ERP.md`](./DIRECTRICES_TRANSVERSALES_DEL_ERP.md) | **¿Qué reglas unifican a todos los módulos?** | ✅ 6 directrices (DT-01 a DT-06) |
 
 ### Documentos de soporte (no maestros)
 

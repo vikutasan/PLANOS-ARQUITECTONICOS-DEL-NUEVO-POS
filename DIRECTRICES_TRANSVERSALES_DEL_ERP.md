@@ -275,25 +275,76 @@ Cada uno de esos es un caso del mismo error: **una decisión transversal tomada 
 
 ---
 
+## SECCIÓN 6.5 — DT-06: CONFIGURACIÓN DEL NEGOCIO
+
+### DT-06.1 — La regla
+
+> **Los valores que afectan a todos los módulos (zona horaria, moneda, sucursal) se declaran una sola vez, en el módulo Vista General, y se persisten en `system_settings`. Ningún módulo los define por su cuenta. Ningún módulo los sobrescribe.**
+
+### DT-06.2 — El ancla
+
+| Capa | Archivo | Qué hace |
+|---|---|---|
+| Almacenamiento | `system_settings` (tabla) | Guarda `business_timezone`, `business_currency`, `sucursal_id` |
+| Selección | **Módulo Vista General** | La interfaz donde el humano elige |
+| Distribución | `apps/shared/TimezoneContext.jsx` | Contexto global de tiempo (existe hoy) |
+| Distribución | `apps/shared/MoneyContext.jsx` | Contexto global de dinero (**por crear**) |
+| Consumo | Cada módulo | Lee el contexto; nunca define el valor |
+
+### DT-06.3 — Las reglas derivadas
+
+1. **Vista General es un módulo del ERP, no del POS.** Es hermano del POS, no hijo. El POS lo consume, no lo contiene.
+2. **Vista General es el único lugar donde se declaran los valores transversales.** No hay un selector de zona horaria en Caja, ni un selector de moneda en Almacenes.
+3. **El valor se persiste en `system_settings`.** No se persiste en el frontend, ni en `localStorage`, ni en cada módulo.
+4. **El frontend lo distribuye por contexto.** Un contexto por valor transversal (`TimezoneContext`, `MoneyContext`). Los componentes lo consumen con un hook (`useTimezone()`, `useMoney()`).
+5. **El valor tiene un solo endpoint de lectura.** `GET /settings` (o `GET /settings/timezone` + `GET /settings/currency`). No hay un endpoint por módulo.
+6. **Cambiar el valor no cambia los datos guardados.** Cambiar la zona horaria cambia cómo se **muestra** el tiempo; no reescribe los timestamps. Cambiar la moneda cambia el **símbolo**; no reescribe los montos. (Esto es la cara de configuración de DT-01 y DT-02.)
+
+### DT-06.4 — La verificación
+
+| # | Verificación | Cómo |
+|---|---|---|
+| V-20 | Existe un solo lugar donde se declaran los valores transversales | Búsqueda estática: un solo componente selector |
+| V-21 | Los valores se persisten en `system_settings` | Revisión del modelo de datos |
+| V-22 | Existe un contexto por valor transversal | Búsqueda estática: `TimezoneContext`, `MoneyContext` |
+| V-23 | Ningún módulo define su propio valor transversal | Búsqueda estática: no hay `business_timezone`/`business_currency` fuera de `system_settings` |
+| V-24 | Cambiar el valor no altera los datos guardados | Prueba: cambiar zona horaria no modifica timestamps en BD |
+
+### DT-06.5 — La matriz de cumplimiento
+
+| Módulo | Cumple | Evidencia / Deuda |
+|---|---|---|
+| Vista General | ⏳ Pendiente | **Por reconstruir.** Su rol ya está decidido (este documento); su especificación funcional se escribirá en su propia FASE 1 |
+| POS | ✅ | Consume `TimezoneContext`; no define zona horaria |
+| Caja | ✅ | Consume el contexto; no define valores |
+| Resto | ⚠️ Parcial | Pendiente de verificar que ninguno define valores transversales |
+
+**Nota importante:** Vista General **no se especifica aquí**. Este documento solo declara **su rol transversal** (dónde se declaran los valores). Su especificación funcional completa (pantallas, campos, validaciones) es FASE 1 de su propio módulo y se escribirá cuando se reconstruya. Declarar el rol ahora evita que la IA constructora invente el selector en cada módulo.
+
+---
+
 ## SECCIÓN 7 — LA MATRIZ MAESTRA
 
 Estado de cada módulo frente a cada directriz. **Un módulo no se declara terminado con un ❌.**
 
-| Módulo | DT-01 Tiempo | DT-02 Dinero | DT-03 Identidad | DT-04 Inventario | DT-05 Auditoría |
-|---|---|---|---|---|---|
-| POS | ✅ | ✅ | ⚠️ | ⚠️ | ✅ |
-| Caja | ✅ | ✅ | ⚠️ | — | ✅ |
-| Catálogo | — | ✅ | ⚠️ | ⚠️ | ⚠️ |
-| Heladería | — | ✅ | ⚠️ | — | ⚠️ |
-| Almacenes | ⚠️ | ⚠️ | ✅ | ✅ | ⚠️ |
-| Grandeza | ⚠️ | ❌ | ⚠️ | — | ⚠️ |
-| RRHH | ⚠️ | ❌ | ⚠️ | — | ⚠️ |
-| Pedidos | ⚠️ | ❌ | ⚠️ | — | ⚠️ |
-| Producción | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ |
-| Analytics | ✅ | ⚠️ | — | — | — |
-| Frontend | ⚠️ | ❌ | ⚠️ | — | — |
+| Módulo | DT-01 Tiempo | DT-02 Dinero | DT-03 Identidad | DT-04 Inventario | DT-05 Auditoría | DT-06 Config |
+|---|---|---|---|---|---|---|
+| **Vista General** | — | — | — | — | — | ⏳ |
+| POS | ✅ | ✅ | ⚠️ | ⚠️ | ✅ | ✅ |
+| Caja | ✅ | ✅ | ⚠️ | — | ✅ | ✅ |
+| Catálogo | — | ✅ | ⚠️ | ⚠️ | ⚠️ | ⚠️ |
+| Heladería | — | ✅ | ⚠️ | — | ⚠️ | ⚠️ |
+| Almacenes | ⚠️ | ⚠️ | ✅ | ✅ | ⚠️ | ⚠️ |
+| Grandeza | ⚠️ | ❌ | ⚠️ | — | ⚠️ | ⚠️ |
+| RRHH | ⚠️ | ❌ | ⚠️ | — | ⚠️ | ⚠️ |
+| Pedidos | ⚠️ | ❌ | ⚠️ | — | ⚠️ | ⚠️ |
+| Producción | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ |
+| Analytics | ✅ | ⚠️ | — | — | — | ⚠️ |
+| Frontend | ⚠️ | ❌ | ⚠️ | — | — | ⚠️ |
 
-**Leyenda:** ✅ Cumple · ⚠️ Parcial · ❌ No cumple · — No aplica
+**Leyenda:** ✅ Cumple · ⚠️ Parcial · ❌ No cumple · ⏳ Pendiente · — No aplica
+
+**Nota sobre Vista General:** es el módulo donde se **declaran** los valores transversales. Su fila está en ⏳ porque aún no se reconstruye, pero su rol ya está decidido (DT-06). Los demás módulos lo consumen.
 
 ---
 
@@ -338,7 +389,7 @@ Este documento existe porque el mismo error se cometió muchas veces en lugares 
 
 > **Lo transversal se decide una vez y se verifica en cada módulo. Nunca se decide en cada módulo.**
 
-**Las 5 directrices vigentes:**
+**Las 6 directrices vigentes:**
 
 | ID | Directriz | Estado |
 |---|---|---|
@@ -347,6 +398,16 @@ Este documento existe porque el mismo error se cometió muchas veces en lugares 
 | DT-03 | Identidad: UUID identifica, folio comunica | Vigente |
 | DT-04 | Inventario: ledger inmutable, solo el dueño escribe | Vigente |
 | DT-05 | Auditoría: quién, cuándo, qué — transaccional | Vigente |
+| DT-06 | Configuración: los valores transversales se declaran una sola vez, en Vista General | Vigente |
+
+**La simetría completa (DT-06):**
+
+```
+system_settings  →  Vista General  →  contexto global  →  cada módulo
+   (guarda)           (declara)        (distribuye)        (consume)
+```
+
+Hoy están documentados el primero, el tercero y el cuarto. **DT-06 declara el segundo**, que era el eslabón que faltaba.
 
 **Documentos relacionados:**
 
@@ -354,4 +415,5 @@ Este documento existe porque el mismo error se cometió muchas veces en lugares 
 - `CRITERIOS_DE_ACEPTACION_DEL_NUEVO_POS.md` — CA-21 (dinero), CA-13 a CA-16 (tiempo)
 - `MODELO_DE_DATOS_DEL_NUEVO_POS.md` — C-01 (UUID), C-02 (UTC), C-03 (Numeric), O-19 (business_currency)
 - `CONTRATOS_ENTRE_MODULOS_DEL_NUEVO_POS.md` — P-01 a P-03, A-01 a A-06
+- `PLANO ARQUITECTONICO PARA EL NUEVO POS.md` — Sección 6 (módulos fuera del alcance del POS)
 - `README.md` — reglas de oro 9 (tiempo) y 11 (dinero)

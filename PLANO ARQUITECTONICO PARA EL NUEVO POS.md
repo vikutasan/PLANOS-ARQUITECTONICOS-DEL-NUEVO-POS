@@ -853,7 +853,68 @@ o depender del ERP actual. Es un repositorio de **planos**, no de **obras**.
 
 ---
 
-## SECCIÓN 5 — DECLARACIÓN DE LA REGLA DURA (REPETIDA AL CIERRE)
+## SECCIÓN 5 — MÓDULOS DEL ERP FUERA DEL ALCANCE DEL POS
+
+> Este documento es el plano **del POS**. Pero el POS no es el único módulo del ERP.
+> Hay módulos que **no** son el POS, que el POS **consume**, y cuyo rol ya está decidido
+> aunque todavía no se reconstruyan.
+
+Esta sección existe para que la IA constructora **no invente** lo que ya está decidido.
+Un módulo que no se menciona es un módulo que se improvisa.
+
+### 5.1 Vista General (módulo de configuración transversal)
+
+**Qué es:** el módulo donde se **declaran** los valores que afectan a todos los módulos del ERP.
+
+**Qué NO es:**
+- No es una pantalla del POS.
+- No es un módulo de negocio (no vende, no cobra, no mueve inventario).
+- No es un dashboard de solo lectura.
+
+**Su responsabilidad (decidida):**
+
+| Valor transversal | Dónde se guarda | Quién lo consume |
+|---|---|---|
+| Zona horaria (`business_timezone`) | `system_settings` | Todo el ERP, vía `TimezoneContext` |
+| Moneda (`business_currency`) | `system_settings` | Todo el ERP, vía `MoneyContext` |
+| Sucursal (`sucursal_id`) | `system_settings` | Todo el ERP |
+
+**Su rol está anclado en:** [`DIRECTRICES_TRANSVERSALES_DEL_ERP.md`](./DIRECTRICES_TRANSVERSALES_DEL_ERP.md) — DT-06 (Configuración del Negocio).
+
+**Su estado:** ⏳ **Pendiente de reconstrucción.** Su especificación funcional completa (pantallas, campos, validaciones, permisos) es **FASE 1 de su propio módulo** y se escribirá cuando se reconstruya. Lo que ya está decidido —y por eso se declara aquí— es **su rol transversal**: es el único lugar donde se declaran los valores que todos los módulos consumen.
+
+**Por qué se declara ahora y no después:** si no se declara, la IA constructora que arme el POS (o Caja, o Almacenes) va a inventar un selector de zona horaria o de moneda dentro de su propio módulo. Eso es exactamente el error que produjo las 5 implementaciones de tiempo y los 80 formateos de dinero del ERP actual. Declarar el rol ahora cierra esa puerta antes de que se abra.
+
+### 5.2 La simetría completa
+
+```
+system_settings  →  Vista General  →  contexto global  →  cada módulo
+   (guarda)           (declara)        (distribuye)        (consume)
+```
+
+- **`system_settings`** — la tabla donde vive el valor. Documentada en el Documento 8.
+- **Vista General** — la interfaz donde el humano lo elige. **Declarada aquí.**
+- **Contexto global** — `TimezoneContext` (existe), `MoneyContext` (por crear). Documentado en el compendio.
+- **Cada módulo** — consume el contexto; nunca define el valor. Verificado por DT-06.
+
+### 5.3 Otros módulos fuera del alcance (por decidir)
+
+Los siguientes módulos existen en el ERP actual pero **su rol transversal aún no se ha decidido**. Se listan para que no se improvisen, no para especificarlos:
+
+| Módulo | Rol transversal | Estado |
+|---|---|---|
+| Vista General | Configuración del negocio | ✅ Decidido (DT-06) |
+| Auditoría | Rastro de operaciones | ✅ Decidido (DT-05) |
+| Almacenes | Ledger de inventario | ✅ Decidido (DT-04) |
+| Seguridad / Perfiles | Identidad y permisos | ⏳ Por decidir |
+| Estadísticas | Reportería | ⏳ Por decidir |
+| Visión | Reconocimiento de imágenes | ⏳ Por decidir |
+
+**Regla:** un módulo de esta tabla no se especifica hasta que se reconstruya. Pero su **rol transversal**, si ya está decidido, se declara aquí para que ningún otro módulo lo invada.
+
+---
+
+## SECCIÓN 6 — DECLARACIÓN DE LA REGLA DURA (REPETIDA AL CIERRE)
 
 > **NO SE TOCA EL ERP INSTALADO Y CORRIENDO.**
 > **NO SE TOCA NINGUNO DE SUS MÓDULOS.**
