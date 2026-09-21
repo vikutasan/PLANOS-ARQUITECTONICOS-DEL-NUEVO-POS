@@ -26,10 +26,21 @@ riesgo para el negocio en marcha.
 
 Si vas a meter mano en este proyecto, **lee primero la guía maestra**:
 
-> ### 📘 [GUÍA MAESTRA PARA COLABORADORES](./GUIA_MAESTRA_PARA_COLABORADORES_NUEVO_POS.md)
+> ### 📘 [GUÍA MAESTRA PARA COLABORADORES](./ESPECIFICACIONES%20DEL%20PROYECTO/GUIA_MAESTRA_PARA_COLABORADORES_NUEVO_POS.md)
 >
 > Es el **punto de entrada único**. Te dice qué leer, en qué orden, y qué reglas
 > nunca romper. Si solo vas a leer un documento, lee ese.
+
+Si lo que quieres es **aplicar este mismo método a otro módulo del ERP** (Almacenes,
+Productos, RRHH, Estadísticas, Auditoría, Heladería, Reparto, Monitoreo de Red,
+Pedidos, Perfiles), lee la metodología:
+
+> ### 🧭 [METODOLOGÍA DE INGENIERÍA INVERSA Y DISEÑO](./METODOLOGIA_DE_INGENIERIA_INVERSA_Y_DISENO.md)
+>
+> Es el **manual de obra reutilizable**: las 6 fases (ingeniería inversa → diseño →
+> plan de acción → despliegue → punto de entrada → autocrítica), la checklist maestra
+> por módulo, y los 8 errores que no se deben cometer. El POS fue el primer módulo
+> construido con este método; los demás se construyen igual.
 
 ---
 
@@ -80,15 +91,25 @@ edificios nuevos.
 
 ---
 
-## Contenido (los 5 documentos maestros)
+## Contenido (los 6 documentos maestros)
+
+Todos los documentos viven en la carpeta [`ESPECIFICACIONES DEL PROYECTO/`](./ESPECIFICACIONES%20DEL%20PROYECTO/),
+salvo el plano fundacional y este README, que están en la raíz.
 
 | # | Documento | Responde | Estado |
 |---|-----------|----------|--------|
-| **0** | [`GUIA_MAESTRA_PARA_COLABORADORES_NUEVO_POS.md`](./GUIA_MAESTRA_PARA_COLABORADORES_NUEVO_POS.md) | **¿Por dónde empiezo?** | ✅ Punto de entrada |
+| **0** | [`GUIA_MAESTRA_PARA_COLABORADORES_NUEVO_POS.md`](./ESPECIFICACIONES%20DEL%20PROYECTO/GUIA_MAESTRA_PARA_COLABORADORES_NUEVO_POS.md) | **¿Por dónde empiezo?** | ✅ Punto de entrada |
 | **1** | [`PLANO ARQUITECTONICO PARA EL NUEVO POS.md`](./PLANO%20ARQUITECTONICO%20PARA%20EL%20NUEVO%20POS.md) | **¿Qué debe ser el nuevo POS?** | ✅ Fundacional |
-| **2** | [`ESPECIFICACION_FUNCIONAL_POS_INGENIERIA_INVERSA.md`](./ESPECIFICACION_FUNCIONAL_POS_INGENIERIA_INVERSA.md) | **¿Qué hace hoy el POS actual?** | ✅ Ingeniería inversa |
-| **3** | [`PLAN_ACCION_ARQUITECTONICO_NUEVO_POS.md`](./PLAN_ACCION_ARQUITECTONICO_NUEVO_POS.md) | **¿Qué acciones concretas ejecutar?** | ✅ 5 acciones |
-| **4** | [`MODELO_DESPLIEGUE_Y_CONSOLIDACION_CENTRAL.md`](./MODELO_DESPLIEGUE_Y_CONSOLIDACION_CENTRAL.md) | **¿Dónde vive y cómo se consolida?** | ✅ Topología |
+| **2** | [`ESPECIFICACION_FUNCIONAL_POS_INGENIERIA_INVERSA.md`](./ESPECIFICACIONES%20DEL%20PROYECTO/ESPECIFICACION_FUNCIONAL_POS_INGENIERIA_INVERSA.md) | **¿Qué hace hoy el POS actual?** | ✅ Ingeniería inversa |
+| **3** | [`PLAN_ACCION_ARQUITECTONICO_NUEVO_POS.md`](./ESPECIFICACIONES%20DEL%20PROYECTO/PLAN_ACCION_ARQUITECTONICO_NUEVO_POS.md) | **¿Qué acciones concretas ejecutar?** | ✅ 5 acciones |
+| **4** | [`MODELO_DESPLIEGUE_Y_CONSOLIDACION_CENTRAL.md`](./ESPECIFICACIONES%20DEL%20PROYECTO/MODELO_DESPLIEGUE_Y_CONSOLIDACION_CENTRAL.md) | **¿Dónde vive y cómo se consolida?** | ✅ Topología |
+| **5** | [`METODOLOGIA_DE_INGENIERIA_INVERSA_Y_DISENO.md`](./METODOLOGIA_DE_INGENIERIA_INVERSA_Y_DISENO.md) | **¿Cómo aplico esto a otro módulo?** | ✅ Manual de obra |
+
+### Documentos de soporte (no maestros)
+
+| Documento | Responde | Estado |
+|-----------|----------|--------|
+| [`AUTOCRITICA_DE_LOS_DOCUMENTOS_DEL_NUEVO_POS.md`](./ESPECIFICACIONES%20DEL%20PROYECTO/AUTOCRITICA_DE_LOS_DOCUMENTOS_DEL_NUEVO_POS.md) | **¿Qué corregimos de nuestros propios documentos?** | ✅ 3 defectos, 6 correcciones |
 
 ### Orden de lectura recomendado
 
@@ -102,6 +123,8 @@ edificios nuevos.
 3. PLAN DE ACCIÓN (cómo)        → las acciones obligatorias
         ↓
 4. DESPLIEGUE (dónde)           → la topología
+        ↓
+5. METODOLOGÍA (cómo replicar)  → el manual de obra para los demás módulos
 ```
 
 ---
@@ -123,16 +146,24 @@ edificios nuevos.
 
 ---
 
-## Estructura propuesta (etapas posteriores)
+## Estructura actual del repositorio
 
 ```
 PLANOS-ARQUITECTONICOS-DEL-NUEVO-POS/
 ├── README.md                                       # Este archivo
-├── GUIA_MAESTRA_PARA_COLABORADORES_NUEVO_POS.md    # Punto de entrada
+├── METODOLOGIA_DE_INGENIERIA_INVERSA_Y_DISENO.md   # Manual de obra (reutilizable)
 ├── PLANO ARQUITECTONICO PARA EL NUEVO POS.md       # Documento fundacional
-├── ESPECIFICACION_FUNCIONAL_POS_INGENIERIA_INVERSA.md  # Ingeniería inversa
-├── PLAN_ACCION_ARQUITECTONICO_NUEVO_POS.md         # Las 5 acciones
-├── MODELO_DESPLIEGUE_Y_CONSOLIDACION_CENTRAL.md    # Topología hub-and-spoke
+└── ESPECIFICACIONES DEL PROYECTO/
+    ├── GUIA_MAESTRA_PARA_COLABORADORES_NUEVO_POS.md      # Punto de entrada
+    ├── ESPECIFICACION_FUNCIONAL_POS_INGENIERIA_INVERSA.md # Ingeniería inversa
+    ├── PLAN_ACCION_ARQUITECTONICO_NUEVO_POS.md           # Las 5 acciones
+    ├── MODELO_DESPLIEGUE_Y_CONSOLIDACION_CENTRAL.md      # Topología hub-and-spoke
+    └── AUTOCRITICA_DE_LOS_DOCUMENTOS_DEL_NUEVO_POS.md    # Autocrítica
+```
+
+### Estructura propuesta (etapas posteriores)
+
+```
 ├── 01-logica-del-negocio/
 │   ├── reglas-de-negocio.md                        # Las 81 reglas (RN-01 a RN-81)
 │   └── deudas-conocidas.md                         # Las 5 deudas (DEUDA-01 a DEUDA-05)
