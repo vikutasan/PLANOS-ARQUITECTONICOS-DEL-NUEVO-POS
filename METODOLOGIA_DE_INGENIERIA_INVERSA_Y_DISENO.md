@@ -41,6 +41,53 @@ para que esa distinción se haga **con evidencia** (código + línea), no con op
 Todo hallazgo debe estar **anclado a evidencia verificable**: `archivo:línea`, commit, o
 test. Una afirmación sin ancla es una opinión, y las opiniones no se portan.
 
+### 0.4 Cómo nace este método (el orden real del negocio)
+
+Este método **no nace de un libro: nace del negocio.** El ERP se construyó módulo por
+módulo, en base a **necesidades reales**, corrigiendo errores sobre la marcha y mejorando
+las interfaces sobre la marcha. No se diseñó primero y se construyó después; se construyó
+primero y se estabilizó con el uso.
+
+Por eso el método invierte el orden clásico del software:
+
+```
+Orden clásico:   especificar → diseñar → construir
+Orden real:      construir → estabilizar → especificar
+```
+
+**El orden real es superior para un negocio que no puede parar**, por una razón simple:
+**el software que sobrevive al uso real es la única especificación que no miente.** Un
+documento escrito antes de construir es una hipótesis. El código que lleva meses en el
+mostrador es un hecho. Cuando se aplica este método, no se documenta una idea: se
+documenta **una verdad probada**.
+
+**La regla de entrada:** un módulo solo se documenta cuando **ya demostró ser funcional y
+estable en el tiempo**. No se documenta lo que aún se mueve. El objetivo es que, al
+terminar, **el módulo parezca que nació así desde un principio** — sin perder ni una sola
+de las cicatrices que lo hacen confiable.
+
+**Criterio objetivo de "estable" (para no depender de la sensación):** un módulo está
+listo para documentar cuando lleva **~4-6 semanas sin cambios de lógica de negocio**. Los
+cambios de estilo, textos o acomodo **no cuentan**. Si se documenta antes, el plano nace
+viejo.
+
+### 0.5 Los 3 riesgos que este método debe evitar
+
+| Riesgo | Síntoma | Antídoto |
+|--------|---------|----------|
+| **Documentar lo que aún se mueve** | El plano queda obsoleto a la semana | Esperar a las ~4-6 semanas sin cambios de lógica |
+| **Documentar el módulo entero de golpe** | Agotamiento y errores (26 interfaces, 81 reglas) | Documentar **por flujo**, no por archivo: un flujo crítico completo y cerrado, luego el siguiente |
+| **Que el plano se vuelva un museo** | Nadie vuelve a abrirlo; describe un sistema que ya no existe | Actualizar el plano **en el mismo commit** que toca el módulo (lo vigila la Fase 6) |
+
+### 0.6 Secuencia recomendada de módulos
+
+El método se aplica **primero al módulo más maduro**, para que sirva de plantilla:
+
+1. **POS** — el más maduro (v22) y el que más duele si se rompe. Es la plantilla del método.
+2. **Almacenes y Heladería** — tienen tests y contratos claros; documentarlos es rápido.
+3. **RRHH y Producción** — más grandes; se les aplica el método ya rodado.
+4. **Reparto Grandeza** — el más complejo (offline, GPS, WhatsApp); se deja para el final.
+
 ---
 
 ## SECCIÓN 1 — LAS 6 FASES DEL MÉTODO
