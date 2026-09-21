@@ -129,7 +129,7 @@ salvo el plano fundacional y este README, que están en la raíz.
 | **6** | [`ESPECIFICACION_RESPONSIVA_Y_ERGONOMIA_TACTIL.md`](./ESPECIFICACION_RESPONSIVA_Y_ERGONOMIA_TACTIL.md) | **¿Cómo debe verse y tocarse en cualquier pantalla?** | ✅ Regla dura (A-06) |
 | **7** | [`ESPECIFICACION_DE_INTERFACES_POS.md`](./ESPECIFICACION_DE_INTERFACES_POS.md) | **¿Cómo se ve y se toca cada una de las 26 interfaces?** | ✅ Mapa visual y táctil |
 | **8** | [`MODELO_DE_DATOS_DEL_NUEVO_POS.md`](./MODELO_DE_DATOS_DEL_NUEVO_POS.md) | **¿Cómo se guardan los datos?** | ✅ Cimiento (17 tablas) |
-| **9** | [`CONTRATOS_ENTRE_MODULOS_DEL_NUEVO_POS.md`](./CONTRATOS_ENTRE_MODULOS_DEL_NUEVO_POS.md) | **¿Cómo se comunican los módulos sin leer tablas ajenas?** | ✅ 9 contratos |
+| **9** | [`CONTRATOS_ENTRE_MODULOS_DEL_NUEVO_POS.md`](./CONTRATOS_ENTRE_MODULOS_DEL_NUEVO_POS.md) | **¿Cómo se comunican los módulos sin leer tablas ajenas?** | ✅ 15 contratos |
 | **10** | [`CRITERIOS_DE_ACEPTACION_DEL_NUEVO_POS.md`](./CRITERIOS_DE_ACEPTACION_DEL_NUEVO_POS.md) | **¿Cuándo se considera terminado?** | ✅ 20 criterios |
 
 ### Documentos de soporte (no maestros)
@@ -192,7 +192,7 @@ PLANOS-ARQUITECTONICOS-DEL-NUEVO-POS/
 ├── ESPECIFICACION_RESPONSIVA_Y_ERGONOMIA_TACTIL.md # Regla dura de toda pantalla
 ├── ESPECIFICACION_DE_INTERFACES_POS.md             # Mapa visual y táctil (26 interfaces)
 ├── MODELO_DE_DATOS_DEL_NUEVO_POS.md                # Cimiento: 17 tablas, UUID/UTC/ledger
-├── CONTRATOS_ENTRE_MODULOS_DEL_NUEVO_POS.md        # Fronteras: 9 contratos entre módulos
+├── CONTRATOS_ENTRE_MODULOS_DEL_NUEVO_POS.md        # Fronteras: 15 contratos entre módulos
 ├── CRITERIOS_DE_ACEPTACION_DEL_NUEVO_POS.md        # Definición de "obra terminada" (20 criterios)
 ├── PLANO ARQUITECTONICO PARA EL NUEVO POS.md       # Documento fundacional
 └── ESPECIFICACIONES DEL PROYECTO/

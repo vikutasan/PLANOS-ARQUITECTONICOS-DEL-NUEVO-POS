@@ -340,9 +340,156 @@ Seguridad.
 
 ---
 
-## SECCIÓN 7 — CONTRATO DE VISIÓN (Visión → POS)
+## SECCIÓN 7 — CONTRATO DE CAJA (POS ↔ Caja)
+
+> **Nota importante.** Este contrato **ya existe y funciona** en el ERP actual. No es deuda:
+> es un contrato **bien hecho** que se documenta aquí como referencia. El POS ya habla con
+> Caja por endpoints limpios, sin leer sus tablas. Es el modelo a imitar por los demás.
 
 ### 7.1 Acoplamiento actual
+
+```
+Hoy el POS habla con Caja por endpoints (correcto):
+  cash_sessions   →  apps/api/modules/cash/models.py:7
+  cash_movements  →  apps/api/modules/cash/models.py:32
+  Endpoints       →  apps/api/modules/cash/router.py:11
+  Frontend        →  apps/pos/components/GestorDeCaja.jsx:74
+```
+
+**No hay problema.** El POS **no** lee `cash_sessions` ni `cash_movements` directamente:
+pide a Caja por su API. Esto cumple P-01, P-02 y P-03. Se documenta para que sirva de
+ejemplo y para que el POS nuevo lo replique igual.
+
+### 7.2 Contrato existente — consultar la sesión activa
+
+```
+CONTRATO caja.sesion_activa
+  Consumidor:   POS
+  Proveedor:    Caja
+  Operación:    GET /cash/sessions/{terminal_id}/active
+  Entrada:      terminal_id (String)
+  Salida:       {
+                  id:            UUID,
+                  terminal_id:   String,
+                  employee_id:   UUID,
+                  employee_name: String,
+                  opening_float: Numeric(12,2),
+                  status:        String,   ← OPEN | CLOSED
+                  opened_at:     DateTime(timezone=True),
+                  closed_at:     DateTime(timezone=True) NULL
+                }
+  Garantías:
+    - Devuelve la sesión OPEN de esa terminal, o 404 si no hay ninguna.
+    - El POS usa esto para saber si puede cobrar (no hay caja → no hay cobro).
+  Errores:
+    - 404 si no hay sesión activa en esa terminal.
+```
+
+### 7.3 Contrato existente — abrir el turno
+
+```
+CONTRATO caja.abrir_turno
+  Consumidor:   POS (pantalla GestorDeCaja)
+  Proveedor:    Caja
+  Operación:    POST /cash/sessions/open
+  Entrada:      {
+                  terminal_id:   String,
+                  employee_id:   UUID,
+                  employee_name: String,
+                  opening_float: Numeric(12,2)
+                }
+  Salida:       CashSession (igual que §7.2)
+  Garantías:
+    - Solo puede haber UNA sesión OPEN por terminal.
+    - `employee_name` se desnormaliza para reportes rápidos (decisión consciente).
+  Errores:
+    - 400 si ya hay una sesión abierta en esa terminal.
+```
+
+### 7.4 Contrato existente — registrar cobro y movimientos
+
+```
+CONTRATO caja.registrar_movimiento
+  Consumidor:   POS
+  Proveedor:    Caja
+  Operación:    POST /cash/sessions/{session_id}/movements
+  Entrada:      {
+                  movement_type: String,   ← ENTRADA | SALIDA
+                  amount:        Numeric(12,2),
+                  concept:       String
+                }
+  Salida:       CashMovement
+  Garantías:
+    - Registra una entrada o salida de efectivo (propinas, refuerzo, retiro).
+    - El cobro de tickets NO usa este endpoint: el POS asigna `cash_session_id`
+      al ticket al cobrar, y Caja lo lee desde ahí.
+  Errores:
+    - 404 si la sesión no existe.
+```
+
+**Cómo se enlaza el cobro con la caja.** El POS **no** llama a Caja para cada cobro. Al
+cobrar, el POS escribe `tickets.cash_session_id` (ver Documento 8, §1.2). Caja lee sus
+tickets por esa columna. Así el cobro es **una sola transacción** en el POS, y Caja
+consolida después. Esto es correcto y se conserva.
+
+### 7.5 Contrato existente — resumen y corte
+
+```
+CONTRATO caja.resumen_del_turno
+  Consumidor:   POS (pantalla de corte)
+  Proveedor:    Caja
+  Operación:    GET /cash/sessions/{session_id}/summary
+  Salida:       CashSummaryResponse (totales por forma de pago, movimientos, esperado)
+  Garantías:
+    - Calcula lo esperado a partir de los tickets PAID + los movimientos.
+    - Es una LECTURA: no cierra nada.
+  Errores:
+    - 404 si la sesión no existe.
+
+CONTRATO caja.cerrar_turno
+  Consumidor:   POS (pantalla de corte)
+  Proveedor:    Caja
+  Operación:    POST /cash/sessions/{session_id}/close
+  Entrada:      {
+                  physical_cash:   Numeric(12,2),
+                  physical_credit: Numeric(12,2),
+                  physical_debit:  Numeric(12,2)
+                }
+  Salida:       CashCloseResponse (esperado vs capturado, diferencia)
+  Garantías:
+    - Marca la sesión como CLOSED y guarda los montos físicos capturados.
+    - Devuelve la diferencia (descuadre) para que el cajero la vea.
+    - Una sesión CLOSED ya no acepta movimientos.
+  Errores:
+    - 400 si la sesión ya está cerrada.
+```
+
+### 7.6 Contrato existente — reporte diario consolidado
+
+```
+CONTRATO caja.reporte_diario
+  Consumidor:   POS / Estadísticas
+  Proveedor:    Caja
+  Operación:    GET /cash/daily-report/{fecha}
+  Entrada:      fecha (YYYY-MM-DD, hora local)
+  Salida:       Reporte agrupado por canal (PANADERÍA/HELADERÍA) y por cajero/terminal
+  Garantías:
+    - Agrupa por canal y por cajero/terminal.
+    - Usa la fecha LOCAL, no UTC.
+  Errores:
+    - 400 si el formato de fecha es inválido.
+```
+
+**Anclaje.** Todo este contrato ya existe en
+[`cash/router.py`](../../apps/api/modules/cash/router.py:11) y se consume desde
+[`GestorDeCaja.jsx`](../../apps/pos/components/GestorDeCaja.jsx:74). El POS nuevo lo
+replica **igual**: no hay nada que corregir aquí.
+
+---
+
+## SECCIÓN 8 — CONTRATO DE VISIÓN (Visión → POS)
+
+### 8.1 Acoplamiento actual
 
 ```
 Hoy el POS llama a su propio motor de visión:
@@ -354,7 +501,7 @@ Hoy el POS llama a su propio motor de visión:
 responsabilidades: vender y reconocer imágenes. Si Visión crece (más modelos, más cámaras),
 arrastra al POS.
 
-### 7.2 Contrato nuevo
+### 8.2 Contrato nuevo
 
 ```
 CONTRATO vision.reconocer_producto
@@ -382,7 +529,7 @@ CONTRATO vision.reconocer_producto
 
 ---
 
-## SECCIÓN 8 — MATRIZ DE CONTRATOS
+## SECCIÓN 9 — MATRIZ DE CONTRATOS
 
 | # | Contrato | Consumidor | Proveedor | Reemplaza a | Estado hoy |
 |---|----------|-----------|-----------|-------------|------------|
@@ -394,27 +541,40 @@ CONTRATO vision.reconocer_producto
 | 6 | `pos.resumen_de_venta` | Estadísticas | POS | Lectura de `tickets` | **Deuda** |
 | 7 | `seguridad.identidad_del_empleado` | POS | Seguridad | Lectura de `employees` | **Deuda** |
 | 8 | `seguridad.validar_pin` | POS | Seguridad | Lectura de `employees` | **Deuda** |
-| 9 | `vision.reconocer_producto` | POS | Visión | Motor interno del POS | **Deuda** |
+| 9 | `caja.sesion_activa` | POS | Caja | (ya existe) | **Ya existe** |
+| 10 | `caja.abrir_turno` | POS | Caja | (ya existe) | **Ya existe** |
+| 11 | `caja.registrar_movimiento` | POS | Caja | (ya existe) | **Ya existe** |
+| 12 | `caja.resumen_del_turno` | POS | Caja | (ya existe) | **Ya existe** |
+| 13 | `caja.cerrar_turno` | POS | Caja | (ya existe) | **Ya existe** |
+| 14 | `caja.reporte_diario` | POS / Estadísticas | Caja | (ya existe) | **Ya existe** |
+| 15 | `vision.reconocer_producto` | POS | Visión | Motor interno del POS | **Deuda** |
 
-**Lectura de la matriz.** De 9 contratos, **1 es cicatriz** (se conserva), **1 ya existe**
-(se formaliza) y **7 son deuda** (se corrigen en el POS nuevo).
+**Lectura de la matriz.** De 15 contratos: **1 es cicatriz** (se conserva), **1 ya existe
+parcial** (catálogo, se formaliza), **6 ya existen completos** (Caja, se documentan como
+referencia) y **7 son deuda** (se corrigen en el POS nuevo).
+
+**Lo notable:** el módulo de Caja es el **único módulo que ya cumple la Regla de Oro #5 al
+100%**. El POS nunca lee sus tablas. Es la prueba de que el patrón funciona y el modelo a
+imitar por Almacenes, Producción, Seguridad y Visión.
 
 ---
 
-## SECCIÓN 9 — OBSERVACIONES
+## SECCIÓN 10 — OBSERVACIONES
 
 | # | Observación | Acción |
 |---|-------------|--------|
 | **O-19** | El contrato §2.2 usa `evento_id` generado por el POS. Es el patrón Outbox (A-04). | Implementar la tabla `warehouse_events` en el POS nuevo (ya está en el Documento 8, §5). |
 | **O-20** | El contrato §5.2 corrige el bug D-28 (límites locales vs UTC). | Documentar la zona horaria en la firma del contrato (ya hecho). |
 | **O-21** | El contrato §6.3 (validar PIN) es el único que expone un secreto en tránsito. | Exigir HTTPS y rate-limit obligatorio. |
-| **O-22** | El contrato §7.2 saca Visión del POS. | Mover `VisionScanner.jsx` y `service.predict_vision` al módulo Visión. |
+| **O-22** | El contrato §8.2 saca Visión del POS. | Mover `VisionScanner.jsx` y `service.predict_vision` al módulo Visión. |
 | **O-23** | Ningún contrato devuelve tablas completas: todos devuelven proyecciones. | Mantener esta regla: si un contrato devuelve `SELECT *`, está mal diseñado. |
-| **O-24** | Falta definir el contrato de **Caja** (POS ↔ Caja). | Se documenta en el Documento 10 (criterios de aceptación) como pendiente explícito. |
+| **O-24** | **El contrato de Caja YA EXISTE en el código** (ver §7). No es un pendiente: es un contrato completo y bien hecho. | Documentarlo como referencia (hecho en §7) y usarlo como modelo para los demás módulos. |
+| **O-25** | El cobro se enlaza a la caja por `tickets.cash_session_id`, no por una llamada por cobro. | Conservar este diseño: mantiene el cobro en una sola transacción. |
+| **O-26** | Caja es el único módulo que ya cumple la Regla de Oro #5 al 100%. | Usarlo como caso de referencia al migrar Almacenes, Producción, Seguridad y Visión. |
 
 ---
 
-## SECCIÓN 10 — CIERRE
+## SECCIÓN 11 — CIERRE
 
 **Lo que este documento deja claro:**
 

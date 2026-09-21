@@ -321,7 +321,7 @@ Bloqueante:     SÍ (para escalar a más sucursales)
 
 | Tema | Por qué no está aquí | Dónde se cubre |
 |------|----------------------|----------------|
-| Contrato de Caja (POS ↔ Caja) | Pendiente explícito (O-24 del Documento 9) | Documento futuro |
+| Contrato de Caja (POS ↔ Caja) | **Ya está documentado** (SECCIÓN 7 del Documento 9): el módulo existe y funciona | [`CONTRATOS_ENTRE_MODULOS_DEL_NUEVO_POS.md`](./CONTRATOS_ENTRE_MODULOS_DEL_NUEVO_POS.md) §7 |
 | Migración de datos históricos | Es un proyecto aparte, no parte de la construcción | Plan de migración |
 | Capacitación de cajeros | Es operación, no construcción | Guía de capacitación |
 | Consolidación central (hub) | Ya está en el modelo de despliegue | `MODELO_DESPLIEGUE_Y_CONSOLIDACION_CENTRAL.md` |
