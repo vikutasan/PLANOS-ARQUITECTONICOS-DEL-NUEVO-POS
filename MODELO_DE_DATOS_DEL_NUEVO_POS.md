@@ -37,7 +37,7 @@ TABLA <nombre_nuevo>
 |---|--------|---------|
 | **C-01** | **PK entero → UUID** | El folio `V####` es local y se repite entre sucursales. La identidad real debe ser global. |
 | **C-02** | **`DateTime` naive → `DateTime(timezone=True)` en UTC** | Hoy se guarda UTC sin tzinfo (ver [`core/timestamps.py`](../../apps/api/core/timestamps.py:21)). Mañana el tipo lo declara. |
-| **C-03** | **`Numeric(12,2)` se conserva** | El dinero nunca se guarda en `Float`. Esto ya está bien hoy y no se toca. |
+| **C-03** | **`Numeric(12,2)` se conserva** | El dinero nunca se guarda en `Float`. Esto ya está bien hoy y no se toca. La moneda del negocio (`business_currency`) **declara** en qué moneda se captura; **no convierte**. La presentación pasa por un solo formateador (ver CA-21 del Documento 10). |
 | **C-04** | **`version` (bloqueo optimista) se conserva y se generaliza** | Hoy solo `tickets` y `stock_almacen` lo tienen. Mañana toda tabla que el POS escriba en paralelo lo lleva. |
 
 ---
@@ -539,6 +539,7 @@ Estas tablas existen hoy y son **deuda** que el POS nuevo elimina:
 | **O-16** | `orders.delivery_fee` es `Float`, no `Numeric`. El dinero nunca va en `Float`. | **Corregir** a `Numeric(12,2)` |
 | **O-17** | `stock_almacen.cantidad_actual` es `Float`; para piezas enteras debería ser `Integer`, y para granel `Numeric`. | **Evaluar** por `item_type` |
 | **O-18** | No hay tabla de `sucursales` en el esquema actual; `sucursal_id` es un `String` suelto. | **Crear** tabla `sucursales` y usar FK |
+| **O-19** | No existe una configuración de moneda del negocio (`business_currency`). Hoy cada componente formatea el dinero por su cuenta (80 `toFixed(2)` sueltos en 12 componentes). | **Crear** `business_currency` en `system_settings` + un único `formatMoney` (ver CA-21 del Documento 10) |
 
 ---
 
@@ -551,7 +552,7 @@ inventar el esquema, y ahí es donde se cuelan las deudas que este proyecto busc
 
 1. **Toda tabla tiene origen trazable** a `archivo:línea` del ERP actual.
 2. **Todo cambio estructural está justificado** (C-01 a C-04 + sección 7).
-3. **Toda deuda conocida está marcada para eliminación** (sección 7 + O-13 a O-18).
+3. **Toda deuda conocida está marcada para eliminación** (sección 7 + O-13 a O-19).
 4. **Toda cicatriz está marcada para conservación** (bloqueo optimista, Outbox,
    auditoría capturó/cobró, diagnóstico sin-almacén).
 

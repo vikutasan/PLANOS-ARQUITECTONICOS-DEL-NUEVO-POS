@@ -286,6 +286,42 @@ Evidencia:      La sucursal funcionando + las notas del colaborador sobre la gu�
 Bloqueante:     SÍ (para escalar a más sucursales)
 ```
 
+### CA-21 — El dinero se presenta por un solo camino
+
+```
+Qué exige:      Todo monto monetario que se muestra al usuario pasa por UN ÚNICO
+                formateador (`formatMoney`), ligado a la moneda del negocio
+                (`business_currency`). Ningún componente formatea dinero por su cuenta.
+
+                La regla tiene 4 partes:
+                  1. UN SOLO FORMATEADOR. Existe una función `formatMoney(valor)` que
+                     usa `Intl.NumberFormat` con `style: 'currency'` y la moneda
+                     configurada. Es el único camino para mostrar dinero.
+                  2. CERO `toFixed(2)` EN COMPONENTES. Ningún componente de UI usa
+                     `toFixed(2)` ni `toLocaleString` para dinero. (Hoy hay 80
+                     ocurrencias sueltas en 12 componentes del POS actual: esa es la
+                     deuda que este criterio elimina.)
+                  3. REDONDEO DECLARADO. El redondeo es half-up (el que espera un
+                     cajero), no el half-even que `Intl` aplica por defecto. Se fija
+                     explícitamente, no se deja al azar del navegador.
+                  4. EL SELECTOR NO CONVIERTE. `business_currency` declara la moneda en
+                     la que se capturan los precios. NO es un conversor de divisas.
+                     Cambiarlo NO altera ningún monto guardado; solo cambia cómo se ve.
+
+Cómo se verifica:  Dos pruebas:
+                  a) Búsqueda estática en el código del POS nuevo:
+                     - No debe existir `toFixed(2)` en ningún componente de UI.
+                     - No debe existir `toLocaleString` aplicado a un monto.
+                     - Debe existir exactamente UNA definición de `formatMoney`.
+                  b) Prueba automática del formateador:
+                     - `formatMoney(1234.5)` con moneda MXN devuelve `$1,234.50`.
+                     - `formatMoney(1234.505)` redondea half-up a `$1,234.51`.
+                     - `formatMoney(0)` devuelve `$0.00`.
+                     - Un valor nulo/indefinido devuelve `$0.00` (nunca `NaN`).
+Evidencia:      Salida de la búsqueda (0 `toFixed(2)`, 1 `formatMoney`) + la prueba en verde.
+Bloqueante:     SÍ
+```
+
 ---
 
 ## SECCIÓN 5 — MATRIZ DE ACEPTACIÓN
@@ -312,8 +348,9 @@ Bloqueante:     SÍ (para escalar a más sucursales)
 | CA-18 | Rendimiento < 300 ms p95 | N-4 | NO | Medición de 100 llamadas |
 | CA-19 | Impresión idéntica | N-4 | SÍ | Comparación física |
 | CA-20 | Despliegue por sucursal | N-4 | SÍ | Instalación por un colaborador |
+| CA-21 | El dinero se presenta por un solo camino | N-2 | SÍ | Búsqueda estática + prueba del formateador |
 
-**Resumen:** 20 criterios. **18 bloqueantes**, 2 diferibles (CA-18).
+**Resumen:** 21 criterios. **19 bloqueantes**, 2 diferibles (CA-18).
 
 ---
 
@@ -333,13 +370,16 @@ Bloqueante:     SÍ (para escalar a más sucursales)
 
 **Lo que este documento deja claro:**
 
-1. "Terminado" tiene **20 criterios verificables**, no una opinión.
-2. **18 son bloqueantes**: sin ellos no se despliega.
+1. "Terminado" tiene **21 criterios verificables**, no una opinión.
+2. **19 son bloqueantes**: sin ellos no se despliega.
 3. Cada criterio tiene un **cómo se verifica** concreto: un comando, una prueba, una consulta.
 4. La paridad funcional (N-1) se exige **antes** de la corrección estructural (N-2):
    primero que haga lo mismo, después que lo haga mejor.
 5. Las cicatrices (N-3) son **bloqueantes**: un POS que pierde el DRAFT GUARD no es
    "el POS nuevo", es una regresión.
+6. El dinero tiene **un solo camino de presentación** (CA-21): un formateador, cero
+   `toFixed(2)` sueltos, redondeo declarado, y un selector que **declara** la moneda
+   pero **nunca la convierte**.
 
 **Con este documento, la fase de planificación queda cerrada.** Los 10 documentos maestros
 cubren: qué debe ser (1), qué hace hoy (2), cómo se ve (3), cómo se despliega (4), cómo se

@@ -130,7 +130,7 @@ salvo el plano fundacional y este README, que están en la raíz.
 | **7** | [`ESPECIFICACION_DE_INTERFACES_POS.md`](./ESPECIFICACION_DE_INTERFACES_POS.md) | **¿Cómo se ve y se toca cada una de las 26 interfaces?** | ✅ Mapa visual y táctil |
 | **8** | [`MODELO_DE_DATOS_DEL_NUEVO_POS.md`](./MODELO_DE_DATOS_DEL_NUEVO_POS.md) | **¿Cómo se guardan los datos?** | ✅ Cimiento (17 tablas) |
 | **9** | [`CONTRATOS_ENTRE_MODULOS_DEL_NUEVO_POS.md`](./CONTRATOS_ENTRE_MODULOS_DEL_NUEVO_POS.md) | **¿Cómo se comunican los módulos sin leer tablas ajenas?** | ✅ 17 contratos |
-| **10** | [`CRITERIOS_DE_ACEPTACION_DEL_NUEVO_POS.md`](./CRITERIOS_DE_ACEPTACION_DEL_NUEVO_POS.md) | **¿Cuándo se considera terminado?** | ✅ 20 criterios |
+| **10** | [`CRITERIOS_DE_ACEPTACION_DEL_NUEVO_POS.md`](./CRITERIOS_DE_ACEPTACION_DEL_NUEVO_POS.md) | **¿Cuándo se considera terminado?** | ✅ 21 criterios |
 
 ### Documentos de soporte (no maestros)
 
@@ -166,7 +166,7 @@ salvo el plano fundacional y este README, que están en la raíz.
 
 ---
 
-## Las 10 reglas de oro
+## Las 11 reglas de oro
 
 | # | Regla |
 |---|-------|
@@ -180,6 +180,7 @@ salvo el plano fundacional y este README, que están en la raíz.
 | **8** | **El central no es transaccional.** Si cae, las sucursales siguen. |
 | **9** | **Todo timestamp se guarda en UTC.** Se muestra en hora local. |
 | **10** | **El inventario es un ledger inmutable.** Nunca `UPDATE stock`. |
+| **11** | **El dinero se presenta por un solo camino.** Un formateador; el selector de moneda **declara**, nunca convierte. |
 
 ---
 
@@ -193,7 +194,7 @@ PLANOS-ARQUITECTONICOS-DEL-NUEVO-POS/
 ├── ESPECIFICACION_DE_INTERFACES_POS.md             # Mapa visual y táctil (26 interfaces)
 ├── MODELO_DE_DATOS_DEL_NUEVO_POS.md                # Cimiento: 17 tablas, UUID/UTC/ledger
 ├── CONTRATOS_ENTRE_MODULOS_DEL_NUEVO_POS.md        # Fronteras: 17 contratos entre módulos
-├── CRITERIOS_DE_ACEPTACION_DEL_NUEVO_POS.md        # Definición de "obra terminada" (20 criterios)
+├── CRITERIOS_DE_ACEPTACION_DEL_NUEVO_POS.md        # Definición de "obra terminada" (21 criterios)
 ├── PLANO ARQUITECTONICO PARA EL NUEVO POS.md       # Documento fundacional
 └── ESPECIFICACIONES DEL PROYECTO/
     ├── GUIA_MAESTRA_PARA_COLABORADORES_NUEVO_POS.md      # Punto de entrada

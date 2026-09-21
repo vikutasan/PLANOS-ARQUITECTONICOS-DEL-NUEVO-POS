@@ -317,6 +317,11 @@ Aplica las reglas transversales del sistema:
 - **Identidad:** UUID v4 como PK global. El entero autoincremental solo como folio de
   display, local a la sucursal.
 - **Tiempo:** todo timestamp en UTC. La conversión a hora local es de presentación.
+- **Dinero:** se guarda en `Numeric(12,2)`, nunca en `Float`. La moneda del negocio
+  (`business_currency`) **declara** en qué moneda se captura; **no convierte**. La
+  presentación pasa por **un solo formateador** (`formatMoney`); ningún componente
+  formatea dinero por su cuenta (`toFixed(2)` prohibido). El redondeo es half-up y se
+  declara explícitamente. (Ver CA-21 del Documento 10.)
 - **Inventario:** ledger inmutable. El stock se **deriva**, nunca se sobrescribe.
 
 ### 3.5 Paso 2.5 — Definir la estructura del repositorio nuevo
@@ -502,7 +507,8 @@ FASE 2 — DISEÑO
 [ ] Opinión sobre el enfoque actual
 [ ] Destino decidido para CADA hallazgo (eliminar/conservar)
 [ ] Contratos entre módulos definidos
-[ ] Modelo de datos nuevo (UUID, UTC, ledger)
+[ ] Modelo de datos nuevo (UUID, UTC, ledger, dinero en Numeric(12,2))
+[ ] Regla de presentación del dinero declarada (un formateador, cero toFixed(2))
 [ ] Estructura del repositorio nuevo
 [ ] Modo responsivo de cada interfaz verificado contra R-01 a R-04
 [ ] Artefacto: PLANO_<MODULO>.md
@@ -553,6 +559,8 @@ MIGRACIÓN
 | **6** | Omitir las reglas de oro del módulo | El colaborador no conoce las cicatrices |
 | **7** | Tocar el ERP "para arreglar algo rapidito" | Rompes la caja de una panadería en horario pico |
 | **8** | Dejar documentos del proyecto nuevo en el repo del ERP | Contaminas el repositorio de producción |
+| **9** | Formatear dinero en cada componente (`toFixed(2)` suelto) | 80 formas distintas de mostrar el mismo peso; el redondeo deja de ser predecible |
+| **10** | Confundir el selector de moneda con un conversor de divisas | El sistema "cambia" montos guardados y descuadra la caja |
 
 ---
 
