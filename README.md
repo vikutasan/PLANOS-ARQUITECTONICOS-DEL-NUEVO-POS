@@ -52,6 +52,18 @@ responsiva. Es una **regla dura**: ningún componente se acepta si no la cumple.
 > ancho fijo a parametrizar. **La estética del POS v22 se preserva al 100%; la ergonomía
 > del mostrador es intocable.**
 
+Y si vas a reconstruir **cualquier interfaz del POS** (pantalla, modal, panel, overlay,
+composición o plantilla de impresión), lee antes el mapa visual y táctil. Documenta las
+**26 interfaces reales** con una ficha de 7 puntos cada una.
+
+> ### 🖥️ [ESPECIFICACIÓN DE INTERFACES DEL POS](./ESPECIFICACION_DE_INTERFACES_POS.md)
+>
+> El **mapa visual y táctil** del Punto de Venta. Documenta las 26 interfaces (7 pantallas
+> raíz + 6 modales + 5 paneles/overlays + 4 composición + 2 impresión) con una ficha de
+> 7 puntos: propósito, estructura visual, controles, estados, navegación, modo responsivo
+> y anclaje al código. Cierra el círculo: el backend dice **qué calcula**, este documento
+> dice **cómo se ve y cómo se toca**.
+
 ---
 
 ## ¿Qué es este repositorio?
@@ -101,7 +113,7 @@ edificios nuevos.
 
 ---
 
-## Contenido (los 7 documentos maestros)
+## Contenido (los 8 documentos maestros)
 
 Todos los documentos viven en la carpeta [`ESPECIFICACIONES DEL PROYECTO/`](./ESPECIFICACIONES%20DEL%20PROYECTO/),
 salvo el plano fundacional y este README, que están en la raíz.
@@ -115,6 +127,7 @@ salvo el plano fundacional y este README, que están en la raíz.
 | **4** | [`MODELO_DESPLIEGUE_Y_CONSOLIDACION_CENTRAL.md`](./ESPECIFICACIONES%20DEL%20PROYECTO/MODELO_DESPLIEGUE_Y_CONSOLIDACION_CENTRAL.md) | **¿Dónde vive y cómo se consolida?** | ✅ Topología |
 | **5** | [`METODOLOGIA_DE_INGENIERIA_INVERSA_Y_DISENO.md`](./METODOLOGIA_DE_INGENIERIA_INVERSA_Y_DISENO.md) | **¿Cómo aplico esto a otro módulo?** | ✅ Manual de obra |
 | **6** | [`ESPECIFICACION_RESPONSIVA_Y_ERGONOMIA_TACTIL.md`](./ESPECIFICACION_RESPONSIVA_Y_ERGONOMIA_TACTIL.md) | **¿Cómo debe verse y tocarse en cualquier pantalla?** | ✅ Regla dura (A-06) |
+| **7** | [`ESPECIFICACION_DE_INTERFACES_POS.md`](./ESPECIFICACION_DE_INTERFACES_POS.md) | **¿Cómo se ve y se toca cada una de las 26 interfaces?** | ✅ Mapa visual y táctil |
 
 ### Documentos de soporte (no maestros)
 
@@ -138,6 +151,8 @@ salvo el plano fundacional y este README, que están en la raíz.
 5. METODOLOGÍA (cómo replicar)  → el manual de obra para los demás módulos
         ↓
 6. RESPONSIVA (cómo se ve/toca) → la regla dura de toda pantalla
+        ↓
+7. INTERFACES (cómo se ve cada una) → el mapa de las 26 interfaces
 ```
 
 ---
@@ -166,6 +181,7 @@ PLANOS-ARQUITECTONICOS-DEL-NUEVO-POS/
 ├── README.md                                       # Este archivo
 ├── METODOLOGIA_DE_INGENIERIA_INVERSA_Y_DISENO.md   # Manual de obra (reutilizable)
 ├── ESPECIFICACION_RESPONSIVA_Y_ERGONOMIA_TACTIL.md # Regla dura de toda pantalla
+├── ESPECIFICACION_DE_INTERFACES_POS.md             # Mapa visual y táctil (26 interfaces)
 ├── PLANO ARQUITECTONICO PARA EL NUEVO POS.md       # Documento fundacional
 └── ESPECIFICACIONES DEL PROYECTO/
     ├── GUIA_MAESTRA_PARA_COLABORADORES_NUEVO_POS.md      # Punto de entrada
