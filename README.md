@@ -222,6 +222,8 @@ PLANOS-ARQUITECTONICOS-DEL-NUEVO-POS/
 │   └── PLAN_DE_CONSTRUCCION_DEL_NUEVO_POS.md       # Etapa 5: 7 fases, 6 puertas
 ├── 06-prompt-del-arquitecto/
 │   └── PROMPT_DEL_ARQUITECTO_DEL_NUEVO_POS.md      # Estándares de calidad del constructor
+├── 07-ia-local/
+│   └── ESPECIFICACION_IA_LOCAL_Y_MULTIMODAL.md     # IA local + captura multimodal (6 decisiones)
 └── ESPECIFICACIONES DEL PROYECTO/
     ├── GUIA_MAESTRA_PARA_COLABORADORES_NUEVO_POS.md      # Punto de entrada
     ├── ESPECIFICACION_FUNCIONAL_POS_INGENIERIA_INVERSA.md # Ingeniería inversa
