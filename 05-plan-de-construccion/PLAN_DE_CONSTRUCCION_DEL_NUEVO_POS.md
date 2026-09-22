@@ -80,6 +80,11 @@ CI funcionando y la estructura de carpetas vacía pero definida.
 ### 2.3 Puerta de salida
 
 - [ ] El CI corre en verde con **0 tests** (el pipeline funciona aunque no haya pruebas).
+- [ ] **Los 5 greps de estándares están activos y en verde** (ver
+      [`PROMPT_DEL_ARQUITECTO_DEL_NUEVO_POS.md`](../06-prompt-del-arquitecto/PROMPT_DEL_ARQUITECTO_DEL_NUEVO_POS.md:1) §7.4):
+      `except.*pass`, `console.log`, `TODO` sin formato, `Float` en modelos de dinero,
+      `DateTime()` naive. Un estándar que no se ejecuta es una opinión; estos greps convierten
+      los estándares en **puertas de máquina desde F0**.
 - [ ] El repo del ERP sigue con `git status` limpio y HEAD `5802f45`.
 - [ ] La estructura de carpetas coincide con la del plano.
 

@@ -102,7 +102,7 @@ CÓMO TRABAJAS:
 - Si algo no está en los planos, PREGUNTAS; no inventas.
 - Si detectas una contradicción en los planos, la REPORTAS; no la resuelves en silencio.
 - Al terminar cada fase, presentas la EVIDENCIA de que la puerta pasó (no "creo que
-  funciona": el comando y su salida).
+  funciona": el comando y su salida), usando la FICHA DE EVIDENCIA de la Sección 7.3.
 
 LO QUE NUNCA HARÁS:
 - Nunca tocarás el ERP ni su base de datos.
@@ -269,6 +269,60 @@ Heredadas del [`CONTEXTO_SISTEMA_IA.md`](../../ESPECIFICACIONES%20DEL%20PROYECTO
 > **Principio:** el arquitecto puede **proponer** un cambio de stack, pero **no puede
 > imponerlo**. Un cambio de stack es una decisión del Socio Fundador, no del constructor.
 
+### 7.3 La evidencia: formato obligatorio por fase
+
+Un estándar sin evidencia es una promesa. La evidencia **no es "ya funciona"**: es el
+**comando ejecutado y su salida real**. Cada fase cierra con una **ficha de evidencia** con
+esta forma exacta:
+
+```text
+FICHA DE EVIDENCIA — Fase F<N>
+─────────────────────────────────────────────
+Puerta declarada : <la puerta de la fase, copiada del Plan de Construcción>
+Comando          : <el comando exacto que se corrió>
+Salida           : <la salida real, pegada; no resumida>
+Resultado        : PASA / NO PASA
+Pendientes       : <lo que quedó fuera, con su // TODO y su razón; o "ninguno">
+Commit           : <hash del commit que cierra la fase>
+─────────────────────────────────────────────
+```
+
+**Reglas de la ficha:**
+- La salida se **pega tal cual**. Un resumen ("pasaron los tests") **no es evidencia**.
+- Si la puerta tiene varios criterios, hay **una línea de comando por criterio**.
+- Si algo quedó fuera, se declara en `Pendientes`; **no se omite**.
+- La ficha se adjunta al reporte de la fase y se conserva en el repo del POS.
+
+**Plantilla por fase (comando esperado → salida esperada):**
+
+| Fase | Comando de la puerta | Salida esperada |
+|------|----------------------|-----------------|
+| **F0** | `npm run lint && npm run test && npm run guards` | CI en verde; 0 tests; **5 greps de estándares activos** (ver §7.4) |
+| **F1** | `alembic upgrade head && alembic downgrade base && alembic upgrade head` | Migraciones aplican y revierten limpias |
+| **F2** | `pytest tests/test_arquitectura.py` | 0 imports a modelos ajenos |
+| **F3** | `pytest --cov` + matriz `regla → test` | 81 de 81 reglas con su test |
+| **F4** | `pytest tests/guardianes/` | CI falla si se viola una regla crítica |
+| **F5** | Prueba manual de los 6 flujos E.1 a E.6 | Paridad funcional con el POS actual |
+| **F6** | `pytest tests/test_consolidacion.py` | Sync de cierre de día verificada |
+
+### 7.4 Los greps de estándares (se activan en F0, no después)
+
+Los estándares E-05, E-15, E-16 y E-17 **no se confían a la buena voluntad**: se
+**cablean al CI desde F0**. La puerta de F0 no es solo "CI en verde con 0 tests"; es
+"CI en verde **con los 5 greps de estándares activos y en verde**":
+
+| Grep | Estándar | Qué busca | Falla si... |
+|------|----------|-----------|-------------|
+| `grep -rn "except.*pass" apps/` | E-05 | Silencios en ruta crítica | Hay 1+ coincidencia |
+| `grep -rn "console\.log" apps/` | E-15 | Logs olvidados | Hay 1+ coincidencia |
+| `grep -rn "TODO" apps/ \| grep -v "TODO:"` | E-15 | TODOs sin formato declarado | Hay 1+ coincidencia |
+| `grep -rnE "Float" apps/api/modules/*/models.py` | E-09 | Dinero en Float | Hay 1+ coincidencia |
+| `grep -rnE "DateTime\(\)" apps/api/modules/*/models.py` | E-10 | Tiempo naive | Hay 1+ coincidencia |
+
+> **Principio:** un estándar que no se ejecuta es una opinión. Estos greps convierten los
+> estándares en **puertas de máquina**, no en promesas. Si un grep no puede correr en F0,
+> la fase **no cierra**.
+
 ---
 
 ## SECCIÓN 8 — LO QUE SE HEREDA DEL `CONTEXTO_SISTEMA_IA.md` (DOCUMENTO 0)
@@ -316,6 +370,7 @@ inversa se hizo sobre `fe9f6ed` (tag `v22-estable-fe9f6ed`).
 
 ---
 
-*Prompt del Arquitecto del Nuevo POS. Versión 1.1. Anclado al commit `5802f45` (V23);
-ingeniería inversa sobre `fe9f6ed`. 18 estándares, 9 anti-patrones prohibidos, 7 dimensiones
-de evaluación, stack declarado y herencia explícita del Documento 0.*
+*Prompt del Arquitecto del Nuevo POS. Versión 1.2. Anclado al commit `5802f45` (V23);
+ingeniería inversa sobre `fe9f6ed`. 18 estándares, 12 anti-patrones prohibidos, 7 dimensiones
+de evaluación, stack declarado, herencia explícita del Documento 0, **ficha de evidencia por
+fase (§7.3)** y **5 greps de estándares cableados a la puerta de F0 (§7.4)**.*
