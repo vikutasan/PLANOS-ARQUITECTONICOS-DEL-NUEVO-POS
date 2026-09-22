@@ -9,7 +9,7 @@
 
 ## §0. Por qué existe este documento
 
-El ERP actual es **responsivo a medias, de forma inconsistente**. La auditoría del código real (v22, commit `fe9f6ed`) reveló una asimetría clara:
+El ERP actual es **responsivo a medias, de forma inconsistente**. La auditoría del código real (v22, commit `fe9f6ed`; el ERP hoy corre en `5802f45`, V23) reveló una asimetría clara:
 
 | Zona del sistema | Estado responsivo | Evidencia |
 |---|---|---|
@@ -195,7 +195,7 @@ Todo elemento interactivo (botón, celda de numpad, ítem de lista, checkbox) de
 
 ## §4. Inventario de contenedores a parametrizar
 
-Auditoría del código real (v22, commit `fe9f6ed`). Estos son los contenedores que **deben** nacer fluidos en el Nuevo POS.
+Auditoría del código real (v22, commit `fe9f6ed`; el ERP hoy corre en `5802f45`, V23). Estos son los contenedores que **deben** nacer fluidos en el Nuevo POS.
 
 ### §4.1 POS transaccional — CRÍTICOS (bloquean el cobro)
 
@@ -330,5 +330,5 @@ Antes de aceptar cualquier componente del Nuevo POS, verificar:
 ---
 
 *Documento maestro #6 — Nuevo POS*
-*Generado a partir de la auditoría del código real v22 (commit `fe9f6ed`)*
+*Generado a partir de la auditoría del código real v22 (commit `fe9f6ed`; el ERP hoy corre en `5802f45`, V23)*
 *28 contenedores de ancho fijo catalogados en `apps/pos/`, 81 en el ERP completo*

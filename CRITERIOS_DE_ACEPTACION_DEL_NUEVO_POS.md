@@ -10,8 +10,9 @@
 > por evidencia.* Cada criterio tiene un **cómo se verifica** concreto (un comando, una
 > prueba, una consulta). Si no se puede verificar, no es un criterio: es un deseo.
 >
-> **Anclaje.** Este documento está anclado al commit `fe9f6ed` (tag `v22-estable-fe9f6ed`)
-> del ERP actual. Los criterios de paridad se comparan contra el POS actual en ese commit.
+> **Anclaje.** Este documento está anclado al commit `5802f45` (V23) del ERP actual. La
+> ingeniería inversa se hizo sobre `fe9f6ed` (tag `v22-estable-fe9f6ed`); los criterios de
+> paridad se comparan contra el POS actual en ese commit.
 
 ---
 

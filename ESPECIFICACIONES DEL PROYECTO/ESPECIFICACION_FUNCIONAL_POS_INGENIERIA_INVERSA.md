@@ -6,6 +6,38 @@
 > **Fecha:** 2026-09-21.
 > **Alcance:** Módulo POS del ERP R de Rico (v7.0.3 / v22), incluyendo sus acoplamientos con Caja, Almacenes, Pedidos, Catálogo y Visión.
 > **Regla dura:** Este documento NO modifica el ERP en producción. Es un artefacto de análisis.
+> **Anclaje original:** commit `fe9f6ed` (tag `v22-estable-fe9f6ed`).
+> **Re-anclaje:** 22 Sep 2026 — commit `5802f45` (V23). Ver §A.4.
+
+---
+
+## §A.4 — NOTA DE RE-ANCLAJE (22 Sep 2026)
+
+> **Por qué existe esta nota.** Este documento se escribió leyendo el POS en el commit
+> `fe9f6ed`. Desde entonces el ERP avanzó a `5802f45` (V23). El **comportamiento del POS
+> no cambió**, pero **dos cosas sí**, y quien reconstruya el Nuevo POS debe saberlo.
+
+### A.4.1 Qué cambió entre `fe9f6ed` y `5802f45` que toca al POS
+
+| Cambio | Versión | Qué hizo | Efecto sobre este documento |
+|--------|---------|----------|-----------------------------|
+| **Operaciones atómicas por ítem** | V22 | Cada operación de ítem (agregar/actualizar/eliminar) es transaccional y valida `version` | **Ya estaba documentado** (RN-17 a RN-30, F-12 a F-14). Sin cambio. |
+| **Dinero `Float` → `Numeric(12,2)`** | V23 | 36 columnas de dinero migradas en todo el ERP, incluidas `tickets.total`, `ticket_items.unit_price`, `ticket_items.subtotal` | **Este documento ya declaraba `Numeric(12,2)`** ([§D.1.2](:299), [§D.1.3](:315)) porque se leyó el modelo, no la BD. Ahora **la BD coincide con el modelo**. Deuda saldada. |
+| **`business_currency` sembrado** | V23 | Nueva clave en `system_settings` + `GET /settings/currency` | El POS **consume** configuración (AC-06). El contrato de Configuración ahora expone moneda. Ver [`ESPECIFICACION_FUNCIONAL_VISTA_GENERAL.md`](ESPECIFICACION_FUNCIONAL_VISTA_GENERAL.md:1). |
+
+### A.4.2 Qué NO cambió
+
+- Las **81 reglas** (RN-01 a RN-81) siguen vigentes sin excepción.
+- Los **29 hallazgos** (5 deudas + 10 acoplamientos + 10 debilidades + 4 riesgos) siguen vigentes.
+- Las **33 funcionalidades** (F-01 a F-33) siguen vigentes.
+- El **offset hardcodeado** de [`cash/service.py:189`](../../apps/api/modules/cash/service.py:189) (DB-04) **sigue ahí**: V23 no lo tocó. RN-81 sigue violada en Caja.
+
+### A.4.3 La consecuencia práctica
+
+El criterio de aceptación **G6** del [`PLAN_ACCION_ARQUITECTONICO_NUEVO_POS.md`](PLAN_ACCION_ARQUITECTONICO_NUEVO_POS.md:231)
+decía *"HEAD `fe9f6ed`"*. **Era falso desde V19.** Se corrigió a `5802f45` en el mismo
+commit que esta nota. La regla dura **no cambia**: el ERP no se toca; solo se actualiza
+la referencia de qué versión se leyó.
 
 ---
 
@@ -631,7 +663,7 @@ Ticket ──(emite)──> WarehouseEvent ──(procesa)──> MovimientoInve
 
 ### H.4 Declaración de regla dura
 
-> **REGLA DURA:** Este documento es un artefacto de análisis. **No se ha modificado ni se modificará el ERP en producción.** Todo trabajo derivado (el nuevo POS) se realizará en un proyecto y repositorio separados. El ERP actual permanece intacto en el commit `fe9f6ed` (tag `v22-estable-fe9f6ed`).
+> **REGLA DURA:** Este documento es un artefacto de análisis. **No se ha modificado ni se modificará el ERP en producción.** Todo trabajo derivado (el nuevo POS) se realizará en un proyecto y repositorio separados. El ERP actual permanece intacto y operando; su HEAD es `5802f45` (V23) al 22 Sep 2026. La ingeniería inversa se hizo sobre `fe9f6ed` (tag `v22-estable-fe9f6ed`); ver §A.4 para los cambios posteriores que tocan al POS.
 
 ---
 

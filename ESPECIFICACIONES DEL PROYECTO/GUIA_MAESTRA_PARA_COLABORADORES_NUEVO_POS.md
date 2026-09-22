@@ -90,7 +90,7 @@ Por eso el trabajo se hace **al lado**, en un **proyecto nuevo**, en un **reposi
 ```bash
 # En el repo del ERP:
 git status --short      # Solo deben aparecer archivos .md sin trackear
-git log -1 --format="%h"  # Debe seguir siendo fe9f6ed
+git log -1 --format="%h"  # Debe seguir siendo 5802f45 (V23)
 ```
 
 Si el HEAD cambió o hay archivos de código modificados, **la regla dura se violó**.
@@ -355,7 +355,7 @@ estás listo para trabajar en el proyecto.
 - [ ] Leí el **Documento 4 (Despliegue)** — al menos las Secciones 0, 1 y 2.
 - [ ] Memorizo las **10 reglas de oro** (Sección 4).
 - [ ] Sé que **no debo limpiar las cicatrices** (Sección 5.1).
-- [ ] Verifiqué que el **ERP sigue intacto** (`git status` + HEAD `fe9f6ed`).
+- [ ] Verifiqué que el **ERP sigue intacto** (`git status` + HEAD `5802f45`).
 - [ ] Sé en qué **repositorio** debo trabajar (Sección 5.3).
 
 ---
@@ -367,9 +367,10 @@ estás listo para trabajar en el proyecto.
 > **NO SE MODIFICA NI UNA LÍNEA DEL POS ACTUAL.**
 
 Este documento es el **punto de entrada** al proyecto. No contiene código de producción.
-El ERP permanece intacto y operando, anclado al commit `fe9f6ed` (tag `v22-estable-fe9f6ed`).
+El ERP permanece intacto y operando; su HEAD es `5802f45` (V23) al 22 Sep 2026. La ingeniería
+inversa se hizo sobre `fe9f6ed` (tag `v22-estable-fe9f6ed`).
 
 ---
 
-*Guía maestra de incorporación. Versión 1.0. Anclada al commit `fe9f6ed`.
+*Guía maestra de incorporación. Versión 1.1. Anclada al commit `5802f45` (V23); ingeniería inversa sobre `fe9f6ed`.
 Topología: hub-and-spoke (ERP completo por sucursal + servidor central corporativo).*

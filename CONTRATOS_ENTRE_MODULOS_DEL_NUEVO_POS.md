@@ -16,8 +16,9 @@
 > crea una **doble fuente de verdad** y **hardcodea la sucursal**, lo que rompe el principio
 > SaaS (una instalación por sucursal). Este documento define el sustituto correcto.
 >
-> **Anclaje.** Este documento está anclado al commit `fe9f6ed` (tag `v22-estable-fe9f6ed`)
-> del ERP actual. Cada acoplamiento que se corrige se cita con su `archivo:línea`.
+> **Anclaje.** Este documento está anclado al commit `5802f45` (V23) del ERP actual. La
+> ingeniería inversa se hizo sobre `fe9f6ed` (tag `v22-estable-fe9f6ed`). Cada acoplamiento
+> que se corrige se cita con su `archivo:línea`.
 
 ---
 

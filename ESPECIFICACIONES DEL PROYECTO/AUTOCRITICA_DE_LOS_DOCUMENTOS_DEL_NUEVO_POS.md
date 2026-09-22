@@ -5,7 +5,7 @@
 > fuentes autoritativas ([`DOCUMENTACION_MODULO_POS.md`](ESPECIFICACIONES DEL PROYECTO/DOCUMENTACION_MODULO_POS.md:1),
 > [`CONTEXTO_SISTEMA_IA.md`](ESPECIFICACIONES DEL PROYECTO/CONTEXTO_SISTEMA_IA.md:1)) y al **código real** del POS.
 > **Regla dura:** no se toca el ERP. Este documento es un artefacto de diseño.
-> **Anclaje:** commit `fe9f6ed` (tag `v22-estable-fe9f6ed`).
+> **Anclaje:** commit `5802f45` (V23); ingeniería inversa sobre `fe9f6ed` (tag `v22-estable-fe9f6ed`).
 
 ---
 
@@ -190,16 +190,19 @@ no se tiran: se **anclan** a sus fuentes.
 
 ---
 
-## SECCIÓN 6 — LAS CORRECCIONES A APLICAR
+## SECCIÓN 6 — LAS CORRECCIONES (APLICADAS)
 
-| # | Corrección | Documento | Tipo |
-|---|-----------|-----------|------|
-| **C-1** | Añadir nota de trazabilidad: `CONTEXTO_SISTEMA_IA.md` §3.3 es la fuente autoritativa de la topología | `MODELO_DESPLIEGUE...` §0 | Añadir |
-| **C-2** | Alinear la frecuencia de sync al default establecido (23:30, cierre del día) | `MODELO_DESPLIEGUE...` §2.3 | Corregir |
-| **C-3** | Añadir la tabla de los dos sistemas de numeración (RN-XX vs Regla N) | `GUIA_MAESTRA...` §4/§6 | Añadir |
-| **C-4** | Añadir las 21 Reglas de Oro (las 9 críticas) con su incidente | `GUIA_MAESTRA...` §5 | Añadir |
-| **C-5** | Mencionar los 3 niveles de conectividad (§3.3.2) y la resolución de conflictos (§3.3.5) | `MODELO_DESPLIEGUE...` §2 | Añadir |
-| **C-6** | Añadir `CONTEXTO_SISTEMA_IA.md` a la lista de documentos maestros | `GUIA_MAESTRA...` §2 | Añadir |
+> **Estado (22 Sep 2026):** las 6 correcciones fueron **aplicadas** en los documentos destino.
+> Se registra aquí la evidencia para cerrar el ciclo de la autocrítica.
+
+| # | Corrección | Documento | Tipo | Estado | Evidencia |
+|---|-----------|-----------|------|--------|-----------|
+| **C-1** | Añadir nota de trazabilidad: `CONTEXTO_SISTEMA_IA.md` §3.3 es la fuente autoritativa de la topología | `MODELO_DESPLIEGUE...` §0 | Añadir | ✅ Aplicada | Bloque "⚠️ NOTA DE TRAZABILIDAD (autocrítica v1.1)" al inicio del documento |
+| **C-2** | Alinear la frecuencia de sync al default establecido (23:30, cierre del día) | `MODELO_DESPLIEGUE...` §2.3 | Corregir | ✅ Aplicada | Tabla de dominios con "Al cierre del día (default `23:30`)" + bloque de alineación §3.3.3 |
+| **C-3** | Añadir la tabla de los dos sistemas de numeración (RN-XX vs Regla N) | `GUIA_MAESTRA...` §4/§6 | Añadir | ✅ Aplicada | §4.1 "DOS SISTEMAS DE NUMERACIÓN DISTINTOS" + glosario `RN-XX` |
+| **C-4** | Añadir las 21 Reglas de Oro (las 9 críticas) con su incidente | `GUIA_MAESTRA...` §5 | Añadir | ✅ Aplicada | §5.0 "LAS 21 REGLAS DE ORO DEL POS" con tabla de 9 reglas + incidente |
+| **C-5** | Mencionar los 3 niveles de conectividad (§3.3.2) y la resolución de conflictos (§3.3.5) | `MODELO_DESPLIEGUE...` §2 | Añadir | ✅ Aplicada | §2.7 "Los 3 niveles de conectividad" + §2.8 "La resolución de conflictos" |
+| **C-6** | Añadir `CONTEXTO_SISTEMA_IA.md` a la lista de documentos maestros | `GUIA_MAESTRA...` §2 | Añadir | ✅ Aplicada | §2 "Documento 0" + §2.0 "El Contexto del Sistema (máxima autoridad)" |
 
 ---
 
@@ -210,10 +213,11 @@ no se tiran: se **anclan** a sus fuentes.
 > **NO SE MODIFICA NI UNA LÍNEA DEL POS ACTUAL.**
 
 Este documento es un artefacto de diseño. No contiene código de producción.
-El ERP permanece intacto y operando, anclado al commit `fe9f6ed` (tag `v22-estable-fe9f6ed`).
+El ERP permanece intacto y operando; su HEAD es `5802f45` (V23) al 22 Sep 2026. La ingeniería
+inversa se hizo sobre `fe9f6ed` (tag `v22-estable-fe9f6ed`).
 
 ---
 
-*Informe de autocrítica. Versión 1.0. Anclado al commit `fe9f6ed`.
+*Informe de autocrítica. Versión 1.2. Anclado al commit `5802f45` (V23); ingeniería inversa sobre `fe9f6ed`.
 3 defectos materiales encontrados (1 alto, 2 medios). 0 afirmaciones técnicas falsas.
-6 correcciones propuestas.*
+6 correcciones propuestas — **6 aplicadas** (ver Sección 6).*

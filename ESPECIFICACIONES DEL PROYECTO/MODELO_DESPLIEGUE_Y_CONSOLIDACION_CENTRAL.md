@@ -480,10 +480,11 @@ operativa + consolidación garantizada**.
 
 Este documento es un artefacto de diseño derivado de la ingeniería inversa del POS actual
 (commit `fe9f6ed`, tag `v22-estable-fe9f6ed`) y de la aclaración del negocio sobre la
-topología de despliegue. No contiene código de producción. El ERP permanece intacto y operando.
+topología de despliegue. No contiene código de producción. El ERP permanece intacto y
+operando; su HEAD es `5802f45` (V23) al 22 Sep 2026.
 
 ---
 
-*Documento complementario al plano fundacional y al plan de acción. Versión 1.0.
-Anclado al commit `fe9f6ed`. Topología: hub-and-spoke (ERP completo por sucursal +
-servidor central corporativo de consolidación).*
+*Documento complementario al plano fundacional y al plan de acción. Versión 1.1.
+Anclado al commit `5802f45` (V23); ingeniería inversa sobre `fe9f6ed`. Topología: hub-and-spoke
+(ERP completo por sucursal + servidor central corporativo de consolidación).*

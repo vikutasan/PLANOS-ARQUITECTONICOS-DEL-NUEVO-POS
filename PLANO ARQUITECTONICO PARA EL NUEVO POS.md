@@ -71,9 +71,9 @@ TÉCNICAS** (el *cómo*). Este documento solo contiene lo primero.
 
 **Riesgo 3 — El POS actual cambia mientras planificamos.**
 El ERP en producción seguirá evolucionando. El plano podría quedar desactualizado.
-*Mitigación:* el plano se ancla a un **commit congelado** del POS actual (el commit
-`fe9f6ed`, tag `v22-estable-fe9f6ed`). Cualquier divergencia posterior es una decisión
-consciente, no un accidente.
+*Mitigación:* el plano se ancla a un **commit congelado** del POS actual (la ingeniería
+inversa se hizo sobre `fe9f6ed`, tag `v22-estable-fe9f6ed`; el ERP hoy corre en `5802f45`,
+V23). Cualquier divergencia posterior es una decisión consciente, no un accidente.
 
 ### 0.3 Lo que este enfoque NO es
 
@@ -106,7 +106,8 @@ Un monolito modular con **contratos explícitos** es la forma correcta porque:
 ## SECCIÓN 1 — LOGICA DEL NEGOCIO
 
 > **Esta sección describe QUÉ hace el módulo POS, sin mencionar código de interfaz.**
-> Cada regla está trazada a su origen en el POS actual (commit `fe9f6ed`).
+> Cada regla está trazada a su origen en el POS actual (commit `fe9f6ed`; ver §A.4 de la
+> Especificación Funcional para los cambios posteriores que tocan al POS).
 > Las reglas se numeran `RN-XX` (Regla de Negocio) para poder referenciarlas en los
 > contratos de la Sección 2.
 
@@ -763,7 +764,8 @@ POS sea robusto: **cobrar es lo único que no puede fallar.**
 
 **Paso 1 — Congelar la fuente.**
 Anclar la lectura al commit `fe9f6ed` (tag `v22-estable-fe9f6ed`). Cualquier lectura
-posterior es sobre una versión distinta y debe re-trazarse.
+posterior es sobre una versión distinta y debe re-trazarse. (El ERP hoy corre en `5802f45`,
+V23; los cambios V22/V23 que tocan al POS están en §A.4 de la Especificación Funcional.)
 
 **Paso 2 — Inventariar los puntos de entrada.**
 Listar todas las operaciones que el POS expone (crear sesión, reservar, agregar ítem,
@@ -921,7 +923,8 @@ Los siguientes módulos existen en el ERP actual pero **su rol transversal aún 
 > **NO SE MODIFICA NI UNA LÍNEA DEL POS ACTUAL.**
 
 Este documento se produjo **leyendo** el POS actual (solo lectura), anclado al commit
-`fe9f6ed` (tag `v22-estable-fe9f6ed`). El ERP permanece intacto y operando.
+`fe9f6ed` (tag `v22-estable-fe9f6ed`). El ERP permanece intacto y operando; su HEAD es
+`5802f45` (V23) al 22 Sep 2026.
 
 El POS actual es la **fuente de verdad funcional** (lo que hace). Este plano es la
 **fuente de verdad estructural** (cómo debería construirse). Copiamos su
@@ -929,4 +932,4 @@ El POS actual es la **fuente de verdad funcional** (lo que hace). Este plano es 
 
 ---
 
-*Documento fundacional. Versión 1.0. Anclado al commit `fe9f6ed` del ERP actual.*
+*Documento fundacional. Versión 1.1. Anclado al commit `5802f45` (V23) del ERP actual; ingeniería inversa sobre `fe9f6ed`.*

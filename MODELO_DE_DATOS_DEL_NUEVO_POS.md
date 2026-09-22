@@ -13,8 +13,9 @@
 > naive, mañana habrá UTC explícito; donde hoy hay un `UPDATE stock`, mañana habrá un
 > asiento en el ledger.
 >
-> **Anclaje.** Este documento está anclado al commit `fe9f6ed` (tag `v22-estable-fe9f6ed`)
-> del ERP actual. Cada tabla del esquema actual se cita con su `archivo:línea`.
+> **Anclaje.** Este documento está anclado al commit `5802f45` (V23) del ERP actual. La
+> ingeniería inversa se hizo sobre `fe9f6ed` (tag `v22-estable-fe9f6ed`). Cada tabla del
+> esquema actual se cita con su `archivo:línea`.
 
 ---
 

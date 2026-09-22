@@ -228,7 +228,7 @@ si se comparte BD entre sucursales.
 | G3 | Ninguna regla crítica puede violarse sin que CI falle | Suite de guardianes en verde/rojo |
 | G4 | No hay `try/except pass` en la ruta crítica | Búsqueda automatizada en CI |
 | G5 | Ninguna regla de negocio usa el folio como identidad | Revisión de la matriz de trazabilidad |
-| G6 | El ERP permanece intacto | `git status` del ERP limpio; HEAD `fe9f6ed` |
+| G6 | El ERP permanece intacto | `git status` del ERP limpio; HEAD `5802f45` (V23) |
 
 ---
 
@@ -240,8 +240,25 @@ si se comparte BD entre sucursales.
 
 Este documento es un artefacto de diseño derivado de la ingeniería inversa del POS actual
 (commit `fe9f6ed`, tag `v22-estable-fe9f6ed`). No contiene código de producción. El ERP
-permanece intacto y operando.
+permanece intacto y operando; su HEAD es `5802f45` (V23) al 22 Sep 2026.
 
 ---
 
-*Documento complementario al plano fundacional. Versión 1.0. Anclado al commit `fe9f6ed`.*
+## SECCIÓN 6 — NOTA DE RE-ANCLAJE (22 Sep 2026)
+
+> **Por qué existe esta nota.** Este plan se escribió leyendo el POS en el commit `fe9f6ed`.
+> Desde entonces el ERP avanzó a `5802f45` (V23). El **comportamiento del POS no cambió**,
+> pero el **anclaje del criterio G6 sí quedó obsoleto** y se corrigió arriba.
+
+| Cambio entre `fe9f6ed` y `5802f45` | Efecto sobre este plan |
+|------------------------------------|------------------------|
+| **V22 — Operaciones atómicas por ítem** | Ya contemplado en A-01/A-03. Sin cambio. |
+| **V23 — Dinero `Float` → `Numeric(12,2)`** | Refuerza A-02 (frontera por contratos): el POS ya no puede asumir `Float`. Sin cambio de acción. |
+| **V23 — `business_currency` sembrado** | El POS **consume** configuración (AC-06). Sin cambio de acción. |
+
+**Lo que NO cambió:** las 5 acciones (A-01 a A-05), los 29 hallazgos cubiertos, el orden de
+ejecución y los criterios G1 a G5 siguen vigentes sin excepción. Solo G6 se re-ancló.
+
+---
+
+*Documento complementario al plano fundacional. Versión 1.1. Anclado al commit `5802f45` (V23); ingeniería inversa sobre `fe9f6ed`.*

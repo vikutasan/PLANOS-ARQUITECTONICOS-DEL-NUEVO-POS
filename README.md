@@ -218,6 +218,8 @@ PLANOS-ARQUITECTONICOS-DEL-NUEVO-POS/
 ├── CRITERIOS_DE_ACEPTACION_DEL_NUEVO_POS.md        # Definición de "obra terminada" (21 criterios)
 ├── DIRECTRICES_TRANSVERSALES_DEL_ERP.md            # Reglas transversales (DT-01 a DT-06) + matriz
 ├── PLANO ARQUITECTONICO PARA EL NUEVO POS.md       # Documento fundacional
+├── 05-plan-de-construccion/
+│   └── PLAN_DE_CONSTRUCCION_DEL_NUEVO_POS.md       # Etapa 5: 7 fases, 6 puertas
 └── ESPECIFICACIONES DEL PROYECTO/
     ├── GUIA_MAESTRA_PARA_COLABORADORES_NUEVO_POS.md      # Punto de entrada
     ├── ESPECIFICACION_FUNCIONAL_POS_INGENIERIA_INVERSA.md # Ingeniería inversa
@@ -243,14 +245,15 @@ PLANOS-ARQUITECTONICOS-DEL-NUEVO-POS/
 │   └── contrato-vision.md
 ├── 03-modelo-de-datos/                             # ✅ Cubierto por el Documento 8
 ├── 04-estructura-de-modulos/                       # (Etapa 3 — pendiente)
-└── 05-plan-de-construccion/                        # (Etapa 5 — pendiente)
+└── 05-plan-de-construccion/                        # ✅ Cubierto por el Plan de Construcción
 ```
 
 ---
 
 ## Anclaje
 
-El plano está anclado al commit `fe9f6ed` (tag `v22-estable-fe9f6ed`) del ERP actual.
+El plano está anclado al commit `5802f45` (V23) del ERP actual. La ingeniería inversa se hizo
+sobre `fe9f6ed` (tag `v22-estable-fe9f6ed`); ver la nota de re-anclaje en cada documento.
 Cualquier divergencia posterior del ERP es una decisión consciente, no un accidente.
 
 ---

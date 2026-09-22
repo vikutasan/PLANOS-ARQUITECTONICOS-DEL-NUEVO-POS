@@ -596,7 +596,8 @@ Este método produce **documentos** en el repositorio
 
 ---
 
-*Metodología de ingeniería inversa y diseño. Versión 1.0.
-Derivada del trabajo realizado sobre el módulo POS (v22, commit `fe9f6ed`).
+*Metodología de ingeniería inversa y diseño. Versión 1.1.
+Derivada del trabajo realizado sobre el módulo POS (v22, commit `fe9f6ed`; el ERP hoy corre
+en `5802f45`, V23).
 Aplicable a: Almacenes, Productos, RRHH, Estadísticas, Auditoría, Heladería,
 Reparto, Monitoreo de Red, Pedidos, Perfiles.*
