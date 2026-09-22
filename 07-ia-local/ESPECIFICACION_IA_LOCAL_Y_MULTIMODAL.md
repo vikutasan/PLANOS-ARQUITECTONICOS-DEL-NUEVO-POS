@@ -1,9 +1,28 @@
 # ESPECIFICACIÓN — IA LOCAL Y CAPTURA MULTIMODAL
 
-> **Estado:** Decisión arquitectónica tomada. Pendiente de ejecución.
+> **Estado:** Decisión arquitectónica tomada. **Parcialmente implementada** (ver §0.1).
 > **Fecha:** 22 Sep 2026
 > **Autoridad:** Este documento **hereda** de [`CONTEXTO_SISTEMA_IA.md`](../../ESPECIFICACIONES%20DEL%20PROYECTO/CONTEXTO_SISTEMA_IA.md:1) (Documento 0) y de [`SPEC_AI_GATEWAY_TRANSVERSAL.md`](../../docs/SPEC_AI_GATEWAY_TRANSVERSAL.md:1). Si hay contradicción, **prevalece el Documento 0**.
 > **Alcance:** Aplica al **ERP en operación** (integración sin destruir el POS) y al **NUEVO POS** (arquitectura nativa).
+> **Ancla:** `5802f45` (V23) para el núcleo del plano; `c0c66fe` (v26.1) para la parte de IA. Ver [`ACTA_DE_RECONCILIACION_IA.md`](ACTA_DE_RECONCILIACION_IA.md:1).
+
+---
+
+## 0.1 ESTADO DE IMPLEMENTACIÓN (RECONCILIACIÓN v26.1)
+
+> **Nota de reconciliación:** entre el ancla `5802f45` (V23) y el commit `c0c66fe` (v26.1), la IA **se construyó parcialmente** en el ERP en operación. Esta sección registra qué está hecho y qué no. El detalle completo está en [`ACTA_DE_RECONCILIACION_IA.md`](ACTA_DE_RECONCILIACION_IA.md:1).
+
+| Decisión | Estado real (v26.1) | Nota |
+|---|---|---|
+| **D-1** | ✅ Implementada | Desfase de nombre: el código usa `AI_HABILITADA`, no `AI_LOCAL_ENABLED` |
+| **D-2** | ✅ Parcial | Flexibilidad por URL implementada; `AI_LOCAL_MODE` **no** existe |
+| **D-3** | ✅ Parcial | Arquitectura de conteo construida; faltan las 300 imágenes por tipo de pan |
+| **D-4** | ✅ Parcial | E1-E3 construidas; **E4 (mAP) no existe**; entrenamiento **síncrono** (concesión) |
+| **D-5** | ✅ Implementada | Fallback 503 completo |
+| **D-6** | ⚠️ Concesión | Se tocó `pos/service.py` (viola la regla de oro §6.2) |
+| **A-1** | ✅ Implementada | Multimodalidad respetada |
+
+**Deudas registradas:** ver §12.
 
 ---
 
@@ -34,7 +53,9 @@ La IA deja de ser un experimento y se convierte en una **capacidad declarada** d
 > *"El módulo de almacenes NUNCA debe romperse porque la IA no esté."*
 > — [`service.py`](../../apps/api/modules/ai/service.py:3)
 
-Esta regla ya está implementada en el código: [`_ia_habilitada()`](../../apps/api/modules/ai/service.py:32) lee `AI_LOCAL_ENABLED` (default `false`) y [`_lanzar_no_disponible()`](../../apps/api/modules/ai/service.py:47) lanza el 503 estándar.
+Esta regla ya está implementada en el código: [`_ia_habilitada()`](../../apps/api/modules/ai/service.py:46) lee `AI_HABILITADA` (default `false`) y [`_lanzar_no_disponible()`](../../apps/api/modules/ai/service.py:69) lanza el 503 estándar.
+
+> **Nota de reconciliación (C-1):** el nombre canónico de la variable es **`AI_HABILITADA`** (así está en el código real). Versiones anteriores de este documento citaban `AI_LOCAL_ENABLED`, que **no existe** en el código.
 
 ### 1.3 Habilitación prioritaria
 
@@ -74,14 +95,16 @@ def _url_motor_ia() -> str:
 
 ### 2.3 Variables de entorno (contrato de configuración)
 
-| Variable | Default | Descripción |
-|---|---|---|
-| `AI_LOCAL_ENABLED` | `false` | Interruptor maestro. Apagado = modo manual puro |
-| `AI_LOCAL_URL` | `""` (vacío) | URL base del motor. Define el modo (M1/M2/M3) |
-| `AI_LOCAL_TIMEOUT` | `30` | Segundos antes de degradar a 503 |
-| `AI_LOCAL_MODE` | `local` | Etiqueta informativa: `local` \| `central` \| `cloud` |
+| Variable | Default | Descripción | Estado real (v26.1) |
+|---|---|---|---|
+| `AI_HABILITADA` | `false` | Interruptor maestro. Apagado = modo manual puro | ✅ Implementada |
+| `AI_LOCAL_URL` | `""` (vacío) | URL base del motor. Define el modo (M1/M2/M3) | ✅ Implementada |
+| `AI_LOCAL_TIMEOUT` | `30` | Segundos antes de degradar a 503 | ✅ Implementada |
+| `AI_LOCAL_MODE` | `local` | Etiqueta informativa: `local` \| `central` \| `cloud` | ❌ **No implementada** (pendiente) |
 
 > **Regla:** `AI_LOCAL_MODE` es **solo informativo** (para diagnóstico y UI). El comportamiento **nunca** debe ramificar según este valor. Si el código hace `if mode == "cloud"`, es un error de diseño.
+
+> **Nota de reconciliación (C-1):** el interruptor maestro se llama **`AI_HABILITADA`** en el código real, no `AI_LOCAL_ENABLED`. `AI_LOCAL_MODE` **no existe todavía**; se mantiene en el plano como pendiente (es barato y útil para diagnóstico/UI).
 
 ### 2.4 Criterio de aceptación D-2
 
@@ -168,12 +191,14 @@ Cámara → [1] ORB (¿qué producto?) → [2] YOLO (¿cuántos?) → [3] Propue
 
 ### 4.2 Rediseño propuesto: 4 etapas
 
-| Etapa | Nombre | Responsabilidad |
-|---|---|---|
-| **E1** | **Captura** | Tomar fotos (ya existe, se conserva) |
-| **E2** | **Anotación** | Dibujar bounding boxes sobre cada foto (NUEVO) |
-| **E3** | **Entrenamiento** | Lanzar `yolo train` con el dataset anotado (NUEVO) |
-| **E4** | **Evaluación** | Medir precisión (mAP) y promover el modelo (NUEVO) |
+| Etapa | Nombre | Responsabilidad | Estado real (v26.1) |
+|---|---|---|---|
+| **E1** | **Captura** | Tomar fotos (ya existe, se conserva) | ✅ Construida |
+| **E2** | **Anotación** | Dibujar bounding boxes sobre cada foto (NUEVO) | ✅ Construida |
+| **E3** | **Entrenamiento** | Lanzar `yolo train` con el dataset anotado (NUEVO) | ✅ Construida |
+| **E4** | **Evaluación** | Medir precisión (mAP) y promover el modelo (NUEVO) | ❌ **NO construida** (pendiente) |
+
+> **Nota de reconciliación (C-4):** E1, E2 y E3 **se construyeron** en el ERP en operación (commits `8abe54a` y `c0c66fe`). **E4 (Evaluación/mAP) NO existe**: el pipeline publica `best.pt` sin medir precisión. Se mantiene como **pendiente crítico** (ver DEUDA-IA-01 en §12).
 
 ### 4.3 Reglas del módulo rediseñado
 
@@ -181,6 +206,13 @@ Cámara → [1] ORB (¿qué producto?) → [2] YOLO (¿cuántos?) → [3] Propue
 2. **Un modelo no se promueve sin métricas.** Si no hay mAP, no hay despliegue.
 3. **El entrenamiento corre fuera del API del ERP.** Es un job, no un endpoint síncrono.
 4. **La anotación es humana.** No se auto-etiqueta con el modelo que se quiere mejorar (sesgo circular).
+
+> **Nota de reconciliación (C-5):** la implementación actual **viola las reglas 1, 2 y 3**:
+> - **Regla 1:** no hay versionado formal del dataset.
+> - **Regla 2:** se publica `best.pt` **sin mAP** (ver DEUDA-IA-03 en §12).
+> - **Regla 3:** el entrenamiento es **síncrono** (timeout de 1h), no un job asíncrono. **Esto es una concesión al ERP viejo**, no diseño del NUEVO POS. El plano tiene razón: en el NUEVO POS debe ser un job con estado consultable (ver DEUDA-IA-02 en §12).
+>
+> La **regla 4 sí se cumple**: la anotación es humana.
 
 ### 4.4 Criterio de aceptación D-4
 
@@ -207,7 +239,7 @@ MENSAJE_IA_NO_DISPONIBLE = (
 
 | Escenario | Comportamiento esperado |
 |---|---|
-| IA apagada (`AI_LOCAL_ENABLED=false`) | 503 → toast → operador usa entrada manual |
+| IA apagada (`AI_HABILITADA=false`) | 503 → toast → operador usa entrada manual |
 | IA encendida pero motor caído | `httpx` lanza excepción → capturar → 503 → toast |
 | Timeout del motor (>30s) | `httpx.TimeoutException` → 503 → toast |
 | Respuesta malformada | `ValidationError` → 503 → toast |
@@ -245,6 +277,8 @@ MENSAJE_IA_NO_DISPONIBLE = (
 | **I5** | Rediseñar "Entrenamiento IA" | Medio | Es un módulo aislado, no toca el POS |
 
 **Regla de oro:** ninguna fase de integración puede tocar [`apps/api/modules/pos/service.py`](../../apps/api/modules/pos/service.py:1) sin autorización explícita.
+
+> **Nota de reconciliación (C-6):** en la implementación real (v26.1), **`pos/service.py` SÍ se tocó**: se le añadieron `upload_training_images`, `list_training_dataset`, `save_annotations` y `predict_vision`. Fue una **concesión** (los endpoints de dataset se colocaron en el POS por cercanía). **El plano tiene razón:** en el NUEVO POS, el dataset y la anotación viven en el **módulo de IA**, no en el POS. El POS solo **consume** el contrato. Ver DEUDA-IA-04 en §12.
 
 ### 6.3 Estrategia de integración al NUEVO POS
 
@@ -299,15 +333,15 @@ En el NUEVO POS, la IA **nace integrada** desde el diseño:
 
 ## 8. MATRIZ DE TRAZABILIDAD
 
-| Decisión | Documento que la rige | Código que la implementa | Fase del NUEVO POS |
-|---|---|---|---|
-| D-1 | Este documento + Documento 0 | [`service.py`](../../apps/api/modules/ai/service.py:32) | F2 (Frontera) |
-| D-2 | Este documento §2 | [`_url_motor_ia()`](../../apps/api/modules/ai/service.py:42) | F2 (Frontera) |
-| D-3 | Este documento §3 | [`predict_vision()`](../../apps/api/modules/pos/service.py:854) | F3 (Comportamiento) |
-| D-4 | Este documento §4 | [`VisionTrainingUI.jsx`](../../apps/pos/VisionTrainingUI.jsx:15) | F5 (Superficie) |
-| D-5 | [`SPEC_AI_GATEWAY_TRANSVERSAL.md`](../../docs/SPEC_AI_GATEWAY_TRANSVERSAL.md:152) | [`_lanzar_no_disponible()`](../../apps/api/modules/ai/service.py:47) | F4 (Guardianes) |
-| D-6 | Este documento §6 | Todo el módulo `ai/` | F2 + F4 + F5 |
-| A-1 | Este documento §7 | Frontend multimodal | F5 (Superficie) |
+| Decisión | Documento que la rige | Código que la implementa | Fase del NUEVO POS | Estado real (v26.1) |
+|---|---|---|---|---|
+| D-1 | Este documento + Documento 0 | [`service.py`](../../apps/api/modules/ai/service.py:46) | F2 (Frontera) | ✅ Implementada |
+| D-2 | Este documento §2 | [`_url_motor_ia()`](../../apps/api/modules/ai/service.py:80) | F2 (Frontera) | ✅ Parcial (`AI_LOCAL_MODE` pendiente) |
+| D-3 | Este documento §3 | [`predict_vision()`](../../apps/api/modules/pos/service.py:1011) | F3 (Comportamiento) | ✅ Parcial (faltan 300 imágenes) |
+| D-4 | Este documento §4 | [`VisionTrainingUI.jsx`](../../apps/pos/VisionTrainingUI.jsx:1) | F5 (Superficie) | ✅ Parcial (E4 pendiente) |
+| D-5 | [`SPEC_AI_GATEWAY_TRANSVERSAL.md`](../../docs/SPEC_AI_GATEWAY_TRANSVERSAL.md:152) | [`_lanzar_no_disponible()`](../../apps/api/modules/ai/service.py:69) | F4 (Guardianes) | ✅ Implementada |
+| D-6 | Este documento §6 | Todo el módulo `ai/` | F2 + F4 + F5 | ⚠️ Concesión (`pos/service.py` tocado) |
+| A-1 | Este documento §7 | Frontend multimodal | F5 (Superficie) | ✅ Implementada |
 
 ---
 
@@ -352,6 +386,21 @@ En el NUEVO POS, la IA **nace integrada** desde el diseño:
 - [`VoiceAgentService.js`](../../apps/voice-agent/VoiceAgentService.js:1) — Mock a reemplazar
 - [`PLAN_DE_CONSTRUCCION_DEL_NUEVO_POS.md`](../05-plan-de-construccion/PLAN_DE_CONSTRUCCION_DEL_NUEVO_POS.md:1) — Plan de construcción
 - [`PROMPT_DEL_ARQUITECTO_DEL_NUEVO_POS.md`](../06-prompt-del-arquitecto/PROMPT_DEL_ARQUITECTO_DEL_NUEVO_POS.md:1) — Contrato del arquitecto
+
+---
+
+## 12. DEUDAS REGISTRADAS (RECONCILIACIÓN v26.1)
+
+> **Origen:** [`ACTA_DE_RECONCILIACION_IA.md`](ACTA_DE_RECONCILIACION_IA.md:1). Estas son las deudas **reales** (incumplimientos del plano), no desfases de nomenclatura. **No se resuelven en el ERP en operación**: se resuelven en el NUEVO POS.
+
+| # | Deuda | Decisión | Por qué importa | Dónde se resuelve |
+|---|---|---|---|---|
+| **DEUDA-IA-01** | No existe E4 (Evaluación/mAP) | D-4 §4.2 | Sin métricas, no se sabe si el modelo mejoró o empeoró | NUEVO POS (módulo de IA) |
+| **DEUDA-IA-02** | El entrenamiento es síncrono | D-4 §4.3 regla 3 | Bloquea un worker hasta 1h; no escala | NUEVO POS (job asíncrono) |
+| **DEUDA-IA-03** | Se promueve sin mAP | D-4 §4.3 regla 2 | Se publica `best.pt` sin verificar calidad | NUEVO POS (guardia de promoción) |
+| **DEUDA-IA-04** | El dataset vive en el POS | D-6 §6.2 | El POS no debe conocer el dataset; solo el contrato | NUEVO POS (mover al módulo de IA) |
+
+**Nota:** DEUDA-IA-04 es una **concesión consciente y autorizada** en su momento, no un error. Se registra como deuda de diseño para el NUEVO POS.
 
 ---
 

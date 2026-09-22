@@ -260,6 +260,11 @@ El plano está anclado al commit `5802f45` (V23) del ERP actual. La ingeniería 
 sobre `fe9f6ed` (tag `v22-estable-fe9f6ed`); ver la nota de re-anclaje en cada documento.
 Cualquier divergencia posterior del ERP es una decisión consciente, no un accidente.
 
+> **Ancla dual (22 Sep 2026).** El núcleo del plano (POS, almacenes, RRHH, etc.) sigue anclado
+> a `5802f45` (V23). La **parte de IA** avanzó por separado: se reconcilió contra el commit
+> `c0c66fe` (v26.1). Ver [`07-ia-local/ACTA_DE_RECONCILIACION_IA.md`](07-ia-local/ACTA_DE_RECONCILIACION_IA.md:1).
+> El ancla dual evita invalidar todo el plano por un solo módulo.
+
 ---
 
 ## Principio rector

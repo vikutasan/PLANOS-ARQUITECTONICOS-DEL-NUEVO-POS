@@ -90,8 +90,13 @@ Por eso el trabajo se hace **al lado**, en un **proyecto nuevo**, en un **reposi
 ```bash
 # En el repo del ERP:
 git status --short      # Solo deben aparecer archivos .md sin trackear
-git log -1 --format="%h"  # Debe seguir siendo 5802f45 (V23)
+git log -1 --format="%h"  # Debe seguir siendo 5802f45 (V23) para el núcleo
 ```
+
+> **Ancla dual (22 Sep 2026).** El núcleo del plano sigue anclado a `5802f45` (V23). La **parte
+> de IA** se reconcilió contra `c0c66fe` (v26.1): ver
+> [`07-ia-local/ACTA_DE_RECONCILIACION_IA.md`](../07-ia-local/ACTA_DE_RECONCILIACION_IA.md:1).
+> Si el HEAD del ERP es `c0c66fe`, **no es un error**: es la realidad de la IA, ya reconciliada.
 
 Si el HEAD cambió o hay archivos de código modificados, **la regla dura se violó**.
 
@@ -355,7 +360,7 @@ estás listo para trabajar en el proyecto.
 - [ ] Leí el **Documento 4 (Despliegue)** — al menos las Secciones 0, 1 y 2.
 - [ ] Memorizo las **10 reglas de oro** (Sección 4).
 - [ ] Sé que **no debo limpiar las cicatrices** (Sección 5.1).
-- [ ] Verifiqué que el **ERP sigue intacto** (`git status` + HEAD `5802f45`).
+- [ ] Verifiqué que el **ERP sigue intacto** (`git status` + HEAD `5802f45` para el núcleo; `c0c66fe` para IA).
 - [ ] Sé en qué **repositorio** debo trabajar (Sección 5.3).
 
 ---
@@ -369,6 +374,10 @@ estás listo para trabajar en el proyecto.
 Este documento es el **punto de entrada** al proyecto. No contiene código de producción.
 El ERP permanece intacto y operando; su HEAD es `5802f45` (V23) al 22 Sep 2026. La ingeniería
 inversa se hizo sobre `fe9f6ed` (tag `v22-estable-fe9f6ed`).
+
+> **Ancla dual (22 Sep 2026).** El núcleo del plano sigue anclado a `5802f45` (V23). La **parte
+> de IA** avanzó y se reconcilió contra `c0c66fe` (v26.1). Ver
+> [`07-ia-local/ACTA_DE_RECONCILIACION_IA.md`](../07-ia-local/ACTA_DE_RECONCILIACION_IA.md:1).
 
 ---
 
