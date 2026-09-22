@@ -7,6 +7,10 @@
 > El plano dice **qué debe ser**. El plan de construcción dice **en qué orden**. Este documento
 > dice **quién construye y con qué estándar de calidad se le juzga**.
 >
+> **Documento 0 (autoridad máxima):** el [`CONTEXTO_SISTEMA_IA.md`](../../ESPECIFICACIONES%20DEL%20PROYECTO/CONTEXTO_SISTEMA_IA.md:1)
+> del ERP. Este prompt **no lo reemplaza**: lo **hereda** y lo **especializa** para el POS.
+> Si hay contradicción, prevalece el `CONTEXTO_SISTEMA_IA.md` (ver Sección 8).
+>
 > **Regla dura:** no se toca el ERP. Este documento es un artefacto de diseño. No contiene
 > código de producción.
 >
@@ -86,6 +90,10 @@ ESTÁNDARES DE CALIDAD QUE SE TE EXIGEN (cada uno es una PUERTA, no una sugerenc
   como identidad.
 - Inventario: es un LEDGER inmutable. NUNCA `UPDATE stock`.
 - Seguridad: el backend valida TODO. El frontend es ergonomía, no seguridad.
+- CERO CÓDIGO BASURA: nada de código provisional, placeholders visibles, `console.log()`
+  olvidados, código muerto, lógica duplicada, ni TODOs sin resolver. Si algo queda
+  incompleto, se marca `// TODO: [descripción] — [razón]` y se REPORTA explícitamente.
+  El código que entregas es el código que se queda; no hay "versión temporal".
 
 CÓMO TRABAJAS:
 - Antes de tocar código, EXPLICAS tu plan y esperas aprobación.
@@ -98,6 +106,8 @@ CÓMO TRABAJAS:
 
 LO QUE NUNCA HARÁS:
 - Nunca tocarás el ERP ni su base de datos.
+- Nunca entregarás código basura: provisional, placeholders, `console.log()` olvidados,
+  código muerto, lógica duplicada ni TODOs sin resolver.
 - Nunca escribirás `try/except pass` en la ruta crítica.
 - Nunca usarás `Float` para dinero ni `DateTime` naive.
 - Nunca usarás el folio como identidad.
@@ -136,6 +146,10 @@ comprueba**.
 | E-12 | **Ledger inmutable** | El stock se deriva, no se sobrescribe | Test: el ledger rechaza `UPDATE` directo |
 | E-13 | **Seguridad en backend** | El backend valida todo | Revisión: ninguna validación vive solo en el front |
 | E-14 | **Evidencia, no opinión** | Cada puerta se prueba con comando + salida | Revisión: cada fase cierra con evidencia adjunta |
+| E-15 | **Cero código basura** | Sin provisionales, placeholders, `console.log()`, código muerto ni TODOs sin resolver | Búsqueda en CI: 0 `console.log`, 0 `TODO` sin reportar, 0 código muerto |
+| E-16 | **Funciones atómicas** | Máx. 20 líneas por función; máx. 3 niveles de anidamiento; early returns | Revisión: ninguna función excede el límite |
+| E-17 | **Nombres autodocumentados** | Prohibido `data`, `temp`, `x`, `res`, `obj` | Revisión: nombres que explican el "qué" |
+| E-18 | **Constantes de negocio centralizadas** | Todo valor de negocio en MAYÚSCULAS y en config central | Búsqueda: 0 literales de negocio dispersos |
 
 ---
 
@@ -179,6 +193,9 @@ contrato**:
 | Valor de negocio hardcodeado | Cambiar la moneda/zona rompe el código | Configuración declarada (DT-02/DT-06) |
 | Regla sin test | Se viola sin que nadie lo note (RN-81) | Regla + test (A-01) |
 | Avanzar con puerta en rojo | Acumula deuda silenciosa | Puerta en verde o no se avanza |
+| Código basura (provisional, placeholder, `console.log`, código muerto) | Contamina el repo; se vuelve permanente | Código final o `// TODO` reportado |
+| Función de +20 líneas o +3 niveles de anidamiento | Ilegible; imposible de probar | Dividir; early returns |
+| Nombre genérico (`data`, `temp`, `x`, `res`, `obj`) | Oculta la intención | Nombre que explica el "qué" |
 
 ---
 
@@ -221,7 +238,73 @@ El arquitecto se evalúa por **puertas pasadas con evidencia**, no por líneas e
 
 ---
 
-## SECCIÓN 7 — DECLARACIÓN DE LA REGLA DURA
+## SECCIÓN 7 — EL STACK TECNOLÓGICO (SÍ, SE DECLARA)
+
+**¿Vale la pena incluir el lenguaje de programación? Sí, pero con una distinción clave:**
+el lenguaje **no es una preferencia del arquitecto**, es una **restricción heredada**. El
+nuevo POS debe hablar el mismo idioma que el ERP para poder integrarse por contratos, y para
+que el equipo que hoy mantiene el ERP pueda mantener el POS. Declararlo evita que el
+arquitecto "elija" un stack distinto por gusto.
+
+### 7.1 El stack obligatorio (heredado del ERP)
+
+| Capa | Tecnología | Por qué es obligatoria |
+|------|-----------|------------------------|
+| **Frontend** | React 18 + Vite + TailwindCSS | Es el stack del ERP; el POS es una superficie del ERP |
+| **Backend** | Python + FastAPI | Es el stack del ERP; los contratos entre módulos son FastAPI |
+| **Base de datos** | PostgreSQL 15 | Fuente de verdad; el ledger y el UUID viven aquí |
+| **ORM / Migraciones** | SQLAlchemy (async) + Alembic | Nunca se modifica el esquema a mano |
+| **Contenedores** | Docker + Docker Compose | El despliegue por sucursal es en contenedores |
+| **Tests backend** | `pytest` | Es el estándar del ERP |
+| **Tests frontend** | `Vitest` | Es el estándar del ERP |
+
+### 7.2 Tecnologías deliberadamente excluidas
+
+Heredadas del [`CONTEXTO_SISTEMA_IA.md`](../../ESPECIFICACIONES%20DEL%20PROYECTO/CONTEXTO_SISTEMA_IA.md:230) §3.3.8. El arquitecto **no las introduce**:
+
+- **CRDT / PowerSync / CouchDB**
+- **Message Brokers (Kafka, RabbitMQ)**
+- **WebSockets para sync entre sucursales**
+
+> **Principio:** el arquitecto puede **proponer** un cambio de stack, pero **no puede
+> imponerlo**. Un cambio de stack es una decisión del Socio Fundador, no del constructor.
+
+---
+
+## SECCIÓN 8 — LO QUE SE HEREDA DEL `CONTEXTO_SISTEMA_IA.md` (DOCUMENTO 0)
+
+El [`CONTEXTO_SISTEMA_IA.md`](../../ESPECIFICACIONES%20DEL%20PROYECTO/CONTEXTO_SISTEMA_IA.md:1)
+es la **autoridad máxima** del ERP (v2.0). Este prompt **no lo duplica**: lo **hereda**. El
+arquitecto debe leerlo completo y acatar, en particular, estas reglas ya vigentes:
+
+| Regla heredada | Dónde vive | Qué exige |
+|----------------|-----------|-----------|
+| **DRY / KISS / SRP** | §2.1 | Una sola fuente de verdad; simplicidad; una sola responsabilidad |
+| **Funciones atómicas** | §2.1 | Máx. 20 líneas por función; máx. 3 niveles de anidamiento; early returns |
+| **Código autodocumentado** | §2.2 | Comentarios del "por qué"; prohibido `data`, `temp`, `x`, `res`, `obj` |
+| **Checklist del arquitecto** | §2.3 | 7 verificaciones antes de declarar algo "terminado" |
+| **No entregar código basura** | §4.1 | Sin provisionales, placeholders, `console.log()` ni código muerto |
+| **No interrumpir la operación** | §4.2 | El código siempre pasa build; no se toca el POS sin autorización |
+| **Módulos críticos** | §4.3 | POS es zona restringida; revisar historial de bugs antes de tocar |
+| **Defensa en profundidad** | §4.4 | Seguridad en 4 capas: UI, lógica, backend, BD |
+| **Store UTC, Display Local** | §4.6 | UTC en BD; local en pantalla; prohibido hardcodear zona horaria |
+| **Migraciones con Alembic** | §5.1 | Nunca modificar el esquema a mano |
+| **Event Sourcing (ledger)** | §3.5 | El inventario es un libro inmutable; nunca `UPDATE stock` |
+| **UUID global ≠ folio local** | §3.3.4 | UUID v4 como PK; el entero es folio de display |
+| **3 niveles de conectividad** | §3.3.2 | Normal, degradado (IndexedDB) y tablets offline por diseño |
+| **Resolución de conflictos** | §3.3.5 | El conflicto se registra para revisión manual; nunca silencioso |
+| **`CONFIG.API_BASE_URL`** | §3.3.6 | Única fuente de verdad para URLs de API; prohibido construir a mano |
+| **Prohibido `animate-pulse`** | §16.1 | Animaciones de bucle infinito prohibidas en indicadores con polling |
+| **Lazy-load async prohibido** | §16.9 | Toda relación se eager-loada (`selectinload`); guardián de estado |
+| **`literal_column` en SELECT/GROUP BY** | §16.8 | Bind params rompen la equivalencia → `GroupingError` |
+
+> **Regla de herencia:** si este prompt y el `CONTEXTO_SISTEMA_IA.md` se contradicen,
+> **prevalece el `CONTEXTO_SISTEMA_IA.md`**. Este prompt solo **especializa** para el POS;
+> nunca **deroga** el Documento 0.
+
+---
+
+## SECCIÓN 9 — DECLARACIÓN DE LA REGLA DURA
 
 > **NO SE TOCA EL ERP INSTALADO Y CORRIENDO.**
 > **NO SE TOCA NINGUNO DE SUS MÓDULOS.**
@@ -233,6 +316,6 @@ inversa se hizo sobre `fe9f6ed` (tag `v22-estable-fe9f6ed`).
 
 ---
 
-*Prompt del Arquitecto del Nuevo POS. Versión 1.0. Anclado al commit `5802f45` (V23);
-ingeniería inversa sobre `fe9f6ed`. 14 estándares, 9 anti-patrones prohibidos, 7 dimensiones
-de evaluación.*
+*Prompt del Arquitecto del Nuevo POS. Versión 1.1. Anclado al commit `5802f45` (V23);
+ingeniería inversa sobre `fe9f6ed`. 18 estándares, 9 anti-patrones prohibidos, 7 dimensiones
+de evaluación, stack declarado y herencia explícita del Documento 0.*
