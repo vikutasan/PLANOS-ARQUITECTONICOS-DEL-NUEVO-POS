@@ -881,7 +881,7 @@ Un módulo que no se menciona es un módulo que se improvisa.
 
 **Su rol está anclado en:** [`DIRECTRICES_TRANSVERSALES_DEL_ERP.md`](./DIRECTRICES_TRANSVERSALES_DEL_ERP.md) — DT-06 (Configuración del Negocio).
 
-**Su estado:** ⏳ **Pendiente de reconstrucción.** Su especificación funcional completa (pantallas, campos, validaciones, permisos) es **FASE 1 de su propio módulo** y se escribirá cuando se reconstruya. Lo que ya está decidido —y por eso se declara aquí— es **su rol transversal**: es el único lugar donde se declaran los valores que todos los módulos consumen.
+**Su estado:** ✅ **FASE 1 completada** (22 Sep 2026). Su especificación funcional completa (pantallas, campos, validaciones, permisos) vive en [`ESPECIFICACION_FUNCIONAL_VISTA_GENERAL.md`](./ESPECIFICACIONES%20DEL%20PROYECTO/ESPECIFICACION_FUNCIONAL_VISTA_GENERAL.md): 4 interfaces, 35 reglas (VG-01 a VG-35), 8 hallazgos catalogados y 10 criterios de aceptación. Lo que ya estaba decidido —y por eso se declaró aquí— es **su rol transversal**: es el único lugar donde se declaran los valores que todos los módulos consumen.
 
 **Por qué se declara ahora y no después:** si no se declara, la IA constructora que arme el POS (o Caja, o Almacenes) va a inventar un selector de zona horaria o de moneda dentro de su propio módulo. Eso es exactamente el error que produjo las 5 implementaciones de tiempo y los 80 formateos de dinero del ERP actual. Declarar el rol ahora cierra esa puerta antes de que se abra.
 

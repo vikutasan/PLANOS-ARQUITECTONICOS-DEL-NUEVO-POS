@@ -114,6 +114,7 @@ El proyecto tiene **5 documentos maestros**. Cada uno responde una pregunta dist
 | **2** | [`ESPECIFICACION_FUNCIONAL_POS_INGENIERIA_INVERSA.md`](ESPECIFICACIONES DEL PROYECTO/ESPECIFICACION_FUNCIONAL_POS_INGENIERIA_INVERSA.md:1) | **¿Qué hace hoy el POS actual?** | Tercero, para conocer la fuente de verdad |
 | **3** | [`PLAN_ACCION_ARQUITECTONICO_NUEVO_POS.md`](ESPECIFICACIONES DEL PROYECTO/PLAN_ACCION_ARQUITECTONICO_NUEVO_POS.md:1) | **¿Qué acciones concretas ejecutar?** | Cuarto, para saber cómo no perder las cicatrices |
 | **4** | [`MODELO_DESPLIEGUE_Y_CONSOLIDACION_CENTRAL.md`](ESPECIFICACIONES DEL PROYECTO/MODELO_DESPLIEGUE_Y_CONSOLIDACION_CENTRAL.md:1) | **¿Dónde vive y cómo se consolida?** | Quinto, para entender la topología |
+| **12** | [`ESPECIFICACION_FUNCIONAL_VISTA_GENERAL.md`](ESPECIFICACIONES DEL PROYECTO/ESPECIFICACION_FUNCIONAL_VISTA_GENERAL.md:1) | **¿Qué hace y qué debe hacer Vista General?** | Cuando toques el módulo que declara los valores transversales (zona horaria, moneda, sucursal) |
 
 ### 2.0 Documento 0 — El Contexto del Sistema (máxima autoridad)
 

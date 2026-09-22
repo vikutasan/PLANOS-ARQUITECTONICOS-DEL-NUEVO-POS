@@ -316,7 +316,7 @@ Cada uno de esos es un caso del mismo error: **una decisión transversal tomada 
 
 | Módulo | Cumple | Evidencia / Deuda |
 |---|---|---|
-| Vista General | ⏳ Pendiente | **Por reconstruir.** Su rol ya está decidido (este documento); su especificación funcional se escribirá en su propia FASE 1 |
+| Vista General | ✅ | **FASE 1 completada** (22 Sep 2026) — ver [`ESPECIFICACION_FUNCIONAL_VISTA_GENERAL.md`](./ESPECIFICACIONES%20DEL%20PROYECTO/ESPECIFICACION_FUNCIONAL_VISTA_GENERAL.md). Declara zona horaria, moneda y sucursal; 35 reglas VG; 4 interfaces |
 | POS | ✅ | Consume `TimezoneContext`; no define zona horaria |
 | Caja | ✅ | Consume el contexto; no define valores |
 | Resto | ⚠️ Parcial | Pendiente de verificar que ninguno define valores transversales |
