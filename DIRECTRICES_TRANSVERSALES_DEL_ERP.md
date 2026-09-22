@@ -114,9 +114,9 @@ Cada uno de esos es un caso del mismo error: **una decisión transversal tomada 
 | Capa | Archivo | Qué hace |
 |---|---|---|
 | Almacenamiento | `apps/api/modules/*/models.py` | Columnas de dinero en `Numeric(12,2)` |
-| Configuración | `system_settings.business_currency` | **Por crear** (ver O-19 del Documento 8) |
-| Presentación | `apps/shared/money.js` | **Por crear** — `formatMoney`, `parseMoney`, `roundMoney` |
-| Presentación | `apps/shared/MoneyContext.jsx` | **Por crear** — espejo de `TimezoneContext.jsx` |
+| Configuración | `system_settings.business_currency` | **✅ Creado en V23** (22 Sep 2026) — sembrado en `seed_settings()`, expuesto en `GET /settings/currency` |
+| Presentación | `apps/shared/money.js` | **Por crear (V24)** — `formatMoney`, `parseMoney`, `roundMoney` |
+| Presentación | `apps/shared/MoneyContext.jsx` | **Por crear (V24)** — espejo de `TimezoneContext.jsx` |
 
 ### DT-02.3 — Las reglas derivadas
 
@@ -147,14 +147,16 @@ Cada uno de esos es un caso del mismo error: **una decisión transversal tomada 
 | Caja | ✅ | `opening_float`, `physical_cash`, `amount` en `Numeric(12,2)` |
 | Catálogo | ✅ | `products.price/cost` en `Numeric(12,2)` |
 | Heladería | ✅ | `base_price`, `price_per_scoop`, `unit_price` en `Numeric(12,2)` |
-| Grandeza | ❌ No cumple | 11+ columnas de dinero en `Float` (`b2b_price`, `cash_fund`, `sale_amount`, `payment_received`, `change_given`, `total_amount`, `advance_payment`…) |
-| RRHH | ❌ No cumple | Nómina en `Float` (`sueldo_hora`, `salario_base`, `neto`, `prima_vacacional`, `fianza_total`, `monto_fondo`…) |
-| Pedidos | ❌ No cumple | `delivery_fee` en `Float` |
+| Grandeza | ✅ | **Migrado en V23** (22 Sep 2026): 13 columnas a `Numeric(12,2)` (`b2b_price`, `cash_fund`, `cash_expected`, `cash_received`, `sale_amount`, `payment_received`, `change_given`, `total_exchange_amount`, `total_fresh_amount`, `unit_price`, `amount`, `total_amount`, `advance_payment`) |
+| RRHH | ✅ | **Migrado en V23** (22 Sep 2026): 22 columnas a `Numeric(12,2)` (nómina, uniformes, fondo de cobertura, PSG, vacaciones, finiquito) |
+| Pedidos | ✅ | **Migrado en V23** (22 Sep 2026): `orders.delivery_fee` a `Numeric(12,2)` |
 | Almacenes | ⚠️ Parcial | `cantidad_actual`, `stock_minimo` en `Float` (cantidades, no dinero — pero conviene revisar) |
 | Producción | ⚠️ Parcial | Pesos y gramos en `Float` (correcto para pesos, no para dinero) |
 | Frontend (todos) | ❌ No cumple | 80 `toFixed(2)` en 12 componentes; no existe `formatMoney` |
 
-**Deuda conocida:** la migración `apps/api/migrations_applied/migrate_float_to_decimal.py` cubre solo **10 columnas** (tickets, ticket_items, products, cash_sessions, cash_movements). Quedó a medias: no toca Grandeza, RRHH ni Pedidos.
+**Deuda saldada (V23, 22 Sep 2026):** la migración `apps/api/migrations_applied/migrate_float_to_decimal.py` cubría solo **10 columnas** (tickets, ticket_items, products, cash_sessions, cash_movements). V23 la extendió con **36 columnas más** (Grandeza 13, RRHH 22, Pedidos 1), todas a `Numeric(12,2)`. Se conservaron deliberadamente en `Float` **9 columnas no monetarias** (GPS, distancias, porcentajes, puntajes). Respaldo previo: `database_backups/backup_pre_v23_decimal_20260922.sql`.
+
+**Deuda pendiente (V24):** el **frontend** sigue sin `formatMoney` — hay ~80 `toFixed(2)` en 12 componentes. V23 solo corrigió el **tipo** en BD y modelos; el formateador único y la eliminación de `toFixed(2)` son alcance de V24.
 
 ---
 
