@@ -3,8 +3,8 @@
 > **Documento padre:** [`PLAN_DE_IMPLEMENTACION_UI_POR_MODULO.md`](./PLAN_DE_IMPLEMENTACION_UI_POR_MODULO.md) — el plan de ejecución de temas.
 > **Se apoya en:** [`ESPECIFICACION_IA_LOCAL_Y_MULTIMODAL.md`](../07-ia-local/ESPECIFICACION_IA_LOCAL_Y_MULTIMODAL.md) (capacidad IA del ERP), [`BRIEF_DE_EXTRACCION_VISUAL.md`](./BRIEF_DE_EXTRACCION_VISUAL.md) (los 11 tokens y el prompt), [`PROPUESTA_APARIENCIA_POR_MODULO_V4.md`](./PROPUESTA_APARIENCIA_POR_MODULO_V4.md) (arquitectura de temas).
 > **Regla dura vigente:** NO SE TOCA EL ERP INSTALADO Y CORRIENDO. NO SE TOCA EL POS QUE CORRE.
-> **Alcance:** SOLO el nuevo POS (`../NUEVO-POS/`). El extractor vive en el módulo de IA del nuevo ERP.
-> **Creado:** 28 Sep 2026.
+> **Alcance:** SOLO el nuevo POS (`../NUEVO-POS/`). El extractor vive **temporalmente** dentro de NUEVO-POS (ver §0.3).
+> **Creado:** 28 Sep 2026. **Actualizado:** 28 Sep 2026 (se añadió §0.3 — ubicación temporal y migración).
 > **Estado:** PROPUESTA — pendiente de aprobación del dueño.
 
 ---
@@ -27,7 +27,65 @@
 - **No es un generador de UIs.** No genera código, no dibuja pantallas. Solo extrae los 11 tokens de apariencia.
 - **No es un "modo Pinterest".** No navega Pinterest, no descarga imágenes. El usuario baja la imagen a su ordenador y la sube manualmente.
 - **No rompe la regla de 3 temas.** El módulo sigue ofreciendo máximo 3 al cajero. El extractor permite _crear_ temas nuevos que luego se asignan a una de las 3 posiciones.
-- **No toca el ERP.** Vive en el módulo de IA del nuevo ERP, separado.
+- **No toca el ERP.** Vive dentro del proyecto NUEVO-POS (ver §0.3), separado del ERP.
+
+### 0.3 Ubicación temporal y migración
+
+El extractor tiene **2 partes**: un backend (endpoint) y una pantalla (frontend). Ambas viven hoy dentro de `NUEVO-POS/` porque el módulo de IA del nuevo ERP **todavía no existe** como aplicación independiente.
+
+#### HOY — mientras solo existe NUEVO-POS
+
+```
+NUEVO-POS/
+├── apps/
+│   ├── api/
+│   │   └── routers/
+│   │       └── ia.py                  ← backend del extractor (POST /ia/extraer-estetica)
+│   │
+│   └── pos/
+│       └── src/
+│           └── admin/
+│               └── ExtractorEstetica.jsx  ← pantalla del extractor (acceso admin)
+│
+└── packages/
+    └── theme-engine/                  ← motor compartido (no se mueve NUNCA)
+```
+
+**¿Por qué aquí?** Porque la regla dura prohíbe tocar el ERP actual, y el módulo de IA del nuevo ERP aún no se ha construido. NUEVO-POS ya tiene backend (FastAPI) y frontend (Vite/React), así que es el hogar natural.
+
+#### MAÑANA — cuando el nuevo ERP tenga módulo de IA
+
+```
+NUEVO-ERP/
+├── apps/
+│   ├── api/
+│   │   └── routers/
+│   │       └── ia.py                  ← backend del extractor (NO CAMBIA)
+│   │
+│   ├── ia/                             ← módulo de IA del nuevo ERP
+│   │   └── src/
+│   │       └── ExtractorEstetica.jsx   ← pantalla SE MUDA AQUÍ
+│   │
+│   ├── pos/                            ← módulo POS (sin la pantalla admin)
+│   ├── estadisticas/                   ← módulo Estadísticas
+│   └── almacenes/                      ← módulo Almacenes
+│
+└── packages/
+    └── theme-engine/                  ← motor compartido (NO SE MUEVE)
+```
+
+**Qué se muda:**
+
+| Pieza | HOY | MAÑANA | Esfuerzo |
+|---|---|---|---|
+| Backend (`ia.py`) | `NUEVO-POS/apps/api/routers/ia.py` | Mismo lugar (el API es compartido) | **0** — no cambia |
+| Pantalla (`ExtractorEstetica.jsx`) | `NUEVO-POS/apps/pos/src/admin/` | `NUEVO-ERP/apps/ia/src/` | **Bajo** — mover archivo + actualizar imports |
+| Motor (`theme-engine`) | `NUEVO-POS/packages/theme-engine/` | `NUEVO-ERP/packages/theme-engine/` | **0** — no cambia |
+| Tabla (`temas_generados`) | `NUEVO-POS` (BD `nuevo_pos`) | Misma BD o migración | **Bajo** |
+
+**Regla de migración:** cuando el módulo de IA se construya, la pantalla se mueve. El backend y el motor **nunca se mueven** — ya están en la ubicación correcta.
+
+**Regla mientras tanto:** la pantalla del extractor vive en `apps/pos/src/admin/` y solo es accesible con rol de administrador. El cajero **nunca la ve**.
 
 ---
 
@@ -63,11 +121,11 @@
 
 ### 1.3 Qué piezas son nuevas
 
-| Pieza | Qué es | Dónde vive |
-|---|---|---|
-| **Endpoint `POST /ia/extraer-estetica`** | Recibe imagen, devuelve 11 tokens + extras + contraste | `apps/api/routers/ia.py` |
-| **Pantalla "Extractor de Estética Visual"** | La UI del módulo IA donde el admin sube la imagen | `apps/ia/src/ExtractorEstetica.jsx` |
-| **Tabla `temas_generados`** | Almacena los temas extraídos por IA (nombre, tokens, origen, fecha) | migración en `apps/api/migrations/` |
+| Pieza | Qué es | Dónde vive HOY (ver §0.3) | Dónde vivirá MAÑANA |
+|---|---|---|---|
+| **Endpoint `POST /ia/extraer-estetica`** | Recibe imagen, devuelve 11 tokens + extras + contraste | `apps/api/routers/ia.py` | Mismo lugar (no cambia) |
+| **Pantalla "Extractor de Estética Visual"** | La UI donde el admin sube la imagen | `apps/pos/src/admin/ExtractorEstetica.jsx` | `apps/ia/src/ExtractorEstetica.jsx` |
+| **Tabla `temas_generados`** | Almacena los temas extraídos por IA | migración en `apps/api/migrations/` | Mismo lugar (no cambia) |
 
 ---
 
