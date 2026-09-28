@@ -1,3 +1,11 @@
+> [!WARNING]
+> **?? DOCUMENTO SUPERSEDED (28 Sep 2026)**
+>
+> Este documento ha sido **reemplazado** por el [**PLAN MAESTRO DEFINITIVO**](../PLAN_MAESTRO_DEFINITIVO_POS.md).
+> Los puntos valiosos de este documento fueron integrados en la Secci�n 10 del Plan Maestro.
+> Se conserva como **archivo hist�rico** para referencia.
+
+---
 # PLAN DE CONSTRUCCIÓN DEL NUEVO POS
 ## Etapa 5 — Cómo se construye el POS "como si hubiera nacido así"
 

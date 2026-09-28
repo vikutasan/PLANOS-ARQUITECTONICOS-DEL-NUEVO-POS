@@ -298,5 +298,77 @@ Cuando las 7 fases estén completas, al abrir `localhost:5100/` verás:
 
 **Todo construido sobre la arquitectura de un edificio planificado, no uno remendado.**
 
+---
+
+## 10. HERENCIA VALIOSA DE LOS PLANES ANTERIORES
+
+Los siguientes puntos provienen de los planes de DeepSeek (`PLAN_DE_CONSTRUCCION`, `PLAN_ACCION_ARQUITECTONICO`, `PLAN_DE_IMPLEMENTACION_UI`) y son demasiado valiosos para perderse. Quedan incorporados a este Plan Maestro:
+
+### 10.1 Las 81 reglas de negocio se portan CON su test (A-01)
+
+> **Origen:** PLAN_ACCION_ARQUITECTONICO, Acción A-01
+
+La unidad de migración **no es la regla, es la regla + su prueba**. Cada una de las 81 reglas (RN-01 a RN-81) documentadas en `ESPECIFICACION_FUNCIONAL_POS_INGENIERIA_INVERSA.md` se implementa con su test correspondiente.
+
+**Reglas sin test hoy (riesgo de pérdida):** RN-37 a RN-40 (anti-degradación), RN-44 a RN-48 (limpieza de borradores), RN-81 (cero offsets). Se les escribe test ANTES de implementar.
+
+### 10.2 Frontera por contratos — Prohibición de leer tablas ajenas (A-02)
+
+> **Origen:** PLAN_ACCION_ARQUITECTONICO, Acción A-02
+
+El POS nuevo **no importa** modelos de otros módulos. Cada dependencia se resuelve por contrato explícito. Los 10 acoplamientos (AC-01 a AC-10) del POS viejo se reemplazan por contratos definidos en `CONTRATOS_ENTRE_MODULOS_DEL_NUEVO_POS.md`.
+
+**Test de arquitectura:** falla si el POS importa un modelo ajeno.
+
+### 10.3 Estándares de base de datos (C-01 a C-04)
+
+> **Origen:** PLAN_DE_CONSTRUCCION, Fase 1
+
+| Estándar | Regla |
+|---|---|
+| **C-01** | PK = UUID en todas las tablas (no enteros autoincrementales) |
+| **C-02** | `DateTime(timezone=True)` UTC siempre (nunca naive) |
+| **C-03** | Dinero en `Numeric(12,2)` (NUNCA `Float`) |
+| **C-04** | Columna `version` para bloqueo optimista |
+
+### 10.4 Los 5 greps de CI que se ejecutan desde el día 1
+
+> **Origen:** PLAN_DE_CONSTRUCCION, Fase 0, §2.3
+
+Estos 5 greps se ejecutan en cada push. Si alguno encuentra una violación, **el build falla**:
+
+1. `except.*pass` → prohibido en ruta crítica
+2. `console.log` → prohibido en producción
+3. `TODO` sin formato → prohibido (usar `// TODO(nombre): descripción`)
+4. `Float` en modelos de dinero → siempre `Numeric(12,2)`
+5. `DateTime()` naive → siempre `DateTime(timezone=True)`
+
+### 10.5 Matriz de trazabilidad regla → test
+
+> **Origen:** PLAN_ACCION_ARQUITECTONICO, A-01 y A-03
+
+Cada fase produce una **matriz verificable** donde se puede rastrear: para cada regla de negocio, ¿cuál es su test? Las reglas sin test se marcan como **riesgo de pérdida**. El CI falla si una regla crítica no tiene guardián.
+
+### 10.6 El principio "de adentro hacia afuera"
+
+> **Origen:** PLAN_DE_CONSTRUCCION, §0.2
+
+> *Se construye de adentro hacia afuera: primero el cimiento (datos), luego la frontera (contratos), luego el comportamiento (reglas + tests), luego la superficie (interfaces).*
+
+Nuestras 7 fases respetan este principio: la Fase 1 (Terminal Selector) requiere el endpoint de terminales (dato + contrato) antes de la interfaz. Cada fase interna tiene este orden: endpoint → hook → componente.
+
+### 10.7 Documentos de referencia obligatoria por fase
+
+| Antes de construir... | Consultar... |
+|---|---|
+| Cualquier pantalla | [ESPECIFICACION_DE_INTERFACES_POS.md](./ESPECIFICACION_DE_INTERFACES_POS.md) (las 26 fichas) |
+| Cualquier componente | [ESPECIFICACION_RESPONSIVA_Y_ERGONOMIA_TACTIL.md](./ESPECIFICACION_RESPONSIVA_Y_ERGONOMIA_TACTIL.md) (R-01 a R-04) |
+| Cualquier regla de negocio | [ESPECIFICACION_FUNCIONAL_POS_INGENIERIA_INVERSA.md](./ESPECIFICACIONES%20DEL%20PROYECTO/ESPECIFICACION_FUNCIONAL_POS_INGENIERIA_INVERSA.md) (RN-01 a RN-81) |
+| Cualquier tabla/endpoint | [MODELO_DE_DATOS_DEL_NUEVO_POS.md](./MODELO_DE_DATOS_DEL_NUEVO_POS.md) |
+| Cualquier frontera entre módulos | [CONTRATOS_ENTRE_MODULOS_DEL_NUEVO_POS.md](./CONTRATOS_ENTRE_MODULOS_DEL_NUEVO_POS.md) |
+
+---
+
 > [!IMPORTANT]
-> **¿Apruebas este plan para comenzar la ejecución?**
+> **Este plan (v1.1) integra lo valioso de los 3 planes anteriores. Los documentos originales quedan marcados como SUPERSEDED con referencia a este plan.**
+
