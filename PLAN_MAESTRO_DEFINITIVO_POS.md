@@ -536,14 +536,56 @@ Cada fase internamente sigue:
 
 | Antes de construir... | Consultar... |
 |---|---|
+| **Cualquier cosa** | [PROMPT_DEL_ARQUITECTO_DEL_NUEVO_POS.md](./06-prompt-del-arquitecto/PROMPT_DEL_ARQUITECTO_DEL_NUEVO_POS.md) (personalidad + 16 estándares de calidad) |
+| **Cualquier cosa** | [DIRECTRICES_TRANSVERSALES_DEL_ERP.md](./DIRECTRICES_TRANSVERSALES_DEL_ERP.md) (DT-01 a DT-06: tiempo, dinero, identidad) |
 | Cualquier pantalla | [ESPECIFICACION_DE_INTERFACES_POS.md](./ESPECIFICACION_DE_INTERFACES_POS.md) (las 26 fichas) |
 | Cualquier componente | [ESPECIFICACION_RESPONSIVA_Y_ERGONOMIA_TACTIL.md](./ESPECIFICACION_RESPONSIVA_Y_ERGONOMIA_TACTIL.md) (R-01 a R-04) |
 | Cualquier regla de negocio | [ESPECIFICACION_FUNCIONAL_POS_INGENIERIA_INVERSA.md](./ESPECIFICACIONES%20DEL%20PROYECTO/ESPECIFICACION_FUNCIONAL_POS_INGENIERIA_INVERSA.md) (RN-01 a RN-81) |
 | Cualquier tabla/endpoint | [MODELO_DE_DATOS_DEL_NUEVO_POS.md](./MODELO_DE_DATOS_DEL_NUEVO_POS.md) |
 | Cualquier frontera entre módulos | [CONTRATOS_ENTRE_MODULOS_DEL_NUEVO_POS.md](./CONTRATOS_ENTRE_MODULOS_DEL_NUEVO_POS.md) |
+| Integración con CRM/Notificaciones | [PROPUESTA_CRM_Y_NOTIFICACIONES_DEL_NUEVO_POS.md](./PROPUESTA_CRM_Y_NOTIFICACIONES_DEL_NUEVO_POS.md) |
+
+### 10.8 Los 16 estándares de calidad del constructor (PROMPT DEL ARQUITECTO)
+
+> **Origen:** [PROMPT_DEL_ARQUITECTO_DEL_NUEVO_POS.md](./06-prompt-del-arquitecto/PROMPT_DEL_ARQUITECTO_DEL_NUEVO_POS.md)
+> **Estos son estándares obligatorios, no sugerencias. Cada uno tiene un criterio de verificación.**
+
+| # | Estándar | Qué exige | Cómo se verifica |
+|---|---|---|---|
+| E-01 | **KISS** | La solución más simple que resuelve el problema | ¿Se puede explicar en una frase? |
+| E-02 | **YAGNI** | No construir lo no pedido | ¿Hay código sin requisito que lo respalde? |
+| E-03 | **DRY** | Una sola fuente de verdad | ¿El mismo valor se define en 2+ lugares? |
+| E-04 | **SOLID** | Responsabilidad única; frontera por contratos | Test de arquitectura: 0 imports a modelos ajenos |
+| E-05 | **Fail-fast** | Falla ruidosamente; sin silencios | CI: 0 `try/except pass` en ruta crítica |
+| E-06 | **Idempotencia** | Reintentar no duplica efectos | Test: ejecutar 2× produce el mismo estado |
+| E-07 | **Trazabilidad** | Toda regla tiene su test | Matriz `regla → test` completa |
+| E-08 | **Sin números mágicos** | Todo valor de negocio se declara en config | 0 literales de negocio hardcodeados |
+| E-09 | **Dinero decimal** | `Numeric(12,2)`, nunca `Float` | Esquema: 0 columnas de dinero `Float` |
+| E-10 | **Tiempo UTC** | UTC en BD, local en pantalla | Esquema: 0 `DateTime` naive |
+| E-11 | **Identidad ≠ folio** | UUID global, folio local | Ninguna regla usa folio como identidad |
+| E-12 | **Ledger inmutable** | El stock se deriva, no se sobrescribe | Test: el ledger rechaza `UPDATE` directo |
+| E-13 | **Seguridad en backend** | El backend valida todo | Ninguna validación vive solo en el frontend |
+| E-14 | **Evidencia, no opinión** | Cada puerta se prueba con comando + salida | Cada fase cierra con evidencia |
+| E-15 | **Cero código basura** | Sin `console.log()`, placeholders, código muerto | CI: greps automáticos |
+| E-16 | **Funciones atómicas** | Máx. 20 líneas por función, máx. 3 niveles de anidamiento | Revisión de código |
+
+**Personalidad del constructor:**
+
+> *"Actúa como un ingeniero senior con 15+ años construyendo POS y ERPs en producción, que ha tenido que mantener código heredado y sabe exactamente cómo se degrada un sistema. Copias el comportamiento del POS viejo, NO su deuda."*
+
+**Lo que NUNCA hará:**
+1. Tocar el ERP viejo
+2. Entregar código basura (provisional, placeholders, console.log)
+3. Escribir `try/except pass` en ruta crítica
+4. Usar `Float` para dinero o `DateTime` naive
+5. Usar el folio como identidad
+6. Leer tablas de otro módulo
+7. Avanzar de fase con pruebas fallando
+8. Decir "ya funciona" sin mostrar evidencia
 
 ---
 
 > [!IMPORTANT]
-> **Este plan (v1.1) integra lo valioso de los 3 planes anteriores. Los documentos originales quedan marcados como SUPERSEDED con referencia a este plan.**
+> **Este plan (v1.3) integra lo valioso de los 3 planes anteriores, las 5 decisiones del dueño sobre CRM, y los 16 estándares de calidad del constructor. Los documentos originales de planes quedan en la carpeta PLANES DESCONTINUADOS.**
+
 
