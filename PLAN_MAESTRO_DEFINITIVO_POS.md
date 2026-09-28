@@ -347,41 +347,51 @@ Extraídas de 7 meses de operación real. **Toda línea de código del POS nuevo
 
 ---
 
-### Fase 8 — CRM + Notificaciones (Clientes, Lealtad, WhatsApp/Email)
-> **Saber a quién le vendes. Premiar al que vuelve. Entregar el ticket como el cliente quiera.**
+### Fase 8 — Integración con CRM y Notificaciones (lado POS)
+> **El POS se prepara para hablar con dos módulos futuros del ERP: Clientes (CRM) y Notificaciones.**
+
+> [!IMPORTANT]
+> **Aclaración de alcance:** El CRM y Notificaciones son **módulos independientes del ERP**, no son parte del POS. Tendrán su propio plan, sus propias tablas, su propio código. Lo que esta fase construye es **solo el lado del POS** — los puntos de contacto para comunicarse con esos módulos cuando existan.
 
 > [!NOTE]
-> Esta fase **no bloquea** las fases 1–7. El POS funciona completo sin ella. Se construye cuando el negocio esté listo para operar lealtad.
+> Esta fase **no bloquea** las fases 1–7. El POS funciona completo sin ella.
 
-**Especificación completa:** [PROPUESTA_CRM_Y_NOTIFICACIONES_DEL_NUEVO_POS.md](https://github.com/vikutasan/PLANOS-ARQUITECTONICOS-DEL-NUEVO-POS/blob/main/PROPUESTA_CRM_Y_NOTIFICACIONES_DEL_NUEVO_POS.md) (40 KB, diseño completo con contratos, flujos, tablas, reglas)
+**Especificación completa de los módulos CRM y Notificaciones:** [PROPUESTA_CRM_Y_NOTIFICACIONES_DEL_NUEVO_POS.md](https://github.com/vikutasan/PLANOS-ARQUITECTONICOS-DEL-NUEVO-POS/blob/main/PROPUESTA_CRM_Y_NOTIFICACIONES_DEL_NUEVO_POS.md) (40 KB)
 
-**Módulo CRM (Clientes) — archivos a construir:**
-- `CustomerIdentificationPanel.jsx` — panel de identificación (teléfono → buscar / alta rápida)
-- `CustomerCRMHub.jsx` — 2 pestañas: Clientes + Promociones (entrada en sidebar del ERP futuro)
-- `LoyaltyLedgerView.jsx` — historial de puntos del cliente
-- `PromotionEditor.jsx` — crear/editar promociones (BORRADOR → ACTIVA → VENCIDA/PAUSADA)
-- `customerService.js` — API del CRM (contratos 18 + internos)
-- Backend: 5 tablas (`customers`, `loyalty_ledger`, `promotions`, `customer_benefits`, `customer_history`)
+---
 
-**Módulo Notificaciones — archivos a construir:**
-- `TicketDeliveryPanel.jsx` — paso post-cobro (Imprimir / WhatsApp / Email / Omitir)
-- `notificationService.js` — API de notificaciones (contrato 19)
-- `notificationWorker.py` — worker que procesa la cola (WhatsApp Business API / SMTP)
-- Backend: 3 tablas (`notification_outbox`, `notification_log`, `channel_config`)
+**Lo que SÍ se construye en esta fase (lado POS):**
 
-**Lecciones integradas:**
-- Outbox transaccional: el mensaje se encola en la MISMA transacción del ticket (Regla de Oro #7)
-- NUNCA bloquea la venta: si el CRM o WhatsApp caen, la venta continúa
-- Ledger inmutable para puntos: se asientan, nunca se hacen UPDATE (como inventario)
-- Idempotencia por `evento_id` + constraint UNIQUE
-- Canje de puntos: reserva → confirmación (si el cobro falla, la reserva se libera)
-- Promociones nunca se borran (auditoría histórica)
+| Archivo | Qué hace | Contrato que consume |
+|---|---|---|
+| `CustomerIdentificationPanel.jsx` | Botón "👤 Cliente" en el header + panel para teclear teléfono | #18 `clientes.beneficios_para_ticket` |
+| `TicketDeliveryPanel.jsx` | Paso post-cobro: 🖨️ Imprimir / 📱 WhatsApp / ✉️ Email / Omitir | #19 `notificaciones.encolar_ticket` |
 
-**Criterio de aceptación:**
-- Puedes cobrar identificando al cliente por teléfono y ver sus beneficios aplicados
-- Puedes enviar ticket por WhatsApp o email después de cobrar
-- Si el CRM está caído, la venta continúa a precio de lista
-- Si WhatsApp está caído, el ticket queda en cola y se envía cuando se recupere
+Son **2 componentes** y **2 llamadas a contrato**. Nada más.
+
+**Lo que NO se construye en esta fase (es de otro módulo):**
+
+| Componente | Pertenece a | Módulo |
+|---|---|---|
+| Pantalla de gestión de clientes | ❌ No es del POS | Módulo Clientes (CRM) |
+| Pantalla de promociones | ❌ No es del POS | Módulo Clientes (CRM) |
+| Tablas `customers`, `loyalty_ledger`, `promotions`, `customer_benefits` | ❌ No es del POS | Módulo Clientes (CRM) |
+| Worker de WhatsApp/SMTP | ❌ No es del POS | Módulo Notificaciones |
+| Tablas `notification_outbox`, `notification_log`, `channel_config` | ❌ No es del POS | Módulo Notificaciones |
+
+---
+
+**Lecciones integradas (lado POS):**
+- Si el CRM no responde, el POS cobra a precio de lista (**NUNCA bloquea la venta**)
+- Si Notificaciones no responde, el ticket se imprime normalmente. El envío queda pendiente
+- El POS muestra los beneficios que el CRM devuelve pero **nunca los calcula**
+- Los descuentos se agregan como líneas negativas al ticket (el total se recalcula desde ítems persistidos)
+
+**Criterio de aceptación (lado POS):**
+- El botón "Cliente" permite identificar por teléfono y ver beneficios
+- El paso de entrega ofrece Imprimir / WhatsApp / Email
+- Si el CRM está caído, la venta continúa sin beneficios
+- Si Notificaciones está caído, la venta continúa con impresión
 
 ---
 
