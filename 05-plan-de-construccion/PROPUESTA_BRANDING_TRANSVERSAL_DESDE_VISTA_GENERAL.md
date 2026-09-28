@@ -276,12 +276,18 @@ la validación WCAG AA con fallback a la canónica y aviso (§7). Tres barreras,
   `nuevo_pos`, con su seed.
 - Permite probar el efecto completo sin depender del ERP.
 
-### Fase C — Edición en Vista General del ERP (CON VENTANA ACORDADA)
+### Fase C — Edición en Vista General del ERP (REFERENCIA FUTURA — corregido 28 Sep 2026)
+
+> **Corrección v3 (28 Sep 2026):** esta fase **NO se ejecuta hoy**. Los puntos de aplicación
+> de la identidad en el ERP son **referencia de planificación** para cuando esos módulos se
+> reconstruyan. **Hoy no se toca el ERP ni el POS que corre.** Ver
+> [`ADDENDUM_PUNTOS_DE_APLICACION_DEL_BRANDING.md`](./ADDENDUM_PUNTOS_DE_APLICACION_DEL_BRANDING.md).
 
 - Añadir los campos de logo, colores, tema y tipografía al modal de Vista General.
 - Reutilizar el permiso `editar_info_negocio` que **ya existe**
   ([`ExperimentCenterUI.jsx`](../../ERP-R-DE-RICO/apps/ExperimentCenterUI.jsx:560)).
 - **Requiere confirmación explícita del usuario antes de tocar el ERP.**
+- **Estado hoy:** no se implementa. Es referencia para cuando Vista General se reconstruya.
 
 ### Fase D — Texturas y tipografía avanzada (OPCIONAL)
 
@@ -303,8 +309,13 @@ ya existe en tres lugares del ERP y del POS nuevo.
 
 **Único cambio al planteamiento original:** el **orden**. No empezar por el modal del ERP
 (que está corriendo y vendiendo), sino por el POS nuevo (que está aislado y es donde se
-quiere que el branding se respete). Así el ERP no se toca hasta que el usuario decida abrir
-la ventana de mantenimiento.
+quiere que el branding se respete).
+
+**Corrección v3 (28 Sep 2026):** los puntos de aplicación de la identidad en el ERP son
+**referencia de planificación** para cuando esos módulos se reconstruyan. **Hoy no se toca
+el ERP ni el POS que corre.** No hay ventana de mantenimiento que abrir hoy: no se toca nada.
+Lo único que se hace hoy es **explorar cómo el POS nuevo interactuará** con esos módulos que
+aún no se construyen, y **dejar todo preparado** para cuando existan.
 
 ---
 

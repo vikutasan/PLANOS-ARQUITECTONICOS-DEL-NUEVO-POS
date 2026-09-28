@@ -1,8 +1,13 @@
 # PROPUESTA V4 — Apariencia por Módulo (Motor Compartido + Temas por Módulo + Identidad Encima)
 
+> **ANEXO DE ARQUITECTURA (corrección 28 Sep 2026).** Este documento se conserva como el **"por qué"** de la arquitectura de temas. El **"cómo"** (el plan de ejecución) vive en [`PLAN_DE_IMPLEMENTACION_UI_POR_MODULO.md`](./PLAN_DE_IMPLEMENTACION_UI_POR_MODULO.md), que resuelve las 3 decisiones que aquí quedaron abiertas (mecanismo, vocabulario y default) y corrige los defectos detectados en la revisión autocrítica contra el código real del POS.
+>
+> **No ejecutar nada de este documento sin leer primero el plan de implementación.** Los puntos de este anexo que contradigan al plan, se resuelven a favor del plan.
+
 **Estado:** propuesta para revisión del dueño. No se ha escrito una sola línea de código de esta propuesta.
 **Alcance:** SOLO el POS nuevo que estamos construyendo (`../NUEVO-POS/`).
 **Regla dura vigente:** NO SE TOCA EL ERP INSTALADO Y CORRIENDO. NO SE TOCA EL POS QUE CORRE.
+**Naturaleza del documento (corrección 28 Sep 2026):** los 7 puntos de aplicación de la identidad que se mencionan aquí son **referencia de planificación** para cuando esos módulos del ERP se reconstruyan. **Hoy no se toca ninguno.** El trabajo actual es solo **explorar cómo el POS nuevo interactuará** con esos módulos que aún no se construyen, y **dejar todo preparado** para cuando existan.
 **Reemplaza a:** `PROPUESTA_APARIENCIA_POR_MODULO_V3.md` (en lo que respecta a "3 temas por módulo").
 **Se apoya en:** `PROPUESTA_BRANDING_TRANSVERSAL_DESDE_VISTA_GENERAL.md` (v2) y `ADDENDUM_PUNTOS_DE_APLICACION_DEL_BRANDING.md`.
 
@@ -13,13 +18,17 @@
 | Punto | v2 + Addendum | V4 (esta propuesta) |
 |---|---|---|
 | ¿Quién define los temas? | Un catálogo global único (4 temas para todo el ERP). | **Cada módulo define sus propios temas.** El catálogo global solo guarda los temas *compartidos* (los que varios módulos quieren reusar). |
-| ¿Cuántos temas ve el usuario? | 4 temas globales. | **3 temas por módulo** (1 predeterminado + 2 opcionales). |
+| ¿Cuántos temas ve el usuario? | 4 temas globales. | **De 1 a 3 temas por módulo** (1 predeterminado obligatorio + hasta 2 opcionales). |
 | ¿Dónde vive el motor? | Implícito, sin lugar declarado. | **`packages/theme-engine/`** — un solo motor compartido, fuera de todo módulo. |
 | ¿Dónde viven los temas? | En el catálogo global. | **Dentro de la carpeta de cada módulo** (`apps/<modulo>/theme/`). |
 | ¿La identidad del negocio? | Capa 3 encima del tema. | **Igual** — capa encima, configurada en Vista General, guardada en la BD. |
 | ¿Elección por módulo o global? | Global. | **Por módulo, con predeterminado.** El usuario puede cambiar el tema de un módulo sin afectar a los demás. |
 
-Lo que **NO** cambia: el modelo de 3 capas (`UI final = CANÓNICA ⊕ TEMA ⊕ IDENTIDAD`), los 5 puntos de color, los 3 puntos de tipografía, los 3 estados del logo, y los 2 avisos visibles.
+Lo que **NO** cambia: el modelo de 3 capas (`UI final = CANÓNICA ⊕ TEMA ⊕ IDENTIDAD`), los 3 estados del logo, y los 2 avisos visibles.
+
+**Corrección importante (27 Sep 2026):** los puntos de aplicación de la identidad **ya no se definen desde la óptica del POS**. La identidad aplica en **7 lugares muy específicos del ERP** (ver [`ADDENDUM_PUNTOS_DE_APLICACION_DEL_BRANDING.md`](./ADDENDUM_PUNTOS_DE_APLICACION_DEL_BRANDING.md)), y **6 de esos 7 no tocan el nuevo POS**. Los colores corporativos son **de 1 a 3**, no forzosamente 3.
+
+**Corrección v4 (28 Sep 2026):** los 7 puntos son **referencia de planificación**, no trabajo actual. **Hoy no se toca el ERP ni el POS que corre.** Solo se explora cómo el POS nuevo interactuará con esos módulos que aún no se construyen, dejando todo preparado para cuando existan. La Fase C **no toca el ERP** (ver §10).
 
 ---
 
@@ -113,7 +122,7 @@ export const TEMA_DEL_MODULO = {
 |---|---|---|
 | `modulo` | El nombre del módulo. | Debe coincidir con el nombre de la carpeta. |
 | `default` | El tema con el que nace el módulo. | **Obligatorio.** Debe estar en `permitidos`. |
-| `permitidos` | Los temas que el usuario puede elegir. | **Exactamente 3.** El default + 2 opcionales. |
+| `permitidos` | Los temas que el usuario puede elegir. | **De 1 a 3.** El default + hasta 2 opcionales. |
 | `temas` | El mapa de nombre → archivo del tema. | Cada nombre en `permitidos` debe existir aquí. |
 
 ### 2.2 La forma de un tema
@@ -142,7 +151,7 @@ export default {
 Cada módulo debe pasar estos 5 tests. Si uno falla, el módulo no se puede construir.
 
 1. **El default existe en permitidos.** `permitidos.includes(default)` es verdadero.
-2. **Hay exactamente 3 permitidos.** Ni 2, ni 4. Tres.
+2. **Hay entre 1 y 3 permitidos.** El default siempre está; los opcionales son hasta 2.
 3. **Cada permitido tiene su archivo.** Todo nombre en `permitidos` existe como llave en `temas`.
 4. **Cada tema pasa el contraste.** `validarContraste(tema)` no lanza error.
 5. **El módulo no importa el motor de otro módulo.** Ningún import apunta a `apps/<otro>/theme/`.
@@ -235,23 +244,42 @@ La identidad **no es un tema**. Es una capa que se pone encima del tema que el m
 - **Se guarda** en la base de datos, en la tabla `system_settings` que ya existe.
 - **Se lee** desde cualquier módulo, con `GET /branding`.
 
-### 4.2 Las 4 llaves nuevas
+### 4.2 Dónde APLICA la identidad (corregido 27 Sep 2026)
+
+**La identidad no aplica en todo el ERP.** Aplica en **7 lugares muy específicos**, definidos en [`ADDENDUM_PUNTOS_DE_APLICACION_DEL_BRANDING.md`](./ADDENDUM_PUNTOS_DE_APLICACION_DEL_BRANDING.md). Fuera de esos 7, manda el tema.
+
+| # | Punto de aplicación | Logo | Nombre | Colores | ¿Toca el nuevo POS? |
+|---|---------------------|------|--------|---------|---------------------|
+| 1 | Pantalla de logueo al ERP | ✅ | ✅ | ✅ | ❌ No |
+| 2 | Barra selectora de módulos (lateral izq.) | ✅ | ✅ | ✅ | ❌ No |
+| 3 | Encabezado de Vista General | ✅ | ✅ | ✅ | ❌ No |
+| 4 | Tickets y cortes de caja | ✅ | ✅ | ❌ No | ⚠️ Parcial (solo formato) |
+| 5 | Documentos oficiales (impresión/exportación) | ✅ | ✅ | ✅ (solo encabezado) | ❌ No |
+| 6 | Icono de acceso de la app del ERP | ✅ | ❌ No | ✅ | ❌ No |
+| 7 | Pantalla de carga de la app del ERP | ✅ | ✅ | ✅ | ❌ No |
+
+**Consecuencia para esta propuesta:** los 7 puntos son del **ERP**, no del POS nuevo. Son **referencia de planificación**: describen **dónde irá** la identidad cuando esos módulos se reconstruyan. **Hoy no se implementa ninguno.** La Fase C **no toca el ERP** (ver §10). Las fases A, B y D siguen aisladas al POS nuevo.
+
+### 4.3 Las 5 llaves nuevas
 
 | Llave | Qué guarda | Ejemplo |
 |---|---|---|
 | `business_logo` | La ruta o el base64 del logo. | `/assets/logo.png` |
-| `business_colors` | Los 2-3 colores institucionales (JSON). | `["#7a8b3c", "#2f6b3f"]` |
+| `business_name` | El nombre de marca. | `"R de Rico"` |
+| `business_colors` | **De 1 a 3** colores institucionales (JSON). | `["#7a8b3c", "#2f6b3f"]` |
 | `business_font` | La tipografía corporativa. | `"Montserrat"` |
-| `business_theme_pos` | El tema elegido para el módulo POS. | `"nocturno"` |
-| `business_theme_estadisticas` | El tema elegido para Estadísticas. | `"tablero"` |
+| `business_themes` | El mapa de temas por módulo (JSON). | `{"pos": "nocturno"}` |
 
-**Nota:** hay una llave de tema **por módulo**. Así el usuario puede poner el POS en "Nocturno" y Estadísticas en "Tablero" sin que uno afecte al otro.
+**Nota 1:** los colores son **de 1 a 3**, no forzosamente 3. El sistema deriva el resto por contraste.
 
-### 4.3 El contrato `GET /branding`
+**Nota 2:** los temas van en **una sola llave JSON** (`business_themes`), no en una llave por módulo. Así el usuario puede poner el POS en "Nocturno" y Estadísticas en "Tablero" sin que uno afecte al otro, y el esquema no crece a mano.
+
+### 4.4 El contrato `GET /branding`
 
 ```json
 {
   "logo": "/assets/logo.png",
+  "name": "R de Rico",
   "colors": ["#7a8b3c", "#2f6b3f"],
   "font": "Montserrat",
   "themes": {
@@ -416,7 +444,7 @@ Pensado para quien quiere lo esencial sin adornos. Grises neutros, acento verde.
 |---|---|
 | El motor compartido | Se escribe **una vez**. ~150 líneas. |
 | El contrato del módulo | Se escribe **una vez por módulo**. ~15 líneas. |
-| Los 3 temas por módulo | **3 por módulo.** Este es el costo que crece. |
+| Los temas por módulo | **De 1 a 3 por módulo** (1 predeterminado + hasta 2 opcionales). Este es el costo que crece. |
 | Los 5 tests de contrato | Se escriben **una vez**, se reusan por módulo. |
 
 Con 12 módulos: 12 contratos + 36 temas. Es trabajo, pero es trabajo **acotado y repetible**.
@@ -431,21 +459,21 @@ Con 12 módulos: 12 contratos + 36 temas. Es trabajo, pero es trabajo **acotado 
 ### 9.3 Lo que NO se hace
 
 - No se crean 36 temas de golpe. Se crean cuando se construye cada módulo.
-- No se toca el ERP que corre. Esto es solo para el POS nuevo.
 - No se inventan temas "por si acaso". Cada tema tiene que tener una razón.
+- **No se toca el ERP. No se toca el POS que corre.** Los 7 puntos son referencia futura (ver Fase C).
 
 ---
 
-## 10. Impacto en las fases
+## 10. Impacto en las fases (corregido v4 — 28 Sep 2026)
 
-| Fase | Qué se hace | Toca el ERP? |
-|---|---|---|
-| **A — Motor** | Crear `packages/theme-engine/` con las 3 funciones y los tests. | No |
-| **B — POS** | Crear `apps/pos/theme/` con los 3 temas y el contrato. Aplicar en el POS nuevo. | No |
-| **C — Identidad** | Crear `GET /branding` y la sección "Apariencia por módulo" en Vista General. | No |
-| **D — Los demás módulos** | Repetir el patrón al construir cada módulo. | No |
+| Fase | Qué se hace | Toca el ERP? | Toca el POS nuevo? |
+|---|---|---|---|
+| **A — Motor** | Crear `packages/theme-engine/` con las 3 funciones y los tests. | **No** | Sí |
+| **B — POS** | Crear `apps/pos/theme/` con los temas y el contrato. Aplicar en el POS nuevo. | **No** | Sí |
+| **C — Identidad (referencia futura)** | **Explorar** cómo el POS nuevo interactuará con los módulos que aún no se construyen, y **dejar preparado** el contrato `GET /branding` y las 5 llaves. Los **7 puntos de aplicación en el ERP** quedan como **referencia de planificación** para cuando esos módulos se reconstruyan. | **No — es referencia futura** | Sí (solo el POS nuevo) |
+| **D — Los demás módulos** | Repetir el patrón al construir cada módulo. | **No** | Sí |
 
-**Todas las fases trabajan solo en `../NUEVO-POS/`.** El ERP instalado y el POS que corre no se tocan en ninguna fase.
+**Cambio clave respecto a la versión anterior:** la Fase C **NO toca el ERP hoy**. Los 7 puntos de aplicación son **referencia de planificación** para cuando esos módulos se reconstruyan. Por eso **no requiere ventana de mantenimiento**: no hay nada que mantener porque no se toca nada. Lo único que se hace hoy en la Fase C es **explorar la interacción** y **dejar todo preparado** (contrato, llaves, motor). Las fases A, B y D siguen aisladas al POS nuevo.
 
 ---
 
@@ -456,6 +484,12 @@ Con 12 módulos: 12 contratos + 36 temas. Es trabajo, pero es trabajo **acotado 
 - [x] Los 3 temas del POS definidos (Cálido, Nocturno, Minimal).
 - [x] Los 4 escenarios de caída resueltos.
 - [x] Los 5 tests de contrato definidos.
+- [x] **Corrección 27 Sep 2026:** puntos de aplicación de la identidad alineados con el addendum (7 puntos del ERP, no del POS).
+- [x] **Corrección 27 Sep 2026:** colores corporativos de 1 a 3 (no forzosamente 3).
+- [x] **Corrección 27 Sep 2026:** temas de 1 a 3 por módulo (no "exactamente 3").
+- [x] **Corrección 27 Sep 2026:** una sola llave JSON `business_themes` (no una por módulo).
+- [x] **Mejoras incorporadas:** contraste post-identidad, tema en contenedor del módulo, default importado estáticamente.
+- [x] **Corrección v4 (28 Sep 2026):** los 7 puntos son **referencia de planificación**, no trabajo actual. La regla dura (**NO se toca el ERP ni el POS que corre**) se mantiene intacta. La Fase C vuelve a **"No toca el ERP"**.
 - [ ] Revisión del dueño.
 - [ ] Aprobación para empezar la Fase A.
 

@@ -1,56 +1,258 @@
-# Addendum — Puntos de aplicación del branding
+# Addendum — Puntos de aplicación del branding (v3 — referencia de planificación)
 
 > **Documento padre:** [`PROPUESTA_BRANDING_TRANSVERSAL_DESDE_VISTA_GENERAL.md`](./PROPUESTA_BRANDING_TRANSVERSAL_DESDE_VISTA_GENERAL.md) (v2, commit `fe255bf`)
 > **Complementa a:** [`PROPUESTA_PALETA_CANONICA_V2.md`](./PROPUESTA_PALETA_CANONICA_V2.md) (3 candidatas, commit `962cc64`)
 > **Creado:** 26 Sep 2026
-> **Motivo:** la v2 definió **qué** capas existen (IDENTIDAD / TEMA / CANÓNICA) pero dejó implícito **dónde** aplica cada una. Este addendum cierra esa ambigüedad con listas cerradas.
+> **Corregido:** 27 Sep 2026 — se reemplaza la lista de puntos de aplicación por la instrucción directa del dueño.
+> **Corregido v3:** 28 Sep 2026 — se aclara que los 7 puntos son **referencia de planificación**, no trabajo actual. La regla dura se mantiene intacta.
+> **Motivo de la corrección v3:** el dueño precisó que **NO se toca el ERP ni el POS que corre**. Los 7 puntos describen **dónde irá la identidad cuando esos módulos se reconstruyan**, no dónde hay que ir a tocar código hoy. Este documento es un **plano de referencia**, no una orden de trabajo.
 
 ---
 
-## 0. El problema que resuelve este addendum
+## 0. La corrección, en una frase
 
-La propuesta v2 decía "la identidad se aplica encima del tema". Eso es correcto pero insuficiente: sin una **lista cerrada de puntos de aplicación**, cada desarrollador decide dónde poner el color corporativo, y el resultado es el "collage" que ya advertimos (un acento aquí, otro allá, sin jerarquía).
+La v1 de este addendum respondía a la pregunta *"¿dónde se ve la identidad en el POS?"*. La pregunta correcta era *"¿dónde irá la identidad en el ERP cuando se reconstruya?"*. Son dos preguntas distintas y la respuesta cambia por completo.
 
-**Regla de este addendum:** cada capa tiene una **lista cerrada** de puntos donde aplica. Fuera de esa lista, la capa **no aplica**. Lo que no está en la lista, lo manda el tema.
+### 0.1 La regla dura se mantiene intacta (esto es lo más importante)
 
----
+> **NO SE TOCA EL ERP INSTALADO Y CORRIENDO. NO SE TOCA EL POS QUE CORRE.**
 
-## 1. Jerarquía de capas (el "piso" y las "excepciones")
+Este addendum **no autoriza tocar nada**. Es un **documento de planificación**. Los 7 puntos que se listan abajo son **referencia de dónde irá la identidad** cuando esos módulos del ERP se reconstruyan. Hoy **no se toca ninguno**.
 
-```
-┌─────────────────────────────────────────────────────────┐
-│  CAPA 3 — CANÓNICA                                      │  ← fallback de TODO
-│  (piso del sistema: si nada más existe, esto se ve)     │
-└─────────────────────────────────────────────────────────┘
-                          ▲
-┌─────────────────────────────────────────────────────────┐
-│  CAPA 2 — TEMA                                          │  ← domina el 90%
-│  (fondos, superficies, bordes, sombras, radios,         │
-│   densidad, estilos de modal y de botón)                │
-└─────────────────────────────────────────────────────────┘
-                          ▲
-┌─────────────────────────────────────────────────────────┐
-│  CAPA 1 — IDENTIDAD                                     │  ← excepciones puntuales
-│  (logo + tipografía + 2-3 colores institucionales)      │
-│  aplica SOLO en los puntos listados abajo               │
-└─────────────────────────────────────────────────────────┘
-```
+### 0.2 Qué se hace hoy y qué no
 
-**Fórmula de resolución:**
+| Hoy (POS nuevo) | Mañana (cuando se reconstruyan los módulos) |
+|---|---|
+| Se explora cómo el POS nuevo **interactuará** con los módulos que aún no se construyen. | Se implementan los 7 puntos de aplicación en los módulos reconstruidos. |
+| Se deja **todo preparado** (contratos, llaves, motor) para cuando esos módulos existan. | Se conecta la identidad a los puntos ya definidos. |
+| **No se toca el ERP. No se toca el POS que corre.** | Se toca **solo lo reconstruido**, nunca lo que corre hoy. |
 
-```
-UI final = CANÓNICA ⊕ TEMA ⊕ IDENTIDAD
-```
-
-Donde `⊕` significa "sobrescribe solo en los puntos declarados". La IDENTIDAD nunca sobrescribe un punto que no esté en su lista.
+**Regla dura que gobierna este addendum:** la identidad del negocio (logotipo, nombre de marca y colores corporativos) aplicará **solo en los 7 lugares del ERP listados abajo**, **cuando esos módulos se reconstruyan**. Fuera de esos 7, la identidad **no aplica**. Y de esos 7, **6 no tocarán el nuevo POS que estamos construyendo**.
 
 ---
 
-## 2. Punto 1 — LOGOTIPO
+## 1. Los 7 puntos de aplicación (lista cerrada — instrucción del dueño)
 
-### 2.1 Decisión
+| # | Punto | Logotipo | Nombre de marca | Colores corporativos | ¿Toca el nuevo POS? |
+|---|-------|----------|-----------------|----------------------|---------------------|
+| **1** | Pantalla de logueo al ERP (donde se escribe la clave de acceso) | ✅ Sí | ✅ Sí | ✅ Sí | ❌ **No** |
+| **2** | Parte superior de la barra selectora de módulos (lateral izquierdo del ERP) | ✅ Sí | ✅ Sí | ✅ Sí | ❌ **No** |
+| **3** | Encabezado del módulo Vista General (sitio desde donde se configura la identidad) | ✅ Sí | ✅ Sí | ✅ Sí | ❌ **No** |
+| **4** | Tickets y cortes de caja | ✅ Sí | ✅ Sí | ❌ **No** (solo logo y nombre) | ⚠️ **Parcial** (ver §5) |
+| **5** | Documentos oficiales que genere el ERP (impresión o exportación) | ✅ Sí | ✅ Sí | ✅ Sí (solo en el encabezado del documento) | ❌ **No** |
+| **6** | Icono de acceso de la app del ERP (launcher / icono en el escritorio o dispositivo) | ✅ Sí | ❌ No | ✅ Sí | ❌ **No** |
+| **7** | Pantalla de carga de la app del ERP (splash / arranque) | ✅ Sí | ✅ Sí | ✅ Sí | ❌ **No** |
 
-El logotipo **solo aparece donde el usuario lo establezca**. Pero si la comunicación con Vista General se pierde, la UI **no puede quedar sin marca**. Por eso hay **3 estados explícitos**, evaluados en orden:
+**Lectura de la tabla:** los puntos 1, 2, 3, 5, 6 y 7 son **100% del ERP** y no tocan el nuevo POS. El punto 4 (tickets y cortes) es el único que tiene relación con el POS, y esa relación se resuelve en §5.
+
+**Naturaleza de esta tabla (importante):** es una **referencia de planificación**. Describe **dónde irá la identidad cuando esos módulos del ERP se reconstruyan**. Hoy **no se toca ninguno de los 7 puntos**. El trabajo actual es solo **explorar cómo el POS nuevo interactuará** con esos módulos que aún no se construyen, y **dejar todo preparado** para cuando existan.
+
+---
+
+## 2. Punto 1 — Pantalla de logueo al ERP
+
+### 2.1 Qué aplica
+
+| Elemento | ¿Aplica? | Dónde exactamente |
+|----------|----------|-------------------|
+| Logotipo | ✅ Sí | En el bloque de marca del formulario de acceso |
+| Nombre de marca | ✅ Sí | Junto al logotipo, con la tipografía corporativa |
+| Colores corporativos | ✅ Sí | En el botón de "Entrar" y en la franja de marca del formulario |
+
+### 2.2 Qué NO aplica
+
+- El fondo de la pantalla → **tema del ERP**
+- Los campos de texto (usuario, clave) → **tema del ERP**
+- Los mensajes de error → **tema del ERP**
+
+### 2.3 Alcance
+
+**Este punto NO toca el nuevo POS.** Es la pantalla de acceso del ERP instalado.
+
+**Estado hoy: NO SE IMPLEMENTA.** Es referencia de planificación. Se implementará **cuando el módulo de acceso del ERP se reconstruya**, nunca sobre el ERP que corre hoy.
+
+---
+
+## 3. Punto 2 — Barra selectora de módulos (lateral izquierdo)
+
+### 3.1 Qué aplica
+
+| Elemento | ¿Aplica? | Dónde exactamente |
+|----------|----------|-------------------|
+| Logotipo | ✅ Sí | En la **parte superior** de la barra lateral, arriba de la lista de módulos |
+| Nombre de marca | ✅ Sí | Debajo o junto al logotipo, en el encabezado de la barra |
+| Colores corporativos | ✅ Sí | En el fondo del encabezado de la barra y en el indicador del módulo activo |
+
+### 3.2 Qué NO aplica
+
+- Los iconos y nombres de los módulos → **tema del ERP**
+- El fondo del cuerpo de la barra → **tema del ERP**
+- Los estados hover / focus de cada módulo → **tema del ERP**
+
+### 3.3 Alcance
+
+**Este punto NO toca el nuevo POS.** Es la barra de navegación del ERP instalado.
+
+**Estado hoy: NO SE IMPLEMENTA.** Es referencia de planificación. Se implementará **cuando la barra de navegación del ERP se reconstruya**, nunca sobre el ERP que corre hoy.
+
+---
+
+## 4. Punto 3 — Encabezado del módulo Vista General
+
+### 4.1 Qué aplica
+
+| Elemento | ¿Aplica? | Dónde exactamente |
+|----------|----------|-------------------|
+| Logotipo | ✅ Sí | En el encabezado del módulo Vista General |
+| Nombre de marca | ✅ Sí | En el encabezado, con la tipografía corporativa |
+| Colores corporativos | ✅ Sí | En el encabezado del módulo y en los controles de configuración de la identidad |
+
+### 4.2 Por qué este punto es especial
+
+Vista General es **el sitio desde donde se configura esta identidad de negocio**. Es el único punto de los 7 donde la identidad se **edita** además de **mostrarse**. Los otros 6 puntos solo la **muestran**.
+
+Esto significa que Vista General tiene dos responsabilidades distintas:
+
+1. **Mostrar** la identidad (como los otros puntos).
+2. **Editar** la identidad (logotipo, nombre de marca, colores corporativos) y guardarla en la BD.
+
+### 4.3 Qué NO aplica
+
+- El cuerpo del formulario de configuración → **tema del ERP**
+- Las tablas y listas de datos → **tema del ERP**
+
+### 4.4 Alcance
+
+**Este punto NO toca el nuevo POS.** Es el módulo Vista General del ERP instalado.
+
+**Estado hoy: NO SE IMPLEMENTA.** Es referencia de planificación. Se implementará **cuando Vista General se reconstruya**, nunca sobre el ERP que corre hoy.
+
+---
+
+## 5. Punto 4 — Tickets y cortes de caja
+
+### 5.1 Qué aplica
+
+| Elemento | ¿Aplica? | Dónde exactamente |
+|----------|----------|-------------------|
+| Logotipo | ✅ Sí | En el encabezado del ticket y del corte |
+| Nombre de marca | ✅ Sí | En el encabezado, junto al logotipo |
+| Colores corporativos | ❌ **No** | **Solo logotipo y nombre de marca. Sin colores.** |
+
+### 5.2 La regla explícita del dueño
+
+> **"En los tickets y cortes de caja (solo logotipo y nombre de marca sin colores corporativos)."**
+
+Esta es una decisión deliberada y tiene sentido técnico: los tickets se imprimen en papel térmico, donde el color no se reproduce (sale en escala de grises o se pierde). Aplicar color corporativo a un ticket térmico es trabajo perdido y puede reducir la legibilidad. **Solo logo y nombre.**
+
+### 5.3 Alcance — el único punto con relación al POS
+
+Este es el único de los 7 puntos que tiene relación con el nuevo POS, y la relación se resuelve así:
+
+- **El formato del ticket es el mismo** en el ERP y en el nuevo POS (ya está en los criterios de aceptación: *"El ticket impreso es idéntico al del POS actual"*).
+- **La identidad que se imprime** (logo + nombre) se lee de la misma fuente de configuración.
+- **El nuevo POS no se toca para implementar este punto** en el ERP. Lo que se comparte es el **formato del ticket**, no el código del ERP.
+
+**Precisión importante:** el nuevo POS ya tiene su propio generador de tickets. Este punto del addendum describe el ticket **del ERP**. La coherencia entre ambos tickets es un criterio de aceptación del POS nuevo, no una modificación del ERP.
+
+---
+
+## 6. Punto 5 — Documentos oficiales del ERP (impresión o exportación)
+
+### 6.1 Qué aplica
+
+| Elemento | ¿Aplica? | Dónde exactamente |
+|----------|----------|-------------------|
+| Logotipo | ✅ Sí | En el encabezado del documento |
+| Nombre de marca | ✅ Sí | En el encabezado, junto al logotipo |
+| Colores corporativos | ✅ Sí | **Solo en el encabezado del documento** |
+
+### 6.2 Qué documentos entran
+
+Cualquier documento oficial que el ERP genere, ya sea por **impresión** o por **exportación**:
+
+- Reportes impresos
+- Estados de cuenta
+- Órdenes de compra / pedidos
+- Cualquier exportación (PDF, Excel, etc.) que lleve encabezado de marca
+
+### 6.3 La regla explícita del dueño
+
+> **"En los documentos oficiales que genere el ERP ya sea por impresión o por exportación (acá sí se podría incluir color en el encabezado de dichos documentos)."**
+
+**El color se limita al encabezado.** El cuerpo del documento usa el tema del ERP. Esto evita que un documento oficial se vuelva ilegible por una combinación de colores.
+
+### 6.4 Alcance
+
+**Este punto NO toca el nuevo POS.** Son documentos del ERP instalado.
+
+**Estado hoy: NO SE IMPLEMENTA.** Es referencia de planificación. Se implementará **cuando el generador de documentos del ERP se reconstruya**, nunca sobre el ERP que corre hoy.
+
+---
+
+## 7. Punto 6 — Icono de acceso de la app del ERP
+
+### 7.1 Qué aplica
+
+| Elemento | ¿Aplica? | Dónde exactamente |
+|----------|----------|-------------------|
+| Logotipo | ✅ Sí | Como icono de la app (launcher / escritorio / dispositivo) |
+| Nombre de marca | ❌ No | El icono no lleva texto de marca |
+| Colores corporativos | ✅ Sí | Como fondo o acento del icono |
+
+### 7.2 Qué es este punto
+
+Es el **icono con el que se abre la app del ERP**: el icono en el escritorio, en la barra de tareas, o en la pantalla de inicio del dispositivo. Es la primera impresión de la marca antes de abrir la aplicación.
+
+### 7.3 Alcance
+
+**Este punto NO toca el nuevo POS.** Es el icono de acceso del ERP instalado.
+
+**Estado hoy: NO SE IMPLEMENTA.** Es referencia de planificación. Se implementará **cuando el empaquetado de la app del ERP se reconstruya**, nunca sobre el ERP que corre hoy.
+
+---
+
+## 8. Punto 7 — Pantalla de carga de la app del ERP
+
+### 8.1 Qué aplica
+
+| Elemento | ¿Aplica? | Dónde exactamente |
+|----------|----------|-------------------|
+| Logotipo | ✅ Sí | Centrado en la pantalla de carga (splash) |
+| Nombre de marca | ✅ Sí | Debajo del logotipo |
+| Colores corporativos | ✅ Sí | En el fondo de la pantalla de carga |
+
+### 8.2 Qué es este punto
+
+Es la **pantalla que se muestra mientras la app del ERP arranca** (splash screen). Es el momento en que el usuario espera y ve la marca.
+
+### 8.3 Alcance
+
+**Este punto NO toca el nuevo POS.** Es la pantalla de arranque del ERP instalado.
+
+**Estado hoy: NO SE IMPLEMENTA.** Es referencia de planificación. Se implementará **cuando el empaquetado de la app del ERP se reconstruya**, nunca sobre el ERP que corre hoy.
+
+---
+
+## 9. Lo que la identidad NUNCA toca (en el ERP)
+
+Fuera de los 7 puntos de §1, la identidad **no aplica**. Lo manda el tema del ERP:
+
+- Fondos de pantalla y de módulos
+- Superficies / paneles / tarjetas
+- Bordes, sombras y radios
+- Estados hover / focus / disabled / active
+- Texto de cuerpo, tablas, listas y formularios
+- Iconos de módulos y de acciones
+- Modales y diálogos
+
+**Regla:** si un punto no está en la tabla de §1, no lleva identidad.
+
+---
+
+## 10. Los 3 estados del logotipo (sin cambios)
+
+El logotipo se evalúa en orden, y **nunca queda vacío**:
 
 | Orden | Estado | Condición | Qué se muestra |
 |-------|--------|-----------|----------------|
@@ -58,191 +260,143 @@ El logotipo **solo aparece donde el usuario lo establezca**. Pero si la comunica
 | 2 | **Wordmark del sistema** | `business_logo` no existe, o la URL falla | Texto "R de Rico" con la fuente canónica |
 | 3 | **Nunca vacío** | — | (el estado 2 siempre está disponible) |
 
-### 2.2 Por qué el fallback es un WORDMARK y no un SVG remoto
-
-**Decisión: el fallback es un wordmark tipográfico, no una imagen.**
-
-Razón técnica: si el fallback fuera otra imagen remota, y la red se cae (que es exactamente el escenario que dispara el fallback), el fallback también fallaría. Un wordmark es **texto renderizado con una fuente que ya está en el bundle** — no puede fallar por red.
+**Por qué el fallback es un wordmark y no una imagen:** si el fallback fuera otra imagen remota, y la red se cae (que es exactamente el escenario que dispara el fallback), el fallback también fallaría. Un wordmark es **texto renderizado con una fuente que ya está en el bundle** — no puede fallar por red.
 
 ```
 Estado 1: <img src={business_logo} onError={() => setEstado(2)} />
-Estado 2: <span className="font-pos text-acento">R de Rico</span>
+Estado 2: <span className="font-marca text-acento">R de Rico</span>
 ```
 
-El SVG local empaquetado queda como **mejora opcional** (Fase D), no como fallback primario.
+---
 
-### 2.3 Puntos de aplicación del logo (lista cerrada)
+## 11. Los colores corporativos: de 1 a 3 (no forzosamente 3)
 
-| # | Punto | ¿Aplica? | Notas |
-|---|-------|----------|-------|
-| L1 | Encabezado de la pantalla raíz | ✅ Sí | Es el único punto obligatorio |
-| L2 | Encabezado del ticket impreso | ✅ Sí | Solo si el tema lo permite |
-| L3 | Pantalla de login | ✅ Sí | Refuerza identidad en el arranque |
-| L4 | Modales | ❌ No | El modal no lleva logo; lleva título |
-| L5 | Botones | ❌ No | Nunca |
-| L6 | Fondos | ❌ No | Nunca |
-| L7 | Favicon / manifest PWA | ✅ Sí | Ya existe el patrón en el ERP (`aplicarBrandingAlManifest`) |
+### 11.1 La precisión del dueño
 
-**Regla:** el logo **no se propaga solo**. Si un punto no está en esta tabla, no lleva logo.
+> **"La precisión que puede ser de 1 a 3 colores corporativos, no forzosamente 3."**
+
+### 11.2 La regla
+
+El negocio elige **entre 1 y 3** colores corporativos de la paleta curada. No está obligado a elegir 3.
+
+| Cantidad | Caso de uso | Cómo se deriva el resto |
+|----------|-------------|-------------------------|
+| **1 color** | Negocio minimalista o con una sola marca | El sistema deriva los demás por contraste |
+| **2 colores** | Caso más común (primario + secundario) | El sistema deriva los demás por contraste |
+| **3 colores** | Negocio con paleta completa | El sistema deriva los demás por contraste |
+
+**En los 3 casos, el sistema deriva automáticamente** el fondo, el panel, el texto y el peligro por contraste. El negocio nunca elige un fondo ilegible porque no elige el fondo: lo deriva el sistema.
+
+### 11.3 Implicación en la validación
+
+La validación de contraste (§12.1) se aplica **al conjunto de 1 a 3 colores que el negocio haya elegido**, no a un conjunto fijo de 3. Si elige 1, se valida ese 1. Si elige 3, se validan los 3.
 
 ---
 
-## 3. Punto 2 — COLORES CORPORATIVOS
+## 12. Mejoras incorporadas a este addendum
 
-### 3.1 Decisión
+Estas mejoras se agregan a la propuesta original para cerrar huecos detectados en la revisión técnica.
 
-Los colores corporativos (2–3, máximo 3) aplican en **exactamente 5 puntos**. Ni uno más.
+### 12.1 Validar contraste DESPUÉS de fusionar la identidad
 
-### 3.2 Los 5 puntos de aplicación (lista cerrada)
+**Problema:** validar el contraste del tema aislado no garantiza que la UI final se lea, porque la identidad se aplica **encima** del tema. Un acento corporativo claro sobre un fondo claro pasa el test del tema pero rompe la UI final.
 
-| # | Punto | Qué se pinta | Qué NO se pinta |
-|---|-------|--------------|-----------------|
-| C1 | **Encabezado** | La franja/barra superior de marca | El texto del encabezado (lo manda el tema) |
-| C2 | **Botón primario** | El fondo del botón de cobrar/confirmar | El texto del botón (contraste calculado) |
-| C3 | **Precio** | El número del precio | La etiqueta "Total" (esa es del tema) |
-| C4 | **Categoría activa** | El chip de la categoría seleccionada | Los chips inactivos (esos son del tema) |
-| C5 | **Ticket impreso** | El encabezado del recibo | El cuerpo del recibo (papel crema del tema) |
+**Regla nueva:** el contraste se valida sobre el **resultado final** (`fusionarIdentidad(tema, identidad)`), no solo sobre el tema. Si el resultado no pasa WCAG AA, se descarta el color corporativo y se usa el canónico más cercano, **con aviso visible**.
 
-### 3.3 Lo que el color corporativo NUNCA toca
+### 12.2 Una sola llave JSON para los temas, no una llave por módulo
 
-- Fondos de pantalla → **tema**
-- Superficies / paneles → **tema**
-- Bordes → **tema**
-- Sombras → **tema**
-- Estados hover / focus / disabled → **tema**
-- Texto de cuerpo → **tema**
-- Iconos → **tema** (salvo que el icono sea el logo)
+**Problema:** una llave por módulo (`business_theme_pos`, `business_theme_estadisticas`, ...) crece a mano y se desincroniza.
 
-### 3.4 Regla de contraste (no negociable)
+**Regla nueva:** una sola llave `business_themes` con un mapa JSON:
 
-Cada uno de los 5 puntos debe cumplir:
-
-| Punto | Contraste mínimo | Por qué |
-|-------|------------------|---------|
-| C1 Encabezado | 3:1 contra el fondo | Es un bloque de UI |
-| C2 Botón primario | 4.5:1 (texto del botón vs. fondo del botón) | Es texto sobre color |
-| C3 Precio | 4.5:1 contra el panel | Es texto crítico |
-| C4 Categoría activa | 3:1 contra el fondo | Es un estado de UI |
-| C5 Ticket impreso | 4.5:1 en papel | Legibilidad impresa |
-
-Si un color corporativo no cumple, el sistema **avisa** (ver §6) y ofrece el color canónico más cercano que sí cumpla.
-
----
-
-## 4. Punto 3 — TIPOGRAFÍA
-
-### 4.1 Decisión
-
-La tipografía corporativa aplica en **exactamente 3 puntos**. El resto usa la fuente del tema.
-
-### 4.2 Los 3 puntos de aplicación (lista cerrada)
-
-| # | Punto | Qué usa la fuente corporativa |
-|---|-------|-------------------------------|
-| T1 | **Encabezado / marca** | El nombre del negocio y el wordmark |
-| T2 | **Títulos de sección** | Los `<h1>`/`<h2>` de las pantallas |
-| T3 | **Ticket impreso** | El encabezado del recibo |
-
-### 4.3 Lo que la tipografía corporativa NUNCA toca
-
-- Nombres de producto → **tema**
-- Precios → **tema**
-- Botones → **tema**
-- Etiquetas y chips → **tema**
-- Cuerpo de texto → **tema**
-
-**Razón:** legibilidad y rendimiento. Cargar una fuente corporativa para todo el cuerpo de la UI multiplica el peso de la página y arriesga el FOUT (flash of unstyled text) en la pantalla de mostrador, que es la más crítica.
-
-### 4.4 Cadena de fallback (3 niveles, nunca un hueco)
-
-```
-Fuente corporativa (si carga)
-    ↓ falla
-Fuente del tema (Inter / Roboto / Montserrat / Nunito / Poppins)
-    ↓ falla
-Fallback del sistema (system-ui, -apple-system, sans-serif)
+```json
+{
+  "pos": "nocturno",
+  "estadisticas": "tablero",
+  "vista-general": "kiosco"
+}
 ```
 
-Esto ya está implementado parcialmente en [`tailwind.config.js`](../../../NUEVO-POS/apps/pos/tailwind.config.js:32): `fontFamily: { pos: ['Inter', 'system-ui', 'sans-serif'] }`. La cadena de 3 niveles solo agrega el nivel corporativo al frente.
+Es más fácil de leer, de escribir y de migrar. El contrato `GET /branding` ya devuelve un objeto `themes`, así que la BD refleja eso.
+
+### 12.3 Los temas: mínimo 1, máximo 3 (no "exactamente 3")
+
+**Problema:** obligar a exactamente 3 temas por módulo fuerza a inventar temas que nadie pidió, sobre todo en módulos de configuración como Vista General.
+
+**Regla nueva:** cada módulo declara **entre 1 y 3** temas, con el predeterminado obligatorio. El test valida el rango, no el número exacto.
+
+### 12.4 El tema se aplica al contenedor del módulo, no al `:root` global
+
+**Problema:** si cada módulo escribe su tema en el `:root` global, al navegar entre módulos hay un parpadeo con el tema viejo.
+
+**Regla nueva:** el tema se aplica al **contenedor del módulo**, no al `:root`. Así no hay contaminación cruzada ni parpadeo entre módulos.
+
+### 12.5 El tema predeterminado se importa estáticamente
+
+**Problema:** si el default se carga con `import()` dinámico, la primera pintura ocurre sin tema y luego salta (FOUC).
+
+**Regla nueva:** el tema predeterminado se importa **estáticamente** (siempre en el bundle). Solo los temas opcionales usan `import()` dinámico.
 
 ---
 
-## 5. Punto 4 — TEMAS
-
-### 5.1 Decisión
-
-El tema **domina todo lo demás**. Es el "piso" visual del sistema.
-
-### 5.2 Qué controla el tema (lista abierta — es el dueño del resto)
-
-| Aspecto | El tema decide |
-|---------|----------------|
-| Fondos | Color, textura, degradado |
-| Superficies / paneles | Color, borde, sombra |
-| Bordes | Grosor, color, radio |
-| Sombras | Suavidad, profundidad |
-| Radios | 35px / 40px / 50px (canónicos) o los del tema |
-| Densidad | Aireada vs. compacta |
-| Estilos de modal | Fondo, borde, radio, sombra |
-| Estilos de botón | Relleno vs. outline, radio, sombra |
-| Estados | hover, focus, disabled, active |
-| Tipografía de cuerpo | La fuente del tema |
-
-### 5.3 Los 4 temas del catálogo (de la v2)
-
-| Tema | Carácter | Fondo | Uso |
-|------|----------|-------|-----|
-| **Clásico** | Neutro, oscuro | `#0a0a0a` | Default (= POS actual) |
-| **Madera** | Cálido, texturizado | `wood_bg.jpg` | Panadería / artesanal |
-| **Minimal** | Claro, limpio | Claro | Oficina / mostrador moderno |
-| **Neón** | Oscuro, vibrante | `#0a0a0a` + acentos | Nocturno / bar |
-
-### 5.4 Relación tema ↔ identidad
-
-El tema **cede** en los 5 puntos de color (§3.2) y los 3 de tipografía (§4.2). En todo lo demás, el tema manda. Si la identidad no define un color, el tema provee el suyo.
-
----
-
-## 6. El aviso visible (coherente con la decisión #4 del usuario)
-
-El usuario pidió "aviso" cuando la personalización no se puede aplicar. Este addendum define **2 casos de aviso**:
+## 13. El aviso visible (2 casos)
 
 | Caso | Cuándo | Qué dice el aviso |
 |------|--------|-------------------|
 | **A — Vista General caída** | No se pudo leer `business_*` | "Usando apariencia por defecto. La personalización no está disponible." |
-| **B — Contraste insuficiente** | Un color corporativo no cumple §3.4 | "El color institucional no cumple el contraste mínimo. Se usó el más cercano." |
+| **B — Contraste insuficiente** | Un color corporativo no cumple el contraste mínimo | "El color institucional no cumple el contraste mínimo. Se usó el más cercano." |
 
-El aviso es **visible pero no bloqueante**: no impide vender. Es un banner discreto, no un modal.
-
----
-
-## 7. Resumen ejecutivo (una tabla)
-
-| Capa | Dueño | Puntos de aplicación | Fallback |
-|------|-------|----------------------|----------|
-| **IDENTIDAD — Logo** | Vista General (`business_logo`) | L1 encabezado, L2 ticket, L3 login, L7 PWA | Wordmark "R de Rico" |
-| **IDENTIDAD — Color** | Vista General (`business_colors`) | C1 encabezado, C2 botón primario, C3 precio, C4 categoría activa, C5 ticket | Color canónico más cercano |
-| **IDENTIDAD — Tipografía** | Vista General (`business_font`) | T1 marca, T2 títulos, T3 ticket | Fuente del tema → sistema |
-| **TEMA** | Vista General (`business_theme`) | Todo lo demás | Tema Clásico |
-| **CANÓNICA** | Backend (código) | Piso de todo | — (es el piso) |
+El aviso es **visible pero no bloqueante**: no impide trabajar. Es un banner discreto, no un modal.
 
 ---
 
-## 8. Impacto en las fases (de la v2)
+## 14. Resumen ejecutivo (una tabla)
 
-| Fase | Qué agrega este addendum |
-|------|--------------------------|
-| **A** | Colapsar las 3 fuentes de paleta en 1. Sin cambios de puntos de aplicación todavía. |
-| **B** | Las 4 claves (`business_logo`, `business_colors`, `business_theme`, `business_font`) con seed. |
-| **C** | Vista General edita las 4 claves. Aquí se implementan los 5 puntos de color y los 3 de tipografía. |
-| **D** | Texturas, SVG local del logo, temas adicionales. |
+| # | Punto de aplicación | Logo | Nombre | Colores | ¿Toca el nuevo POS? | Dónde se implementará (referencia futura) |
+|---|---------------------|------|--------|---------|---------------------|---------------------|
+| 1 | Pantalla de logueo al ERP | ✅ | ✅ | ✅ | ❌ No | ERP reconstruido (no hoy) |
+| 2 | Barra selectora de módulos (lateral izq.) | ✅ | ✅ | ✅ | ❌ No | ERP reconstruido (no hoy) |
+| 3 | Encabezado de Vista General | ✅ | ✅ | ✅ | ❌ No | ERP reconstruido (no hoy) |
+| 4 | Tickets y cortes de caja | ✅ | ✅ | ❌ No | ⚠️ Parcial (solo formato) | ERP reconstruido + criterio del POS |
+| 5 | Documentos oficiales (impresión/exportación) | ✅ | ✅ | ✅ (solo encabezado) | ❌ No | ERP reconstruido (no hoy) |
+| 6 | Icono de acceso de la app del ERP | ✅ | ❌ No | ✅ | ❌ No | ERP reconstruido (no hoy) |
+| 7 | Pantalla de carga de la app del ERP | ✅ | ✅ | ✅ | ❌ No | ERP reconstruido (no hoy) |
+
+> **Recordatorio:** "ERP reconstruido (no hoy)" significa que **hoy no se toca nada**. La columna describe **dónde irá** la identidad cuando esos módulos se reconstruyan. Ninguna fila autoriza trabajo sobre el ERP que corre.
+
+**Llaves de configuración (corregidas):**
+
+| Llave | Tipo | Valor por defecto | Descripción |
+|-------|------|-------------------|-------------|
+| `business_logo` | text (URL/ruta) | `""` | Ruta del logotipo. Vacío = wordmark "R de Rico". |
+| `business_name` | text | `"R de Rico"` | Nombre de marca. Ya existe. |
+| `business_colors` | json | `[]` | **De 1 a 3** colores institucionales de la paleta curada. Vacío = canónica. |
+| `business_font` | text | `"inter"` | Una de: `inter`, `roboto`, `montserrat`, `nunito`, `poppins`. |
+| `business_themes` | json | `{}` | Mapa `{ modulo: tema }`. Una sola llave, no una por módulo. |
 
 ---
 
-## 9. Estado
+## 15. Impacto en las fases (corregido v3)
+
+| Fase | Qué agrega | ¿Toca el ERP? | ¿Toca el nuevo POS? |
+|------|-----------|---------------|---------------------|
+| **A** | Colapsar las 3 fuentes de paleta en 1. Motor de temas compartido. | **No** | Sí (solo el POS nuevo) |
+| **B** | Las 5 llaves (`business_logo`, `business_name`, `business_colors`, `business_font`, `business_themes`) con seed. | **No** | Sí (BD del POS nuevo) |
+| **C** | Los 7 puntos de aplicación en el ERP (logueo, barra lateral, Vista General, tickets, documentos, icono de app, pantalla de carga). | **No — es referencia futura** | No |
+| **D** | Texturas, SVG local del logo, temas adicionales. | **No** | Sí (solo el POS nuevo) |
+
+**Cambio clave respecto a la v2:** la Fase C **NO toca el ERP hoy**. Los 7 puntos son **referencia de planificación** para cuando esos módulos se reconstruyan. Por eso **no requiere ventana de mantenimiento**: no hay nada que mantener porque no se toca nada. Las fases A, B y D siguen siendo aisladas al POS nuevo.
+
+**Lo que sí se hace hoy (Fase C, versión real):** solo **explorar cómo el POS nuevo interactuará** con esos módulos que aún no se construyen, y **dejar todo preparado** (contratos, llaves, motor) para cuando existan. Nada más.
+
+---
+
+## 16. Estado
 
 - **Creado:** 26 Sep 2026
-- **Estado:** propuesta — pendiente de aprobación del usuario
+- **Corregido:** 27 Sep 2026 — puntos de aplicación reemplazados por la instrucción directa del dueño (7 puntos, no 5; se agregan icono de acceso y pantalla de carga). Colores corporativos: de 1 a 3, no forzosamente 3.
+- **Corregido v3:** 28 Sep 2026 — se aclara que los 7 puntos son **referencia de planificación**, no trabajo actual. La regla dura (**NO se toca el ERP ni el POS que corre**) se mantiene intacta. La Fase C vuelve a **"No toca el ERP"**.
+- **Estado:** propuesta — pendiente de aprobación del dueño.
 - **Depende de:** [`PROPUESTA_BRANDING_TRANSVERSAL_DESDE_VISTA_GENERAL.md`](./PROPUESTA_BRANDING_TRANSVERSAL_DESDE_VISTA_GENERAL.md) y [`PROPUESTA_PALETA_CANONICA_V2.md`](./PROPUESTA_PALETA_CANONICA_V2.md)
-- **Siguiente paso:** el usuario aprueba el addendum; luego llegan las fichas de Pinterest para fijar la paleta canónica
-                                                                                                                                                                                                                                                                                                                    
+- **Pendiente de reconciliar:** [`PROPUESTA_APARIENCIA_POR_MODULO_V4.md`](./PROPUESTA_APARIENCIA_POR_MODULO_V4.md) debe reflejar también que los 7 puntos son referencia futura y que la Fase C no toca el ERP.
+- **Siguiente paso:** el dueño aprueba este addendum corregido; luego se alinea la V4 y llegan las fichas de Pinterest para fijar la paleta canónica.
