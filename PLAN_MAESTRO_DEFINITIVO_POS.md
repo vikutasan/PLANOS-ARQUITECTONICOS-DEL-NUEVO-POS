@@ -1,7 +1,7 @@
 # 🏗️ PLAN MAESTRO DEFINITIVO — POS Nuevo "R de Rico"
 
 > **Fecha:** 28 Sep 2026  
-> **Versión del plan:** 1.0  
+> **Versión del plan:** 1.2  
 > **Autor:** Antigravity + Víctor (dueño de R de Rico)
 
 ### Repositorios del proyecto
@@ -141,6 +141,85 @@ Extraídas de 7 meses de operación real. **Toda línea de código del POS nuevo
 | Formato | Optimizado para impresión en carta/oficio |
 | Actualización | Se genera en el momento, siempre con precios vigentes |
 
+### 6.3 Identificación de cliente al cobrar — CRM (nueva)
+
+> **Especificación completa:** [PROPUESTA_CRM_Y_NOTIFICACIONES_DEL_NUEVO_POS.md](https://github.com/vikutasan/PLANOS-ARQUITECTONICOS-DEL-NUEVO-POS/blob/main/PROPUESTA_CRM_Y_NOTIFICACIONES_DEL_NUEVO_POS.md)
+> **Petición textual del dueño:** *"Llegará un momento en que tendremos una base de datos de clientes que nos será útil para administrar tarjetas de lealtad, enviar tickets, programar promociones y descuentos."*
+
+| Función | Descripción |
+|---|---|
+| Botón "👤 Cliente" en el header | El cajero puede identificar al cliente en cualquier momento (antes o durante la carga de productos) |
+| 3 caminos de identificación | **A:** Público general (no se identifica). **B:** Cliente registrado (teclea teléfono). **C:** Alta rápida (nombre + teléfono) |
+| Teléfono como clave | Se normaliza con el criterio ya existente (`_normalizar_telefono()`) |
+| Beneficios automáticos | El CRM decide qué descuento aplica. El POS nunca calcula descuentos, solo los muestra |
+| Puntos de lealtad | Ledger inmutable (como inventario): se asientan, nunca se hacen UPDATE |
+| Promociones configurables | "2x1 en conchas los martes". Ciclo de vida: BORRADOR → ACTIVA → VENCIDA/PAUSADA. Nunca se borran |
+| Degradación elegante | Si el CRM cae, el POS cobra a precio de lista. **NUNCA bloquea la venta** |
+
+**Dos tipos de beneficios:**
+- **Tipo A (precio):** Se aplica ANTES de cobrar como línea negativa en el ticket (ej: "10% en pan dulce")
+- **Tipo B (acumulable):** Se asienta DESPUÉS de cobrar en el ledger (ej: "1 punto por cada $10")
+
+### 6.4 Envío de ticket por WhatsApp o Email (nueva)
+
+> **Petición textual del dueño:** *"Deseo que el nuevo POS al momento de cobrar una cuenta me dé la opción de imprimir el ticket o enviarlo por WhatsApp o por e-mail."*
+
+| Función | Descripción |
+|---|---|
+| Paso de entrega post-cobro | Después de "FINALIZAR VENTA" aparece: 🖨️ Imprimir / 📱 WhatsApp / ✉️ E-mail / Omitir |
+| Imprimir siempre disponible | Es el comportamiento por defecto. WhatsApp/email son **adicionales**, nunca sustitutos |
+| Patrón Outbox | El POS **encola** el mensaje en la misma transacción del ticket. El envío real lo hace un worker en segundo plano |
+| NUNCA bloquea la venta | Si WhatsApp está caído, el ticket ya se cobró. El mensaje queda en cola y se reintenta |
+| Idempotencia | Cada mensaje lleva `evento_id`. Un reintento no duplica el mensaje (constraint UNIQUE) |
+| Plantillas | WhatsApp: texto plano con formato. Email: HTML reutilizando el generador de tickets |
+
+**Arquitectura (2 módulos separados por contrato):**
+- **Clientes (CRM):** Decide QUÉ beneficio aplica y A QUIÉN se le manda (tablas: `customers`, `loyalty_ledger`, `promotions`, `customer_benefits`)
+- **Notificaciones:** Ejecuta CÓMO se entrega (tablas: `notification_outbox`, `notification_log`, `channel_config`)
+- **2 contratos nuevos:** #18 `clientes.beneficios_para_ticket` y #19 `notificaciones.encolar_ticket`
+- **8 tablas nuevas** (5 CRM + 3 Notificaciones)
+
+### 6.5 Layout responsivo desde el día 1 (nueva)
+
+> **Especificación completa:** [ESPECIFICACION_RESPONSIVA_Y_ERGONOMIA_TACTIL.md](https://github.com/vikutasan/PLANOS-ARQUITECTONICOS-DEL-NUEVO-POS/blob/main/ESPECIFICACION_RESPONSIVA_Y_ERGONOMIA_TACTIL.md)
+
+| POS viejo | POS nuevo |
+|---|---|
+| Anchos fijos: `w-[420px]`, `w-[1100px]`, `w-[800px]` | Anchos fluidos: `w-full max-w-[420px]` |
+| Solo funciona en la tablet del mostrador | Funciona en cualquier tablet, laptop o pantalla |
+| Cada sucursal con hardware distinto = "adaptación" manual | Se instala y funciona sin tocar CSS |
+
+**4 reglas duras (R-01 a R-04):** estándar táctil 44×44px, estética del mostrador intocable, layout fluido obligatorio.
+
+### 6.6 Consolidación central multi-sucursal (futura)
+
+> **Especificación completa:** [MODELO_DESPLIEGUE_Y_CONSOLIDACION_CENTRAL.md](https://github.com/vikutasan/PLANOS-ARQUITECTONICOS-DEL-NUEVO-POS/blob/main/ESPECIFICACIONES%20DEL%20PROYECTO/MODELO_DESPLIEGUE_Y_CONSOLIDACION_CENTRAL.md)
+
+| POS viejo | POS nuevo |
+|---|---|
+| Una sola sucursal, sin capacidad de replicación | Diseñado para instalarse en N sucursales |
+| No reporta a ningún servidor central | Sync al cierre del día (default 23:30) a servidor corporativo |
+
+**Topología hub-and-spoke:** cada sucursal tiene su ERP completo (autónomo). Al cierre del día envía un resumen al servidor central. Si el central cae, las sucursales siguen operando.
+
+> [!NOTE]
+> La consolidación central es **fase futura** (no bloquea las fases 1–8). El POS se diseña DESDE AHORA con UUID como PK y outbox transaccional para que cuando se active la sync, no haya que rediseñar nada.
+
+### 6.7 IA flexible — 3 modos de topología (nueva)
+
+> **Especificación completa:** [ESPECIFICACION_IA_LOCAL_Y_MULTIMODAL.md](https://github.com/vikutasan/PLANOS-ARQUITECTONICOS-DEL-NUEVO-POS/blob/main/07-ia-local/ESPECIFICACION_IA_LOCAL_Y_MULTIMODAL.md)
+
+| POS viejo | POS nuevo |
+|---|---|
+| IA fija apuntando a un solo servidor | 3 modos seleccionables |
+
+**3 modos de IA:**
+- **M1 — Local por sucursal:** contenedor de IA junto al ERP local (para sucursales con GPU propia)
+- **M2 — Local central:** un solo servidor de IA en la matriz, sirve a todas las sucursales
+- **M3 — Nube:** servicio externo (para picos de demanda o modelos grandes)
+
+**Regla de oro:** la IA NUNCA bloquea la venta. Si no está disponible, el POS funciona sin ella (fallback 503).
+
 ---
 
 ## 7. FASES DE CONSTRUCCIÓN
@@ -268,6 +347,44 @@ Extraídas de 7 meses de operación real. **Toda línea de código del POS nuevo
 
 ---
 
+### Fase 8 — CRM + Notificaciones (Clientes, Lealtad, WhatsApp/Email)
+> **Saber a quién le vendes. Premiar al que vuelve. Entregar el ticket como el cliente quiera.**
+
+> [!NOTE]
+> Esta fase **no bloquea** las fases 1–7. El POS funciona completo sin ella. Se construye cuando el negocio esté listo para operar lealtad.
+
+**Especificación completa:** [PROPUESTA_CRM_Y_NOTIFICACIONES_DEL_NUEVO_POS.md](https://github.com/vikutasan/PLANOS-ARQUITECTONICOS-DEL-NUEVO-POS/blob/main/PROPUESTA_CRM_Y_NOTIFICACIONES_DEL_NUEVO_POS.md) (40 KB, diseño completo con contratos, flujos, tablas, reglas)
+
+**Módulo CRM (Clientes) — archivos a construir:**
+- `CustomerIdentificationPanel.jsx` — panel de identificación (teléfono → buscar / alta rápida)
+- `CustomerCRMHub.jsx` — 2 pestañas: Clientes + Promociones (entrada en sidebar del ERP futuro)
+- `LoyaltyLedgerView.jsx` — historial de puntos del cliente
+- `PromotionEditor.jsx` — crear/editar promociones (BORRADOR → ACTIVA → VENCIDA/PAUSADA)
+- `customerService.js` — API del CRM (contratos 18 + internos)
+- Backend: 5 tablas (`customers`, `loyalty_ledger`, `promotions`, `customer_benefits`, `customer_history`)
+
+**Módulo Notificaciones — archivos a construir:**
+- `TicketDeliveryPanel.jsx` — paso post-cobro (Imprimir / WhatsApp / Email / Omitir)
+- `notificationService.js` — API de notificaciones (contrato 19)
+- `notificationWorker.py` — worker que procesa la cola (WhatsApp Business API / SMTP)
+- Backend: 3 tablas (`notification_outbox`, `notification_log`, `channel_config`)
+
+**Lecciones integradas:**
+- Outbox transaccional: el mensaje se encola en la MISMA transacción del ticket (Regla de Oro #7)
+- NUNCA bloquea la venta: si el CRM o WhatsApp caen, la venta continúa
+- Ledger inmutable para puntos: se asientan, nunca se hacen UPDATE (como inventario)
+- Idempotencia por `evento_id` + constraint UNIQUE
+- Canje de puntos: reserva → confirmación (si el cobro falla, la reserva se libera)
+- Promociones nunca se borran (auditoría histórica)
+
+**Criterio de aceptación:**
+- Puedes cobrar identificando al cliente por teléfono y ver sus beneficios aplicados
+- Puedes enviar ticket por WhatsApp o email después de cobrar
+- Si el CRM está caído, la venta continúa a precio de lista
+- Si WhatsApp está caído, el ticket queda en cola y se envía cuando se recupere
+
+---
+
 ## 8. DECISIONES ARQUITECTÓNICAS
 
 | Decisión | Elección | Por qué |
@@ -284,7 +401,7 @@ Extraídas de 7 meses de operación real. **Toda línea de código del POS nuevo
 
 ## 9. RESULTADO ESPERADO
 
-Cuando las 7 fases estén completas, al abrir `localhost:5100/` verás:
+Cuando las 8 fases estén completas, al abrir `localhost:5100/` verás:
 
 1. **Landing** → Selector de terminales (tarjetas con estado libre/mío/ajeno)
 2. **Login** → El cajero se identifica
@@ -295,6 +412,9 @@ Cuando las 7 fases estén completas, al abrir `localhost:5100/` verás:
 7. **Cámara** → Reconoce productos en la charola
 8. **PDF** → Exporta catálogo para cobro manual sin sistema
 9. **Temas** → Elige entre 3 estilos visuales
+10. **Cliente** → "Es la señora María" → se aplican sus beneficios automáticamente
+11. **WhatsApp** → "Le envío su ticket por WhatsApp" → el cliente lo recibe en su celular
+12. **Lealtad** → "Tiene 150 puntos acumulados" → puede canjearlos por descuento
 
 **Todo construido sobre la arquitectura de un edificio planificado, no uno remendado.**
 
