@@ -251,13 +251,22 @@ Extraídas de 7 meses de operación real. **Toda línea de código del POS nuevo
 > **Sin esto cualquiera opera la caja**
 
 **Archivos a construir:**
-- `usePOSSession.js` — catálogo, folio, inicialización
-- `securityService.js` — validación de roles (ADMIN/MANAGER/CAJERO)
-- Flujo de login integrado con el selector
+- `useAuth.js` — hook de login/logout con persistencia en sessionStorage
+- `securityService.js` — validación de PIN (POST /security/employees/validate-pin)
+- `LoginScreen.jsx` — pantalla de login con numpad (estética del POS viejo)
+- Flujo de login integrado con el selector en App.jsx
 
 **Lecciones integradas:**
 - Primitivos en deps (`currentUser?.id`, no el objeto) (H1)
 - Folio generado SOLO por el backend (prohibición #5)
+
+> [!WARNING]
+> **NOTA DE MIGRACIÓN — Login temporal:**
+> El POS nuevo tiene su propia pantalla de login porque corre como app separada (puerto 5100).
+> El contrato de autenticación es el MISMO del ERP (`POST /security/employees/validate-pin`).
+> **Cuando el POS se integre como módulo del ERP:** eliminar `LoginScreen.jsx`, `securityService.js`
+> y `useAuth.js`, y usar el `LoginUI.jsx` compartido del ERP (`apps/auth/LoginUI.jsx`).
+> El `currentUser` llegará como prop desde el App.jsx del ERP.
 
 ---
 
