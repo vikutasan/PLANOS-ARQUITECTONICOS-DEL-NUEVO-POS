@@ -469,13 +469,58 @@ Estos 5 greps se ejecutan en cada push. Si alguno encuentra una violación, **el
 
 Cada fase produce una **matriz verificable** donde se puede rastrear: para cada regla de negocio, ¿cuál es su test? Las reglas sin test se marcan como **riesgo de pérdida**. El CI falla si una regla crítica no tiene guardián.
 
-### 10.6 El principio "de adentro hacia afuera"
+### 10.6 El principio "de adentro hacia afuera" — diferencia intencional con DeepSeek
 
 > **Origen:** PLAN_DE_CONSTRUCCION, §0.2
 
-> *Se construye de adentro hacia afuera: primero el cimiento (datos), luego la frontera (contratos), luego el comportamiento (reglas + tests), luego la superficie (interfaces).*
+**Cómo lo proponía DeepSeek (por capas horizontales):**
 
-Nuestras 7 fases respetan este principio: la Fase 1 (Terminal Selector) requiere el endpoint de terminales (dato + contrato) antes de la interfaz. Cada fase interna tiene este orden: endpoint → hook → componente.
+DeepSeek diseñó un orden de construcción **por capas**, donde se completa una capa entera del edificio antes de subir a la siguiente:
+
+```
+F1. TODAS las tablas de datos (17 tablas)          ← cimiento completo
+F2. TODOS los contratos entre módulos (17)         ← frontera completa
+F3. TODAS las 81 reglas de negocio con tests       ← comportamiento completo
+F4. TODOS los tests guardianes                     ← blindaje completo
+F5. TODAS las 26 interfaces                        ← superficie completa
+F6. Consolidación central                          ← techo
+```
+
+**Ventaja de este enfoque:** garantiza que nunca construyes una pared sin cimiento. Es académicamente puro.
+
+**Desventaja:** hasta completar F5 (la 5ª capa), no tienes NADA usable. No puedes enseñarle una pantalla funcional al dueño del negocio hasta que hayas construido las 17 tablas, los 17 contratos y las 81 reglas. Eso puede tardar semanas sin mostrar progreso visible.
+
+---
+
+**Cómo lo hacemos nosotros (por funciones verticales):**
+
+Nuestro plan construye **rebanadas verticales** — cada fase entrega una función completa de piso a techo (dato + contrato + regla + test + interfaz):
+
+```
+Fase 1: Terminal Selector   → tabla terminal_locks + endpoint + hook + UI
+Fase 2: Sesión               → tabla sessions + servicio + hook + UI
+Fase 3: POS Completo         → tablas tickets/items + 9 hooks + 12 endpoints + UI
+Fase 4: Gestor de Caja       → tablas cash + servicio + UI
+...
+```
+
+**Ventaja:** al terminar la Fase 1, ya puedes abrir el POS y ver las terminales. Al terminar la Fase 3, ya puedes cobrar. El dueño ve progreso real en cada fase, puede probar, puede opinar.
+
+**Desventaja:** podrías construir una tabla sin respetar los estándares (UUID, UTC, Numeric). Por eso existe la §10.3 y la §10.4 como guardias.
+
+---
+
+**La garantía:** dentro de cada fase, respetamos el orden de DeepSeek:
+
+```
+Cada fase internamente sigue:
+  1. Endpoint (dato + contrato)    ← cimiento de la rebanada
+  2. Hook (regla de negocio)       ← comportamiento de la rebanada
+  3. Test (guardián)               ← blindaje de la rebanada
+  4. Componente (interfaz)         ← superficie de la rebanada
+```
+
+> **En resumen:** DeepSeek proponía construir TODOS los cimientos, luego TODAS las paredes, luego TODOS los techos. Nosotros construimos una habitación completa a la vez (cimiento + pared + techo), pero cada habitación respeta el mismo orden interno. El resultado final es el mismo edificio — la diferencia es que el nuestro se puede ir probando habitación por habitación.
 
 ### 10.7 Documentos de referencia obligatoria por fase
 
