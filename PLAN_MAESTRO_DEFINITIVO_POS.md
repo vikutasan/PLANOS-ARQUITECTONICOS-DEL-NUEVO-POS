@@ -86,9 +86,9 @@ La arquitectura (cimientos) está sólida. Las funciones (habitaciones) se const
 
 ---
 
-## 4. LAS 5 PROHIBICIONES ABSOLUTAS (del cementerio de bugs)
+## 4. LAS 6 PROHIBICIONES ABSOLUTAS (del cementerio de bugs)
 
-Extraídas de 7 meses de operación real. **Toda línea de código del POS nuevo las respeta:**
+Extraídas de 7 meses de operación real + 1 error de construcción del POS nuevo. **Toda línea de código del POS nuevo las respeta:**
 
 > [!WARNING]
 > 1. **NO** reintroducir auto-save, timers ni `setInterval` para guardar el carrito. La persistencia es **atómica por ítem** (v6.0)
@@ -96,6 +96,7 @@ Extraídas de 7 meses de operación real. **Toda línea de código del POS nuevo
 > 3. **NO** leer variables de estado (`cart`, `currentAccountNum`) dentro de callbacks asíncronos — usar siempre `useRef` (Ticket #906, $124→$2)
 > 4. **NO** almacenar candados de terminal en RAM de Python — solo en PostgreSQL (`terminal_locks`)
 > 5. **NO** generar folios en el frontend — solo el backend los genera vía secuencia atómica de PostgreSQL
+> 6. **NO** duplicar módulos que el ERP ya tiene (login, gestión de empleados, perfiles). El POS es un MÓDULO del ERP, no una app suelta. Si el ERP ya lo resuelve, el POS lo recibe como prop — no lo reconstruye. *(Origen: se construyó un login propio y el dueño lo rechazó correctamente por YAGNI)*
 
 ---
 
@@ -247,26 +248,27 @@ Extraídas de 7 meses de operación real. **Toda línea de código del POS nuevo
 
 ---
 
-### Fase 2 — Sesión y Control de Acceso
-> **Sin esto cualquiera opera la caja**
+### Fase 2 — ~~Sesión y Control de Acceso~~ RESUELTA POR EL ERP
+> **El login ya existe en el ERP. El POS NO lo duplica.**
 
-**Archivos a construir:**
-- `useAuth.js` — hook de login/logout con persistencia en sessionStorage
-- `securityService.js` — validación de PIN (POST /security/employees/validate-pin)
-- `LoginScreen.jsx` — pantalla de login con numpad (estética del POS viejo)
-- Flujo de login integrado con el selector en App.jsx
+> [!CAUTION]
+> **DECISIÓN DEL DUEÑO (28 Sep 2026):** Se construyó un login propio (LoginScreen.jsx,
+> useAuth.js, securityService.js) y el dueño lo rechazó correctamente:
+> *"No le veo caso a tenerla ahora, ya que jamás la correré como app suelta."*
+>
+> **Regla resultante (prohibición #6):** NO duplicar módulos que el ERP ya tiene.
+> El POS recibe `currentUser` como prop del ERP. No construye su propio login.
+>
+> Los archivos construidos se conservan en el repo como referencia pero NO se usan.
+
+**Estado actual:**
+- `App.jsx` usa un usuario demo hardcodeado (`{ id: 1, name: 'Victor', role: 'ADMIN' }`)
+- TODO(integración): reemplazar por prop `currentUser` del ERP
 
 **Lecciones integradas:**
 - Primitivos en deps (`currentUser?.id`, no el objeto) (H1)
 - Folio generado SOLO por el backend (prohibición #5)
-
-> [!WARNING]
-> **NOTA DE MIGRACIÓN — Login temporal:**
-> El POS nuevo tiene su propia pantalla de login porque corre como app separada (puerto 5100).
-> El contrato de autenticación es el MISMO del ERP (`POST /security/employees/validate-pin`).
-> **Cuando el POS se integre como módulo del ERP:** eliminar `LoginScreen.jsx`, `securityService.js`
-> y `useAuth.js`, y usar el `LoginUI.jsx` compartido del ERP (`apps/auth/LoginUI.jsx`).
-> El `currentUser` llegará como prop desde el App.jsx del ERP.
+- **YAGNI:** no construir lo que el ERP ya resuelve (prohibición #6)
 
 ---
 
