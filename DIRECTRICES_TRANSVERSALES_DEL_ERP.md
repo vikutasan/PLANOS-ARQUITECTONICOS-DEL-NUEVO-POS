@@ -325,6 +325,67 @@ Cada uno de esos es un caso del mismo error: **una decisión transversal tomada 
 
 ---
 
+## SECCIÓN 6.6 — DT-07: LA INTELIGENCIA ARTIFICIAL DEL NEGOCIO
+
+> **Origen de esta directriz:** aclaración explícita del dueño (29 Sep 2026). Se documenta aquí
+> para que **no exista posibilidad de confusión** cuando se construyan los módulos de IA.
+
+### DT-07.1 — La regla
+
+> **Las capacidades de inteligencia artificial (voz, visión, OCR, NLU) se gestionan en un solo módulo del ERP llamado "Centro de IA". Ningún módulo del ERP —incluido el POS— contiene el motor de IA ni importa sus dependencias (`torch`, `whisper`, `ultralytics`, `tesseract`). Cada módulo consume la IA por contrato.**
+
+### DT-07.2 — El ancla
+
+| Capa | Archivo / Módulo | Qué hace |
+|---|---|---|
+| Motor | `ai-local/` (contenedor `ia-local`) | Ejecuta los modelos (YOLO, Whisper, Ollama, Tesseract). Habla HTTP. |
+| Gateway | `apps/api/modules/ai/` | Traduce HTTP del ERP al motor. **Política inviolable: cualquier fallo del motor → 503 `IA_NO_DISPONIBLE`. Nunca propaga un 500 al módulo consumidor.** |
+| Gestión | **Módulo "Centro de IA"** (`apps/ai/`) | La interfaz donde el humano ve el estado del motor, entrena la visión, diagnostica la voz y lee capturas (OCR). Es un **módulo paraguas** del ERP. |
+| Consumo | Cada módulo (POS, Almacenes, Grandeza…) | Pide la capacidad por **contrato**; nunca importa el motor. |
+
+### DT-07.3 — Las reglas derivadas
+
+1. **El Centro de IA es un módulo del ERP, no del POS.** Es hermano del POS, no hijo. El POS lo consume, no lo contiene. (Simetría exacta con DT-06 y Vista General.)
+2. **El Centro de IA vive en `apps/ai/`, no en `apps/pos/`.** Es transversal: la voz la usan el POS y Almacenes; la visión la usan el POS y Almacenes; el estado del motor interesa a todos.
+3. **Ningún módulo importa el motor de IA.** El ERP solo conoce `AI_LOCAL_URL` y habla HTTP. Si el motor se cae, cada módulo sigue operando en modo manual.
+4. **La IA es asistiva, nunca bloqueante.** Un fallo de la IA **nunca** impide una venta, un cobro o un movimiento de inventario. (Cara de IA de la Regla de Oro #7.)
+5. **La frontera se declara por contrato.** Cada capacidad de IA que un módulo consume se declara en el registro de contratos (`apps/api/contracts/registry.py`) con su firma completa. Un módulo **no** llama a la IA por convención implícita.
+6. **El Centro de IA no decide datos de negocio.** El motor de IA nunca decide un `client_id` ni un `product_id`; solo **sugiere**. La decisión es del humano (contrato human-in-the-loop).
+
+### DT-07.4 — La verificación
+
+| # | Verificación | Cómo |
+|---|---|---|
+| V-25 | Existe un solo lugar donde se gestiona la IA | Búsqueda estática: un solo módulo `apps/ai/` |
+| V-26 | Ningún módulo importa el motor de IA | Búsqueda estática: no hay `import torch`/`whisper`/`ultralytics` fuera de `ai-local/` |
+| V-27 | Cada capacidad de IA consumida tiene su contrato declarado | Revisión del registro de contratos |
+| V-28 | Un fallo del motor no rompe al consumidor | Prueba: apagar `ia-local` y verificar que el POS sigue vendiendo |
+| V-29 | El motor nunca decide un `client_id`/`product_id` | Revisión del contrato human-in-the-loop |
+
+### DT-07.5 — La matriz de cumplimiento
+
+| Módulo | Cumple | Evidencia / Deuda |
+|---|---|---|
+| Centro de IA | ⏳ | **Documentado** en [`DOCUMENTACION_CENTRO_IA.md`](./ESPECIFICACIONES%20DEL%20PROYECTO/DOCUMENTACION_CENTRO_IA.md) (v27.4, 4 capacidades). **Aún no reconstruido** en el ERP nuevo. |
+| POS | ⚠️ | Consume voz y visión por contrato. **Deuda:** el contrato de voz aún no está declarado en el registro (se declara en F7.0). El contrato 17 (visión) sí existe. |
+| Almacenes | ⚠️ | Consume voz. Pendiente de declarar su contrato. |
+| Resto | ⚠️ | Pendiente de verificar que ninguno importa el motor. |
+
+**Nota importante:** el Centro de IA **no se especifica aquí**. Este documento solo declara **su rol transversal** (dónde se gestiona la IA). Su especificación funcional completa ya existe en [`DOCUMENTACION_CENTRO_IA.md`](./ESPECIFICACIONES%20DEL%20PROYECTO/DOCUMENTACION_CENTRO_IA.md) y se reescribirá cuando el módulo se reconstruya. Declarar el rol ahora evita que la IA constructora invente un motor de IA dentro de cada módulo.
+
+### DT-07.6 — El estado de la frontera POS ↔ Centro de IA (hoy)
+
+| Capacidad | Contrato declarado | Estado |
+|---|---|---|
+| Visión (conteo de pan) | `17 vision.reconocer_producto` | ✅ Declarado (proveedor: Visión → **debe reetiquetarse a "Centro de IA"**) |
+| Voz (dictado manos libres) | — | ❌ **No declarado.** Se declara en F7.0. |
+| NLU (interpretar intención) | — | ❌ **No declarado.** Se declara en F7.0. |
+| OCR (leer capturas) | — | ❌ **No declarado.** Lo consume Grandeza, no el POS. |
+
+**Consecuencia:** hoy el POS hablaría con el Centro de IA por **convención implícita**, no por contrato declarado. Eso viola la Regla Dura del proyecto (A-02). La Fase 7 del POS empieza por **cerrar esta brecha** (F7.0).
+
+---
+
 ## SECCIÓN 7 — LA MATRIZ MAESTRA
 
 Estado de cada módulo frente a cada directriz. **Un módulo no se declara terminado con un ❌.**
@@ -391,7 +452,7 @@ Este documento existe porque el mismo error se cometió muchas veces en lugares 
 
 > **Lo transversal se decide una vez y se verifica en cada módulo. Nunca se decide en cada módulo.**
 
-**Las 6 directrices vigentes:**
+**Las 7 directrices vigentes:**
 
 | ID | Directriz | Estado |
 |---|---|---|
@@ -401,6 +462,7 @@ Este documento existe porque el mismo error se cometió muchas veces en lugares 
 | DT-04 | Inventario: ledger inmutable, solo el dueño escribe | Vigente |
 | DT-05 | Auditoría: quién, cuándo, qué — transaccional | Vigente |
 | DT-06 | Configuración: los valores transversales se declaran una sola vez, en Vista General | Vigente |
+| DT-07 | IA: las capacidades de IA se gestionan una sola vez, en el Centro de IA; cada módulo las consume por contrato | Vigente |
 
 **La simetría completa (DT-06):**
 
@@ -411,6 +473,15 @@ system_settings  →  Vista General  →  contexto global  →  cada módulo
 
 Hoy están documentados el primero, el tercero y el cuarto. **DT-06 declara el segundo**, que era el eslabón que faltaba.
 
+**La simetría completa (DT-07):**
+
+```
+ai-local (motor)  →  Centro de IA  →  Gateway (503)  →  cada módulo
+   (ejecuta)          (gestiona)       (traduce)         (consume por contrato)
+```
+
+**DT-07 declara el rol del Centro de IA**, que era el eslabón que faltaba para que el POS (y Almacenes, y Grandeza) no inventen un motor de IA dentro de sí mismos.
+
 **Documentos relacionados:**
 
 - `METODOLOGIA_DE_INGENIERIA_INVERSA_Y_DISENO.md` — §3.4 (reglas transversales), FASE 2 (casilla de dinero), §9 (errores 9 y 10)
@@ -419,3 +490,5 @@ Hoy están documentados el primero, el tercero y el cuarto. **DT-06 declara el s
 - `CONTRATOS_ENTRE_MODULOS_DEL_NUEVO_POS.md` — P-01 a P-03, A-01 a A-06
 - `PLANO ARQUITECTONICO PARA EL NUEVO POS.md` — Sección 6 (módulos fuera del alcance del POS)
 - `README.md` — reglas de oro 9 (tiempo) y 11 (dinero)
+- `ESPECIFICACIONES DEL PROYECTO/DOCUMENTACION_CENTRO_IA.md` — la especificación funcional del Centro de IA (DT-07)
+- `docs/SPEC_AI_GATEWAY_TRANSVERSAL.md` — la especificación del Gateway transversal (DT-07)

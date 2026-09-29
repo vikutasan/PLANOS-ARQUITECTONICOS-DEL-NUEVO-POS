@@ -347,14 +347,35 @@ Extraídas de 7 meses de operación real + 1 error de construcción del POS nuev
 ### Fase 7 — Voz + Visión IA + Selector de Temas
 > **Las funciones estrella + la UI del tema**
 
-**Archivos a construir:**
+> [!IMPORTANT]
+> **Aclaración de alcance (29 Sep 2026):** la voz y la visión **no son del POS**. Son capacidades del
+> **Centro de IA**, un módulo del ERP que aún no se reconstruye. Lo que esta fase construye es **solo
+> el lado del POS**: los puntos de contacto para consumir esas capacidades **por contrato** cuando el
+> Centro de IA exista. Ver **DT-07** en [`DIRECTRICES_TRANSVERSALES_DEL_ERP.md`](./DIRECTRICES_TRANSVERSALES_DEL_ERP.md).
+
+**Sub-fase F7.0 — Declarar la frontera POS ↔ Centro de IA (PRIMERO, sin UI):**
+
+Antes de portar una sola línea de voz o visión, se declaran los contratos que faltan en
+[`apps/api/contracts/registry.py`](../../NUEVO-POS/apps/api/contracts/registry.py:1). Hoy el POS
+hablaría con el Centro de IA por **convención implícita**, lo que viola la Regla Dura (A-02).
+
+| Acción | Detalle |
+|---|---|
+| Reetiquetar el contrato 17 | `vision.reconocer_producto`: proveedor pasa de `"Visión"` a `"Centro de IA"` |
+| Declarar contrato de voz | `ia.transcribir_voz` (proveedor: Centro de IA) |
+| Declarar contrato de NLU | `ia.interpretar_intencion` (proveedor: Centro de IA) |
+| Documentar la degradación | Todo contrato de IA devuelve 503 `IA_NO_DISPONIBLE`; el POS sigue vendiendo |
+
+**Archivos a construir (F7.1 en adelante):**
 - `VoiceCartPanel.jsx` — panel de voz
-- `useVoiceCart.js` — hook de voz
+- `useVoiceCart.js` — hook de voz (consume `ia.transcribir_voz` + `ia.interpretar_intencion`)
 - `voiceCartMapper.js` — mapeo de intents a productos
-- `VisionVisor.jsx` — visor de cámara IA
+- `VisionVisor.jsx` — visor de cámara IA (consume contrato 17)
 - `useVision.js` — hook de visión
 - `ProgramacionPedidoModal.jsx` — pedidos programados
 - `ThemeSelector.jsx` — ✨ selector visual de temas (Fase 4 del theme engine)
+
+**Orden de ejecución propuesto:** F7.0 (contratos) → F7.1 (temas UI, menor riesgo) → F7.2 (voz) → F7.3 (visión).
 
 ---
 
@@ -417,6 +438,35 @@ Son **2 componentes** y **2 llamadas a contrato**. Nada más.
 | **Tests** | Vitest para frontend, pytest para backend | Cada hook y servicio tiene tests. Contratos guardianes obligatorios. |
 | **PDF** | html2pdf.js o jsPDF | Genera PDF en el navegador sin dependencias de servidor. |
 | **Impresión** | window.print() con template HTML | Igual que el POS viejo. Funciona con térmicas de 80mm. |
+| **IA (voz/visión)** | Consumir el **Centro de IA** por contrato (DT-07) | El POS no contiene el motor de IA. Cuando el Centro de IA exista, el POS no se toca: solo cambia quién implementa el contrato. |
+| **CRM / Notificaciones** | Consumir por contrato (Fase 8) | El POS consume beneficios, no los define. Degradación elegante: nunca bloquea la venta. |
+| **Valores transversales** | Consumir de **Vista General** por contexto (DT-06) | Zona horaria, moneda y sucursal se declaran una sola vez. El POS los consume, no los define. |
+
+---
+
+## 8.1 EL POS ES EL PRIMER MÓDULO DE UN ERP RECONSTRUIDO
+
+> **Aclaración explícita del dueño (29 Sep 2026).** Se documenta aquí para que no exista
+> posibilidad de confusión cuando se construyan los demás módulos.
+
+**La visión completa:**
+
+1. **Esto no es un proyecto del POS.** Es el **primer módulo** de una reconstrucción del ERP
+   completo. El método que se usa aquí (diagnóstico → plan por partes → sub-fases con gate →
+   ficha → commit) se **replicará** en cada módulo del ERP.
+2. **El POS se integra con módulos del ERP que aún no existen**, siempre **por contrato**:
+   - **Centro de IA** (voz, visión, OCR, NLU) — ver **DT-07**.
+   - **CRM / Notificaciones** (clientes, lealtad, envío de tickets) — ver **Fase 8**.
+   - **Vista General** (zona horaria, moneda, sucursal) — ver **DT-06**.
+3. **Lo que sí podemos hacer ahora** es **dejar el POS preparado** para que, cuando esos módulos
+   existan, la integración sea limpia y no haya que reescribir el POS. Eso significa:
+   - **Declarar los contratos** que faltan (empezando por los de IA en F7.0).
+   - **No inventar** el motor de IA, ni el CRM, ni el selector de valores transversales dentro del POS.
+   - **Respetar la degradación elegante**: si un módulo del ERP cae, el POS sigue vendiendo.
+
+**La regla que lo resume:**
+
+> **El POS es hermano de los demás módulos del ERP, no su padre. Consume por contrato; nunca los contiene.**
 
 ---
 
