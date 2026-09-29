@@ -386,28 +386,80 @@ Cada uno de esos es un caso del mismo error: **una decisión transversal tomada 
 
 ---
 
+## SECCIÓN 6.7 — DT-08: LA CAPTURA POR VISIÓN CENITAL
+
+> **Origen de esta directriz:** aclaración explícita del dueño (29 Sep 2026). Se documenta aquí
+> para que **no exista posibilidad de confusión** cuando se construya el hardware de captura y
+> cuando se ajuste el umbral de confianza de la visión.
+
+### DT-08.1 — La regla
+
+> **La visión del POS opera sobre una cámara cenital (montada sobre el mostrador, mirando hacia abajo) con iluminación dedicada que elimina las sombras. El umbral de confianza de la visión (RN-72, hoy 0.35) es un valor calibrado para ese montaje cenital, no un valor universal, y es configurable desde el Centro de IA. La captura por visión es un flujo persistente de "escaneo de charola", no una captura bajo demanda.**
+
+### DT-08.2 — El ancla
+
+| Capa | Archivo / Módulo | Qué hace |
+|---|---|---|
+| Hardware | Cámara cenital + iluminación dedicada | Punto de vista fijo y controlado sobre el mostrador. Elimina sombras y el "apuntado" manual del operador. |
+| Contrato | `17 vision.reconocer_producto` | Recibe el frame y devuelve detecciones con confianza. Debe declarar el `modo_captura` (`cenital` \| `manual`). |
+| Umbral | RN-72 (`rules/registry.py`) | 0.35 es el valor **calibrado para el modo cenital**. Configurable desde el Centro de IA. |
+| Consumo | `apps/pos/src/hooks/useVision.js` + `VisionVisor.jsx` | Visor persistente que sugiere productos de la charola. Nunca agrega al carrito solo. |
+
+### DT-08.3 — Las reglas derivadas
+
+1. **El punto de vista es fijo y controlado.** La cámara cenital con iluminación dedicada convierte la visión en un "escáner de charola": el operador coloca los productos y el sistema los reconoce sin apuntar. Esto es lo que hace que la visión **agilice** la captura en lugar de estorbarla.
+2. **El umbral 0.35 es de calibración, no universal.** RN-72 fija 0.35 como el valor calibrado para el montaje cenital con iluminación controlada. No es un valor mágico ni aplicable a una webcam de laptop. Es **configurable desde el Centro de IA** (DT-07).
+3. **La captura es un flujo persistente, no bajo demanda.** El visor cenital permanece abierto durante la venta (modo "escáner de charola"), no se abre y cierra por cada producto. Esto es una consecuencia directa del punto de vista fijo.
+4. **La visión sigue siendo asistiva (RN-74).** Aunque el montaje sea controlado, la visión **sugiere**, nunca decide. El humano confirma. La regla de oro no cambia con el hardware.
+5. **El `modo_captura` se declara en el contrato.** El contrato 17 distingue `cenital` de `manual` para que el Centro de IA pueda aplicar la calibración correcta y para que el POS sepa qué flujo de UI ofrecer.
+6. **La degradación elegante no cambia.** Si el Centro de IA o la cámara fallan, el POS sigue vendiendo en modo manual (DT-07, regla derivada 4).
+
+### DT-08.4 — La verificación
+
+| # | Verificación | Cómo |
+|---|---|---|
+| V-30 | El contrato 17 declara el `modo_captura` | Revisión del registro de contratos |
+| V-31 | El umbral de visión es configurable, no hardcodeado | Revisión: RN-72 lee el umbral de configuración del Centro de IA |
+| V-32 | El visor cenital es persistente, no bajo demanda | Revisión de `VisionVisor.jsx`: el visor no se monta/desmonta por producto |
+| V-33 | La visión nunca agrega al carrito sola | Prueba: una detección no produce una línea de carrito sin confirmación (RN-74) |
+
+### DT-08.5 — La matriz de cumplimiento
+
+| Módulo | Cumple | Evidencia / Deuda |
+|---|---|---|
+| Centro de IA | ⏳ | Debe exponer el umbral configurable y la calibración cenital. **Aún no reconstruido.** |
+| POS | ⚠️ | `useVision` + `VisionVisor` consumen el contrato 17. **Deuda:** el contrato 17 aún no declara `modo_captura` (se ajusta en F7.3). |
+| Almacenes | ⏳ | Podría reutilizar la captura cenital para recepción de mercancía. Pendiente. |
+
+**Nota importante:** esta directriz **no especifica el hardware**. Solo declara que la visión del POS asume un montaje cenital con iluminación controlada, y que el umbral 0.35 es de calibración (configurable), no universal. Documentarlo ahora evita que un futuro ajuste del umbral se haga a ciegas o que alguien asuma que la visión funciona igual con una webcam de laptop.
+
+---
+
 ## SECCIÓN 7 — LA MATRIZ MAESTRA
 
 Estado de cada módulo frente a cada directriz. **Un módulo no se declara terminado con un ❌.**
 
-| Módulo | DT-01 Tiempo | DT-02 Dinero | DT-03 Identidad | DT-04 Inventario | DT-05 Auditoría | DT-06 Config |
-|---|---|---|---|---|---|---|
-| **Vista General** | — | — | — | — | — | ⏳ |
-| POS | ✅ | ✅ | ⚠️ | ⚠️ | ✅ | ✅ |
-| Caja | ✅ | ✅ | ⚠️ | — | ✅ | ✅ |
-| Catálogo | — | ✅ | ⚠️ | ⚠️ | ⚠️ | ⚠️ |
-| Heladería | — | ✅ | ⚠️ | — | ⚠️ | ⚠️ |
-| Almacenes | ⚠️ | ⚠️ | ✅ | ✅ | ⚠️ | ⚠️ |
-| Grandeza | ⚠️ | ❌ | ⚠️ | — | ⚠️ | ⚠️ |
-| RRHH | ⚠️ | ❌ | ⚠️ | — | ⚠️ | ⚠️ |
-| Pedidos | ⚠️ | ❌ | ⚠️ | — | ⚠️ | ⚠️ |
-| Producción | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ |
-| Analytics | ✅ | ⚠️ | — | — | — | ⚠️ |
-| Frontend | ⚠️ | ❌ | ⚠️ | — | — | ⚠️ |
+| Módulo | DT-01 Tiempo | DT-02 Dinero | DT-03 Identidad | DT-04 Inventario | DT-05 Auditoría | DT-06 Config | DT-07 IA | DT-08 Visión cenital |
+|---|---|---|---|---|---|---|---|---|
+| **Vista General** | — | — | — | — | — | ⏳ | — | — |
+| **Centro de IA** | — | — | — | — | — | — | ⏳ | ⏳ |
+| POS | ✅ | ✅ | ⚠️ | ⚠️ | ✅ | ✅ | ⚠️ | ⚠️ |
+| Caja | ✅ | ✅ | ⚠️ | — | ✅ | ✅ | — | — |
+| Catálogo | — | ✅ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | — | — |
+| Heladería | — | ✅ | ⚠️ | — | ⚠️ | ⚠️ | — | — |
+| Almacenes | ⚠️ | ⚠️ | ✅ | ✅ | ⚠️ | ⚠️ | ⚠️ | ⏳ |
+| Grandeza | ⚠️ | ❌ | ⚠️ | — | ⚠️ | ⚠️ | ⚠️ | — |
+| RRHH | ⚠️ | ❌ | ⚠️ | — | ⚠️ | ⚠️ | — | — |
+| Pedidos | ⚠️ | ❌ | ⚠️ | — | ⚠️ | ⚠️ | — | — |
+| Producción | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | — | — |
+| Analytics | ✅ | ⚠️ | — | — | — | ⚠️ | — | — |
+| Frontend | ⚠️ | ❌ | ⚠️ | — | — | ⚠️ | — | — |
 
 **Leyenda:** ✅ Cumple · ⚠️ Parcial · ❌ No cumple · ⏳ Pendiente · — No aplica
 
 **Nota sobre Vista General:** es el módulo donde se **declaran** los valores transversales. Su fila está en ⏳ porque aún no se reconstruye, pero su rol ya está decidido (DT-06). Los demás módulos lo consumen.
+
+**Nota sobre el Centro de IA:** es el módulo donde se **gestionan** las capacidades de IA (DT-07) y donde se **calibra** el umbral de la visión cenital (DT-08). Su fila está en ⏳ porque aún no se reconstruye, pero su rol ya está decidido. Los demás módulos lo consumen por contrato.
 
 ---
 
@@ -452,7 +504,7 @@ Este documento existe porque el mismo error se cometió muchas veces en lugares 
 
 > **Lo transversal se decide una vez y se verifica en cada módulo. Nunca se decide en cada módulo.**
 
-**Las 7 directrices vigentes:**
+**Las 8 directrices vigentes:**
 
 | ID | Directriz | Estado |
 |---|---|---|
@@ -463,6 +515,7 @@ Este documento existe porque el mismo error se cometió muchas veces en lugares 
 | DT-05 | Auditoría: quién, cuándo, qué — transaccional | Vigente |
 | DT-06 | Configuración: los valores transversales se declaran una sola vez, en Vista General | Vigente |
 | DT-07 | IA: las capacidades de IA se gestionan una sola vez, en el Centro de IA; cada módulo las consume por contrato | Vigente |
+| DT-08 | Visión cenital: la captura por visión asume cámara cenital con iluminación dedicada; el umbral 0.35 es de calibración (configurable), no universal | Vigente |
 
 **La simetría completa (DT-06):**
 
@@ -482,6 +535,15 @@ ai-local (motor)  →  Centro de IA  →  Gateway (503)  →  cada módulo
 
 **DT-07 declara el rol del Centro de IA**, que era el eslabón que faltaba para que el POS (y Almacenes, y Grandeza) no inventen un motor de IA dentro de sí mismos.
 
+**La simetría completa (DT-08):**
+
+```
+cámara cenital + luz  →  contrato 17 (modo_captura)  →  umbral calibrado  →  visor persistente
+   (captura fija)          (declara el modo)            (configurable)        (sugiere, no decide)
+```
+
+**DT-08 declara el montaje de captura de la visión**, que era el supuesto implícito detrás del umbral 0.35 (RN-72). Sin esta directriz, un futuro ajuste del umbral se haría a ciegas o alguien asumiría que la visión funciona igual con una webcam de laptop.
+
 **Documentos relacionados:**
 
 - `METODOLOGIA_DE_INGENIERIA_INVERSA_Y_DISENO.md` — §3.4 (reglas transversales), FASE 2 (casilla de dinero), §9 (errores 9 y 10)
@@ -492,3 +554,5 @@ ai-local (motor)  →  Centro de IA  →  Gateway (503)  →  cada módulo
 - `README.md` — reglas de oro 9 (tiempo) y 11 (dinero)
 - `ESPECIFICACIONES DEL PROYECTO/DOCUMENTACION_CENTRO_IA.md` — la especificación funcional del Centro de IA (DT-07)
 - `docs/SPEC_AI_GATEWAY_TRANSVERSAL.md` — la especificación del Gateway transversal (DT-07)
+- `05-plan-de-construccion/PLAN_DE_ABORDAJE_FASE_7_POR_PARTES.md` — §8 (sub-fase F7.3, visión cenital) (DT-08)
+- `PLAN_MAESTRO_DEFINITIVO_POS.md` — §Fase 7 (nota de la cámara cenital) (DT-08)

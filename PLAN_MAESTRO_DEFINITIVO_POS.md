@@ -1,7 +1,7 @@
 # 🏗️ PLAN MAESTRO DEFINITIVO — POS Nuevo "R de Rico"
 
 > **Fecha:** 28 Sep 2026 (última actualización: 29 Sep 2026)
-> **Versión del plan:** 1.5
+> **Versión del plan:** 1.6
 > **Autor:** Antigravity + Víctor (dueño de R de Rico)
 
 ### Repositorios del proyecto
@@ -352,6 +352,20 @@ Extraídas de 7 meses de operación real + 1 error de construcción del POS nuev
 > **Centro de IA**, un módulo del ERP que aún no se reconstruye. Lo que esta fase construye es **solo
 > el lado del POS**: los puntos de contacto para consumir esas capacidades **por contrato** cuando el
 > Centro de IA exista. Ver **DT-07** en [`DIRECTRICES_TRANSVERSALES_DEL_ERP.md`](./DIRECTRICES_TRANSVERSALES_DEL_ERP.md).
+
+> [!NOTE]
+> **Aclaración del hardware de visión (29 Sep 2026):** la visión del POS opera sobre una **cámara
+> cenital** (montada sobre el mostrador, mirando hacia abajo) con **iluminación dedicada que elimina
+> las sombras**. Esto convierte la visión en un **"escáner de charola"**: el operador coloca los
+> productos y el sistema los reconoce sin apuntar. Consecuencias directas:
+> - El **umbral 0.35 (RN-72)** es un valor **calibrado para ese montaje cenital**, no universal, y es
+>   **configurable desde el Centro de IA**.
+> - El visor de visión es un **flujo persistente** (permanece abierto durante la venta), no una
+>   captura bajo demanda.
+> - El contrato 17 debe declarar el **`modo_captura`** (`cenital` | `manual`).
+> - La visión **sigue siendo asistiva** (RN-74): sugiere, nunca decide. La regla de oro no cambia.
+>
+> Ver **DT-08** en [`DIRECTRICES_TRANSVERSALES_DEL_ERP.md`](./DIRECTRICES_TRANSVERSALES_DEL_ERP.md).
 
 **Sub-fase F7.0 — Declarar la frontera POS ↔ Centro de IA (PRIMERO, sin UI):**
 

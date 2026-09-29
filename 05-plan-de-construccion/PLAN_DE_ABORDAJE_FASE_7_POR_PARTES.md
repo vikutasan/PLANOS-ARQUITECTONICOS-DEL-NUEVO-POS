@@ -1,13 +1,13 @@
 # PLAN DE ABORDAJE — FASE 7 POR PARTES
 ## Selector de Temas (UI) + Voz + Visión IA — todo por contrato con el Centro de IA
 
-> **Versión:** 1.0
-> **Fecha:** 2026-09-29
+> **Versión:** 1.1
+> **Fecha:** 2026-09-29 (v1.1: ajuste por la aclaración del hardware de visión — DT-08)
 > **Autor:** Arquitecto del POS nuevo
-> **Estado:** PROPUESTA — pendiente de aprobación del dueño
+> **Estado:** APROBADO — F7.0, F7.1 y F7.2 ejecutadas; F7.3 ajustada por DT-08
 > **Referencias:**
 > - [`PLAN_MAESTRO_DEFINITIVO_POS.md`](../PLAN_MAESTRO_DEFINITIVO_POS.md) §Fase 7 + §8 + §8.1
-> - [`DIRECTRICES_TRANSVERSALES_DEL_ERP.md`](../DIRECTRICES_TRANSVERSALES_DEL_ERP.md) **DT-07** (IA) + DT-06 (Vista General)
+> - [`DIRECTRICES_TRANSVERSALES_DEL_ERP.md`](../DIRECTRICES_TRANSVERSALES_DEL_ERP.md) **DT-07** (IA) + **DT-08** (visión cenital) + DT-06 (Vista General)
 > - [`PROMPT_DEL_ARQUITECTO_DEL_NUEVO_POS.md`](../06-prompt-del-arquitecto/PROMPT_DEL_ARQUITECTO_DEL_NUEVO_POS.md) §7.4 (estándares) + §10.8 (E-01 a E-16)
 > - [`PLAN_DE_ABORDAJE_FASE_6_POR_PARTES.md`](PLAN_DE_ABORDAJE_FASE_6_POR_PARTES.md) (precedente de método)
 > - POS viejo: `apps/pos/hooks/useVoiceCart.js` (409 líneas), `apps/pos/utils/voiceCartMapper.js` (236 líneas), `apps/pos/VisionScanner.jsx` (231 líneas), `apps/ai/utils/aiCenterConstants.js`
@@ -315,6 +315,13 @@ node scripts/guards.mjs                                    → 7/7 verde
 
 ## §8. SUB-FASE 7.3 — Visión (`useVision.js` + `VisionVisor.jsx`)
 
+> [!IMPORTANT]
+> **Ajuste por la aclaración del hardware (29 Sep 2026).** El dueño confirmó que la visión opera
+> sobre una **cámara cenital con iluminación dedicada** (ver **DT-08**). Esto cambia el diseño de
+> esta sub-fase en tres puntos: (1) el umbral 0.35 es de **calibración cenital**, configurable;
+> (2) el contrato 17 declara el **`modo_captura`**; (3) el visor es un **flujo persistente**
+> ("escáner de charola"), no una captura bajo demanda.
+
 ### §8.1 Qué construye
 
 - `apps/pos/src/hooks/useVision.js` — hook que captura frames y consume el contrato 17.
@@ -325,10 +332,12 @@ node scripts/guards.mjs                                    → 7/7 verde
 - **Consume el contrato 17** (`vision.reconocer_producto`), NO Gemini (corrige H-3).
 - **Cero dependencias de nube.** Solo `getUserMedia` (nativo del navegador).
 - **Visión asistiva (RN-74):** la visión **sugiere**, nunca bloquea la venta manual.
-- **Umbral 0.35 (RN-72):** por debajo, la detección se descarta.
+- **Umbral 0.35 (RN-72) = calibración cenital, configurable (DT-08):** por debajo, la detección se descarta. El valor 0.35 es el calibrado para el montaje cenital con iluminación controlada; el hook lo lee de configuración (con 0.35 como valor por defecto), no lo hardcodea.
+- **`modo_captura` en el contrato 17 (DT-08):** el hook envía `modo_captura: 'cenital'` en la llamada al contrato. El contrato distingue `cenital` de `manual`.
+- **Flujo persistente, no bajo demanda (DT-08):** el visor cenital permanece abierto durante la venta (modo "escáner de charola"). El operador coloca los productos y el sistema los reconoce sin apuntar.
 - **Etiquetado por SKU (RN-73):** la detección se resuelve contra el catálogo por SKU.
 - **Degradación elegante:** si el contrato devuelve 503 (Centro de IA no disponible), el visor muestra "IA no disponible" y el POS sigue en modo manual.
-- **La cámara es opcional:** el visor se abre bajo demanda, no al montar el POS.
+- **La cámara es opcional:** el visor se abre cuando el operador lo decide, pero una vez abierto **permanece** (no se cierra por producto).
 
 ### §8.3 Archivos
 
@@ -349,6 +358,9 @@ node scripts/guards.mjs                                    → 7/7 verde
 6. `VisionVisor` sugiere productos pero **NO** los agrega al carrito automáticamente (RN-74).
 7. `VisionVisor` muestra "IA no disponible" si el contrato falla.
 8. `VisionVisor` respeta R-03 (3 modos) y R-04 (target ≥44px).
+9. `useVision` envía `modo_captura: 'cenital'` en la llamada al contrato 17 (DT-08).
+10. `useVision` lee el umbral de configuración (no lo hardcodea); 0.35 es el valor por defecto (DT-08).
+11. `VisionVisor` mantiene el visor abierto entre detecciones (flujo persistente, no bajo demanda) (DT-08).
 
 ### §8.5 Gate de cierre
 
@@ -401,6 +413,9 @@ node scripts/guards.mjs     → 7/7 verde
 | El mapper de voz no resuelve nombres con acentos | Media | Bajo | El mapper normaliza (NFD + strip diacríticos); el gate lo verifica. |
 | Se cuela una dependencia de nube (Gemini) en visión | Baja | **Alto** | El gate de F7.3 verifica que NO se importe `@google/generative-ai`. |
 | `ProgramacionPedidoModal.jsx` se cuela sin alcance | Media | Bajo | Se difiere explícitamente (§12.3). |
+| El umbral 0.35 se trata como universal y no se puede calibrar | Media | Medio | **DT-08:** el umbral es de calibración cenital y configurable; el gate de F7.3 verifica que se lea de configuración (criterio 10). |
+| El visor se implementa como captura bajo demanda (no persistente) | Media | Bajo | **DT-08:** el gate de F7.3 verifica el flujo persistente (criterio 11). |
+| El contrato 17 no declara el `modo_captura` | Media | Bajo | **DT-08:** el gate de F7.3 verifica que el hook envíe `modo_captura: 'cenital'` (criterio 9). |
 
 ---
 
@@ -473,6 +488,7 @@ Se propone tratarlo en una **Fase 7.5** o en la **Fase 8** (junto con CRM/Notifi
 | Regla / Directriz | Sub-fase que la cumple |
 |---|---|
 | **DT-07** (IA por contrato) | F7.0 (declara) + F7.2/F7.3 (consumen) |
+| **DT-08** (visión cenital) | F7.3 (criterios 9, 10 y 11 del gate) |
 | **A-02** (frontera por contratos) | F7.0 (cierra la brecha de H-2) |
 | **RN-71** (motor ORB) | F7.3 (el motor vive en el Centro de IA) |
 | **RN-72** (umbral 0.35) | F7.3 (criterio 4 del gate) |
@@ -483,6 +499,30 @@ Se propone tratarlo en una **Fase 7.5** o en la **Fase 8** (junto con CRM/Notifi
 | **A-01** (regla con su test) | F7.2 (el mapper se porta con su test) |
 | **DT-06** (Vista General) | F7.1 (identidad=null hasta que exista) |
 
+### §12.5 La aclaración del hardware de visión (DT-08) y por qué cambia F7.3
+
+El dueño aclaró (29 Sep 2026) que la visión del POS opera sobre una **cámara cenital con iluminación
+dedicada** que elimina las sombras sobre el mostrador. Esto **no es un detalle de hardware**: cambia
+el análisis de riesgo de la visión.
+
+**Antes de la aclaración**, la visión se veía como el entregable de mayor riesgo ("adorno"): un
+operador apuntando con una webcam a cada producto es **más lento** que teclear. **Después de la
+aclaración**, la visión es un **"escáner de charola"**: punto de vista fijo, iluminación controlada,
+el operador coloca los productos y el sistema los reconoce sin apuntar. Ese es el caso de uso
+**fuerte** de la visión, y **sí agiliza** la captura.
+
+**Los 3 ajustes concretos a F7.3 (ya incorporados en §8):**
+
+1. **El umbral 0.35 es de calibración cenital, configurable (DT-08).** No es un valor universal. El
+   hook lo lee de configuración (0.35 por defecto), no lo hardcodea. El Centro de IA lo calibra.
+2. **El contrato 17 declara el `modo_captura` (`cenital` | `manual`).** El hook envía
+   `modo_captura: 'cenital'`. Así el Centro de IA aplica la calibración correcta.
+3. **El visor es un flujo persistente, no bajo demanda.** Permanece abierto durante la venta (modo
+   "escáner de charola"), no se abre y cierra por producto.
+
+**Lo que NO cambia:** la regla de oro (la visión sugiere, nunca decide — RN-74), la degradación
+elegante (si el Centro de IA cae, el POS sigue vendiendo), y la frontera por contrato (A-02).
+
 ---
 
 ## §13. RESUMEN EJECUTIVO
@@ -492,9 +532,12 @@ Se propone tratarlo en una **Fase 7.5** o en la **Fase 8** (junto con CRM/Notifi
 | **F7.0** | Contratos 24 y 25 + test | 3 | Bajo | — |
 | **F7.1** | Cableado de temas + `ThemeSelector` | 5 | Bajo | F7.0 |
 | **F7.2** | Voz (mapper + hook + panel) | 7 | Medio | F7.0 |
-| **F7.3** | Visión (hook + visor) | 4 | Medio | F7.0 |
+| **F7.3** | Visión cenital (hook + visor persistente) | 4 | Medio | F7.0 |
 | **F7.4** | Ficha de cierre | 1 | Bajo | F7.1–F7.3 |
 
 **Total:** 20 archivos, 4 sub-fases de construcción + 1 de cierre. **Cero dependencias nuevas.**
 
-**El POS termina la Fase 7 con:** un selector de temas funcional, un panel de voz que propone (nunca ejecuta), y un visor de visión que sugiere (nunca bloquea) — los tres **preparados por contrato** para integrarse con el Centro de IA cuando exista.
+**El POS termina la Fase 7 con:** un selector de temas funcional, un panel de voz que propone (nunca ejecuta), y un visor de visión cenital que sugiere (nunca bloquea) — los tres **preparados por contrato** para integrarse con el Centro de IA cuando exista.
+
+**Cambio de versión 1.0 → 1.1:** la sub-fase F7.3 se ajustó por la aclaración del hardware de visión
+(cámara cenital con iluminación dedicada). Ver **DT-08** y §12.5.
