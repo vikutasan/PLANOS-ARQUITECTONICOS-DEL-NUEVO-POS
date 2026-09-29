@@ -1,7 +1,7 @@
 # 🏗️ PLAN MAESTRO DEFINITIVO — POS Nuevo "R de Rico"
 
 > **Fecha:** 28 Sep 2026 (última actualización: 29 Sep 2026)
-> **Versión del plan:** 1.6
+> **Versión del plan:** 1.7
 > **Autor:** Antigravity + Víctor (dueño de R de Rico)
 
 ### Repositorios del proyecto
@@ -220,6 +220,34 @@ Extraídas de 7 meses de operación real + 1 error de construcción del POS nuev
 - **M3 — Nube:** servicio externo (para picos de demanda o modelos grandes)
 
 **Regla de oro:** la IA NUNCA bloquea la venta. Si no está disponible, el POS funciona sin ella (fallback 503).
+
+### 6.8 La UX heredada del viejo POS — la integración se hereda, la implementación se reescribe (nueva)
+
+> **Origen:** hallazgo de F7.6 (29 Sep 2026). Al cablear voz/visión/temas en la pantalla real, se
+> descubrió que el viejo POS **ya define cómo se integran** estos componentes. La primera versión
+> del cableado los trataba como overlays flotantes y **contradecía** esa UX.
+
+**El principio:**
+
+> *Cuando un componente ya existe en el viejo POS, su **INTEGRACIÓN** se hereda; solo su
+> **IMPLEMENTACIÓN** se reescribe. El viejo POS es la fuente de verdad para la integración;
+> el nuevo POS lo es para la implementación.*
+
+Es la **Regla Dura A-01** (portar con su test) aplicada a la UX: no se reinventa *cómo se usa* algo
+que ya se usa bien; se reinventa *cómo se construye*.
+
+| Componente | Integración heredada del viejo POS |
+|---|---|
+| **Visión** | **Modo de vista** (`viewMode === 'CAMERA'`) que **reemplaza el cuerpo**; se conmuta desde la barra de categorías. **No** es un overlay. |
+| **Voz** | **Botón en el header** con `disabled={!vozDisponible}` → abre overlay de dictado. |
+| **Tema** | **No existe** en el viejo POS → capacidad nueva → overlay nuevo. |
+
+**Por qué importa para todo el ERP:** este principio gobierna la reconstrucción completa. Cuando un
+módulo del viejo ERP ya define *cómo se usa*, el módulo nuevo **hereda ese uso** y solo reescribe
+*cómo se construye*. Evita reinventar UX probada y evita romper la memoria muscular del operador.
+
+**Verificación:** gate `RetailVisionPOS.f7_6.test.jsx` (11 criterios / 13 tests) + CI en verde.
+Evidencia en `FICHA_F7_6_UX_HEREDADA.md`.
 
 ---
 

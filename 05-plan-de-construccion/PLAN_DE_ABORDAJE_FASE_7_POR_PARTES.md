@@ -1,10 +1,10 @@
 # PLAN DE ABORDAJE — FASE 7 POR PARTES
 ## Selector de Temas (UI) + Voz + Visión IA — todo por contrato con el Centro de IA
 
-> **Versión:** 1.1
-> **Fecha:** 2026-09-29 (v1.1: ajuste por la aclaración del hardware de visión — DT-08)
+> **Versión:** 1.2
+> **Fecha:** 2026-09-29 (v1.1: ajuste por la aclaración del hardware de visión — DT-08; v1.2: §12.6 UX heredada del viejo POS — F7.6)
 > **Autor:** Arquitecto del POS nuevo
-> **Estado:** APROBADO — F7.0, F7.1 y F7.2 ejecutadas; F7.3 ajustada por DT-08
+> **Estado:** APROBADO — F7.0–F7.4 ejecutadas y Fase 7 CERRADA; F7.6 corrige el cableado (UX heredada)
 > **Referencias:**
 > - [`PLAN_MAESTRO_DEFINITIVO_POS.md`](../PLAN_MAESTRO_DEFINITIVO_POS.md) §Fase 7 + §8 + §8.1
 > - [`DIRECTRICES_TRANSVERSALES_DEL_ERP.md`](../DIRECTRICES_TRANSVERSALES_DEL_ERP.md) **DT-07** (IA) + **DT-08** (visión cenital) + DT-06 (Vista General)
@@ -522,6 +522,67 @@ el operador coloca los productos y el sistema los reconoce sin apuntar. Ese es e
 
 **Lo que NO cambia:** la regla de oro (la visión sugiere, nunca decide — RN-74), la degradación
 elegante (si el Centro de IA cae, el POS sigue vendiendo), y la frontera por contrato (A-02).
+
+### §12.6 La UX heredada del viejo POS (F7.6) — la integración se hereda, la implementación se reescribe
+
+**El hallazgo (29 Sep 2026).** Al cablear los 3 entregables de Fase 7 en la pantalla real
+(`RetailVisionPOS.jsx`), el dueño advirtió que **el viejo POS ya tiene definida la UX de integración**
+de estos componentes. La primera versión del cableado (F7.5) los trataba a los tres como *overlays*
+flotantes — y eso **contradecía** la UX establecida.
+
+**El principio que se adopta (F7.6):**
+
+> *Cuando un componente ya existe en el viejo POS, su **INTEGRACIÓN** se hereda; solo su
+> **IMPLEMENTACIÓN** se reescribe. El viejo POS es la fuente de verdad para la integración;
+> el nuevo POS lo es para la implementación.*
+
+Esto es una aplicación concreta de la **Regla Dura A-01** (portar con su test) al terreno de la UX:
+no se reinventa cómo se usa algo que ya se usa bien; se reinventa *cómo se construye*.
+
+**La evidencia del viejo POS (fuente de verdad de la integración):**
+
+| Componente | Cómo se integra en el viejo POS | Archivo de referencia |
+|---|---|---|
+| **Visión** | Es un **modo de vista** (`viewMode === 'CAMERA'`) que **reemplaza el cuerpo** de la pantalla. Se conmuta desde la barra de categorías. **No** es un overlay flotante. | `apps/pos/components/CategoryBar.jsx`, `apps/pos/RetailVisionPOS.jsx` |
+| **Voz** | Es un **botón en el header** (`#btn-dictado-voz`) con `disabled={!voiceAvailable}`. Al pulsarlo abre un **overlay** de dictado. | `apps/pos/components/POSHeader.jsx`, `apps/pos/components/VoiceCartPanel.jsx` |
+| **Tema** | **No existe** en el viejo POS. Es una capacidad **nueva** del POS nuevo → se integra como **overlay nuevo**. | — (no hay precedente) |
+
+**Las 3 reglas de integración resultantes:**
+
+1. **Visión = `viewMode === 'CAMERA'`.** El visor cenital **reemplaza el cuerpo** (la grilla de
+   productos), no se superpone a él. El conmutador vive en `CategoryBar` (botón "📷 Escáner IA" +
+   cada categoría vuelve a `GRID`). El visor es **persistente** durante la venta (coherente con
+   DT-08: "escáner de charola"), no se abre y cierra por producto.
+2. **Voz = botón en el header con gate.** El botón se **deshabilita** (`disabled={!vozDisponible}`)
+   cuando el contrato 24/25 no está disponible. Al pulsarlo abre el overlay de dictado. La voz
+   **propone**; el operador **confirma** (regla de oro H-5).
+3. **Tema = overlay nuevo.** No hay precedente que heredar; se integra como overlay, igual que la voz.
+
+**Lo que NO se toca (delimitación de F7.6):**
+
+- **No** se reabre F7.3: `useVision.js` y `VisionVisor.jsx` **no se modifican**. El visor ya era
+  correcto; lo que estaba mal era *dónde* se montaba.
+- **No** se añade una prop `variante` ni se duplica el visor. Se reutiliza el mismo componente.
+- **No** se cambia el contrato del carrito: tanto la visión como la voz siguen entrando por
+  `carrito.anadirLinea({ product_id, name, quantity, unit_price })` — el **mismo** punto de entrada
+  que la grilla de productos, de modo que la persistencia atómica por ítem (contratos 18–20) sigue
+  funcionando sin cambios.
+
+**Archivos corregidos por F7.6:**
+
+| Archivo | Cambio |
+|---|---|
+| `apps/pos/src/components/CategoryBar.jsx` | Añade `viewMode` / `onCambiarVista` (conmutador grilla ↔ visor) |
+| `apps/pos/src/components/POSHeader.jsx` | Voz con `disabled={!vozDisponible}`; **se retira** el botón de visión |
+| `apps/pos/src/RetailVisionPOS.jsx` | `viewMode` como estado; el cuerpo alterna grilla ↔ visor; la voz respeta el gate |
+
+**Verificación:** gate de integración `RetailVisionPOS.f7_6.test.jsx` — **11 criterios / 13 tests**,
+más el CI completo en verde. Evidencia en `FICHA_F7_6_UX_HEREDADA.md`.
+
+**Por qué importa para el resto del ERP:** este principio (heredar la integración, reescribir la
+implementación) es el mismo que gobierna la reconstrucción de todo el ERP. Cuando un módulo del
+viejo ERP ya define *cómo se usa*, el módulo nuevo **hereda ese uso** y solo reescribe *cómo se
+construye*. Evita reinventar UX probada y evita romper la memoria muscular del operador.
 
 ---
 
