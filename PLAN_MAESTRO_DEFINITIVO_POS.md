@@ -1,7 +1,7 @@
 # 🏗️ PLAN MAESTRO DEFINITIVO — POS Nuevo "R de Rico"
 
 > **Fecha:** 28 Sep 2026 (última actualización: 29 Sep 2026)
-> **Versión del plan:** 1.4
+> **Versión del plan:** 1.5
 > **Autor:** Antigravity + Víctor (dueño de R de Rico)
 
 ### Repositorios del proyecto
@@ -424,6 +424,26 @@ Son **2 componentes** y **2 llamadas a contrato**. Nada más.
 - El paso de entrega ofrece Imprimir / WhatsApp / Email
 - Si el CRM está caído, la venta continúa sin beneficios
 - Si Notificaciones está caído, la venta continúa con impresión
+
+---
+
+> [!WARNING]
+> **NOTA DE COHERENCIA — RENUMERACIÓN PENDIENTE (añadida 29 Sep 2026).**
+> La [`PROPUESTA_CRM_Y_NOTIFICACIONES_DEL_NUEVO_POS.md`](./PROPUESTA_CRM_Y_NOTIFICACIONES_DEL_NUEVO_POS.md)
+> se redactó cuando el plan iba en **17 contratos** y **73 reglas**. Desde entonces el POS
+> creció: hoy tiene **23 contratos** (25 tras F7.0) y **81 reglas** (RN-74..81 ya ocupadas por
+> visión, auditoría y zona horaria). Por lo tanto, **los números de la propuesta ya no cuadran**
+> y deben renumerarse al abrir la Fase 8:
+>
+> | Elemento | Número en la propuesta | Número real al abrir F8 | Motivo |
+> |---|---|---|---|
+> | Contrato `clientes.beneficios_para_ticket` | #18 | **#26** | Los contratos 18–23 ya existen (F3.2 atómico + F5.0 cuentas) |
+> | Contrato `notificaciones.encolar_ticket` | #19 | **#27** | Idem |
+> | Reglas de lealtad/notificaciones | RN-74..RN-85 | **RN-82..RN-93** | RN-74..81 ya están declaradas en [`rules/registry.py`](../../NUEVO-POS/apps/api/rules/registry.py:596) |
+>
+> **Regla para el futuro:** los números de contrato y de regla se asignan **al momento de
+> declararlos**, nunca al momento de proponerlos. La propuesta es un documento de intención;
+> el `registry.py` es la fuente de verdad.
 
 ---
 
