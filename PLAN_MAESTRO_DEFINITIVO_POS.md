@@ -1,7 +1,7 @@
 # 🏗️ PLAN MAESTRO DEFINITIVO — POS Nuevo "R de Rico"
 
-> **Fecha:** 28 Sep 2026  
-> **Versión del plan:** 1.2  
+> **Fecha:** 28 Sep 2026 (última actualización: 29 Sep 2026)
+> **Versión del plan:** 1.4
 > **Autor:** Antigravity + Víctor (dueño de R de Rico)
 
 ### Repositorios del proyecto
@@ -596,7 +596,95 @@ Cada fase internamente sigue:
 
 ---
 
+## 11. LA DOCUMENTACIÓN FINAL DEL NUEVO POS (entregable obligatorio)
+
+> **Origen:** Decisión del dueño, 29 Sep 2026.
+> **Estado:** PENDIENTE — se ejecuta al cerrar la última fase (Fase 8).
+> **Regla dura:** esta sección NO es opcional. El proyecto NO se considera terminado hasta que exista la documentación final.
+
+### 11.1 Qué se debe producir
+
+Al terminar las 8 fases, se redacta **UNA documentación nueva, única y actualizada del POS nuevo**, que **fusiona dos fuentes**:
+
+| Fuente | Qué aporta | Dónde vive |
+|---|---|---|
+| **Documentación del POS viejo** | La **intención**: qué debía hacer el sistema, las 81 reglas de negocio, las cicatrices, el cementerio de bugs, las especificaciones funcionales | `ERP-R-DE-RICO` → `ESPECIFICACIONES DEL PROYECTO/` |
+| **Documentación generada durante la construcción** | La **realidad**: qué se construyó de verdad, con qué evidencia, qué se dejó fuera y por qué | `NUEVO-POS` → `docs/05-plan-de-construccion/FICHA_F*.md` + `PLANOS-ARQUITECTONICOS` |
+
+**El resultado NO es "pegar los dos documentos".** Es un documento nuevo que integra ambas capas y las reconcilia.
+
+### 11.2 El principio rector: el POR QUÉ de cada decisión
+
 > [!IMPORTANT]
-> **Este plan (v1.3) integra lo valioso de los 3 planes anteriores, las 5 decisiones del dueño sobre CRM, y los 16 estándares de calidad del constructor. Los documentos originales de planes quedan en la carpeta PLANES DESCONTINUADOS.**
+> **Cada decisión de diseño debe explicar de dónde viene.** No basta con decir "se hizo así". Hay que decir **por qué necesidad**, **por qué problema**, **por qué circunstancia** surgió esa decisión.
+
+Toda decisión documentada debe responder estas preguntas:
+
+1. **¿Qué problema resolvía?** (la necesidad concreta)
+2. **¿En qué circunstancia surgió?** (¿fue un bug en producción? ¿una limitación técnica? ¿una lección de la batalla?)
+3. **¿Qué alternativas se descartaron y por qué?**
+4. **¿Cómo se verifica hoy que sigue siendo correcta?** (el test que la protege)
+
+**Ejemplo del nivel de detalle exigido:**
+
+> ❌ **Mal:** "El endpoint devuelve 5 campos."
+>
+> ✅ **Bien:** "El endpoint devuelve exactamente 5 campos porque en el POS viejo, cuando el pizarrón pedía las cuentas abiertas con todas sus líneas, la respuesta tardaba varios segundos con 8+ cuentas y congelaba la pantalla del cajero (incidente documentado). La solución fue exponer solo la proyección mínima (Regla 15) y leer las líneas solo al recuperar una cuenta concreta. Se verifica con `test_respuesta_ligera_max_5_campos`."
+
+### 11.3 Qué NO se desecha (prohibido tirar)
+
+> [!CAUTION]
+> **Nada de lo siguiente se borra ni se resume "para ahorrar espacio".** Es la memoria del proyecto y su valor principal.
+
+- **El cementerio de bugs** — cada bug resuelto, con su síntoma, su causa raíz y su blindaje actual.
+- **Las cicatrices** — los incidentes de producción (T5/CAJA, v6.1 $453, etc.) y qué regla nació de cada uno.
+- **Las 81 reglas de negocio (RN-01 a RN-81)** — con su enunciado, su origen y su test.
+- **Las 6 prohibiciones absolutas** — con el caso real que las originó.
+- **Las 10 reglas arquitectónicas derivadas de la batalla** — con su historia.
+- **Los 16 estándares de calidad (E-01 a E-16)** — con su criterio de verificación.
+- **Las decisiones descartadas** — lo que se probó y NO funcionó, y por qué. (Evita que una IA futura lo reintente.)
+
+### 11.4 El objetivo final: blindar contra la repetición de errores
+
+> [!IMPORTANT]
+> **El propósito de esta documentación es que NINGUNA IA que programe sobre este POS vuelva a cometer los errores del pasado.**
+
+Para lograrlo, la documentación final debe ser **legible por una IA sin contexto previo**. Eso significa:
+
+- Cada regla dice **qué prohíbe**, **por qué existe** y **cómo se detecta** si se viola.
+- Cada decisión dice **qué se descartó** y **por qué**, para que nadie lo reintente.
+- Cada cicatriz dice **qué pasó**, **cuánto costó** y **qué la previene hoy**.
+- Los guardianes automáticos (los greps de CI) están documentados como la **aplicación viva** de esas reglas.
+
+**Criterio de éxito:** una IA nueva, leyendo solo esta documentación, debe poder:
+1. Entender la arquitectura sin leer todo el código.
+2. Saber qué está prohibido y por qué.
+3. No reintentar soluciones que ya fallaron.
+4. Saber dónde está el test que prueba cada afirmación.
+
+### 11.5 Estructura propuesta de la documentación final
+
+| Tomo | Contenido | Fuente principal |
+|---|---|---|
+| **I. Visión y arquitectura** | Objetivo, las 6 prohibiciones, las 10 reglas de batalla, los 16 estándares, el principio "de adentro hacia afuera" | Plan Maestro §1–§5, §10 |
+| **II. Las 81 reglas de negocio** | RN-01 a RN-81, cada una con origen + test | Especificación funcional vieja + `rules/registry.py` |
+| **III. El cementerio de bugs y las cicatrices** | Cada bug/incidente: síntoma, causa, blindaje | Documentación vieja + fichas de fase |
+| **IV. Contratos y fronteras** | Los 23 contratos, con firma, garantías y errores | `contracts/registry.py` |
+| **V. Superficie e interfaces** | Las 24 interfaces, los 6 flujos, la paleta canónica | `superficie/registry.py` |
+| **VI. El acta de obra** | Las fichas de cada sub-fase: qué se construyó, con qué evidencia | `docs/05-plan-de-construccion/FICHA_F*.md` |
+| **VII. Guía para la próxima IA** | Cómo leer esta documentación, qué está prohibido, dónde está cada test | Síntesis de todo lo anterior |
+
+### 11.6 Cuándo se ejecuta
+
+- **No antes.** Se redacta **al cerrar la Fase 8**, cuando ya existe el acta de obra completa.
+- **Durante la construcción**, cada ficha de fase ya va acumulando el material crudo (decisiones, defectos hallados, evidencia). Esa es la materia prima del Tomo VI.
+- **Al final**, se hace la síntesis y la reconciliación con la documentación del POS viejo.
+
+> **En una frase:** el POS viejo nos dio el plano y las cicatrices; la construcción nos dio el acta de obra. Al final, ambos se funden en un solo documento que explica **qué es el POS nuevo, por qué es así, y cómo evitar repetir los errores que lo hicieron necesario.**
+
+---
+
+> [!IMPORTANT]
+> **Este plan (v1.4) integra lo valioso de los 3 planes anteriores, las 5 decisiones del dueño sobre CRM, los 16 estándares de calidad del constructor, y el entregable obligatorio de la documentación final (§11). Los documentos originales de planes quedan en la carpeta PLANES DESCONTINUADOS.**
 
 
