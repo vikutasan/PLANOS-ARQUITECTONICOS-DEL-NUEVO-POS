@@ -432,6 +432,24 @@ hablaría con el Centro de IA por **convención implícita**, lo que viola la Re
 
 **Orden de ejecución propuesto:** F7.0 (contratos) → F7.1 (temas UI, menor riesgo) → F7.2 (voz) → F7.3 (visión).
 
+**Sub-fase F7.5 — El puente POS → Pedidos (CERRADA, 30 Sep 2026):**
+
+El POS viejo **violaba A-02/P-01**: importaba el modelo `Order` y escribía la tabla `orders`
+**directamente** desde el frontend. El POS nuevo construye el puente **por contrato**, de adentro
+hacia afuera:
+
+| Pieza | Detalle |
+|---|---|
+| Contrato 15 (proyección) | `proyectar_pedido(db, ticket)` — `ticket → order` en la **misma transacción** (idempotente, RN-58) |
+| Contrato 16 (consulta) | `GET /orders/by-ticket/{ticket_id}` — proyección explícita (O-23) |
+| DT-06.2 (almacenamiento) | Tabla `system_settings` (modelo `SystemSetting` + migración `0002`) |
+| DT-07 (degradación) | `leer_politica_pago` con default seguro `PAGO_COMPLETO`; la venta nunca se bloquea |
+| Frontend | `useOrderProgramming` + `OrderProgrammingModal.jsx` (UX heredada del viejo POS, §6.8) + cableado en `RetailVisionPOS.jsx` |
+
+Gate de **7 criterios / 11 tests** en verde; CI completo verde. Evidencia:
+[`FICHA_F7_5_PEDIDOS.md`](../../NUEVO-POS/docs/05-plan-de-construccion/FICHA_F7_5_PEDIDOS.md).
+**Diferido a F7.5b:** que el POS lea la política **real** de Vista General (hoy usa el default seguro).
+
 ---
 
 ### Fase 8 — Integración con CRM y Notificaciones (lado POS)

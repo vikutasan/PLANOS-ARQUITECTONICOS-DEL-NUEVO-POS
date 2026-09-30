@@ -483,6 +483,17 @@ En los tres casos, **la venta nunca se bloquea**. Esa es la regla de oro de DT-0
 
 Se propone tratarlo en una **Fase 7.5** o en la **Fase 8** (junto con CRM/Notificaciones), cuando su alcance se defina con el dueño.
 
+> **✅ RESUELTO (30 Sep 2026) — Fase 7.5a CERRADA.** El alcance se definió con el dueño y se
+> ejecutó como **F7.5a** (plan [`PLAN_DE_ABORDAJE_FASE_7_5_PEDIDOS.md`](./PLAN_DE_ABORDAJE_FASE_7_5_PEDIDOS.md),
+> v3.1). El puente **POS → Pedidos** quedó construido **de adentro hacia afuera**: contrato 15
+> (proyección `ticket → order` en la misma transacción), contrato 16 (`GET /orders/by-ticket`),
+> la tabla `system_settings` (DT-06.2), el lector de política con default seguro (DT-07), el hook
+> `useOrderProgramming`, el modal `OrderProgrammingModal.jsx` (UX heredada del viejo POS, §6.8) y
+> el cableado en `RetailVisionPOS.jsx`. Gate de **7 criterios / 11 tests** en verde; CI completo
+> verde. Evidencia: [`FICHA_F7_5_PEDIDOS.md`](../../../NUEVO-POS/docs/05-plan-de-construccion/FICHA_F7_5_PEDIDOS.md).
+> **Queda diferido a F7.5b:** que el POS lea la política **real** de Vista General (hoy usa el
+> default seguro `PAGO_COMPLETO`); el POS no se tocará cuando Vista General exista.
+
 ### §12.4 Trazabilidad regla → sub-fase
 
 | Regla / Directriz | Sub-fase que la cumple |
