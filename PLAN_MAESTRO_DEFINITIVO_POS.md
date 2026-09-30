@@ -1,8 +1,16 @@
 # 🏗️ PLAN MAESTRO DEFINITIVO — POS Nuevo "R de Rico"
 
 > **Fecha:** 28 Sep 2026 (última actualización: 30 Sep 2026)
-> **Versión del plan:** 2.1
+> **Versión del plan:** 2.2
 > **Autor:** Antigravity + Víctor (dueño de R de Rico)
+>
+> **Cambios v2.2:** Fase **9.1 "Pagos mixtos"** cerrada. Un ticket puede cobrarse
+> con varios métodos a la vez (efectivo + tarjeta + transferencia). El arqueo
+> ahora suma **solo la parte en efectivo** (RN-53) — antes sumaba el total aunque
+> parte fuera con tarjeta. Se añaden RN-94 (la suma de pagos cuadra el total, sin
+> tolerancia) y RN-95 (métodos válidos). Se documenta en §7 (Fase 9.1) la lección
+> de INTEGRACIÓN: el dato se persistía pero `TicketSalida` no lo exponía — misma
+> clase de defecto que el `GestorDeCaja` huérfano (F4.5).
 >
 > **Cambios v2.1:** Micro-fase correctiva **F4.5 "Montaje del Gestor de Caja"**
 > cerrada. Se documenta en §10.6.1 la lección de INTEGRACIÓN: *"el componente
@@ -593,6 +601,57 @@ definir la UI por defecto del POS nuevo, pidió comparar ambas UX y rescatar lo 
 - **Ningún** color hardcodeado nuevo (se usan los tokens del tema)
 
 > **Evidencia:** [`FICHA_F9_UX_RESCATE.md`](../../NUEVO-POS/docs/05-plan-de-construccion/FICHA_F9_UX_RESCATE.md)
+
+---
+
+### Fase 9.1 — Pagos mixtos (efectivo + tarjeta + transferencia) — ✅ CERRADA (30 Sep 2026)
+
+> [!IMPORTANT]
+> **ESTADO: CERRADA.** Los 10 criterios de aceptación se cumplen, los 7 guardianes están
+> limpios y todos los tests están en verde. Evidencia completa en
+> [`FICHA_F9_1_PAGOS_MIXTOS.md`](../../NUEVO-POS/docs/05-plan-de-construccion/FICHA_F9_1_PAGOS_MIXTOS.md).
+> Sub-fases: F9.1.0 (contrato + RN-94/RN-95) · F9.1.1 (arqueo lee N pagos) · F9.1.2 (servicio + hook) ·
+> F9.1.3 (UI de abonos) · F9.1.4 (impresión + cierre).
+
+**Contexto:** el viejo POS permitía cobrar un ticket con **varios métodos a la vez** (pago mixto).
+El POS nuevo solo aceptaba un método por ticket. Esta micro-fase cierra esa brecha **sin romper**
+el cobro viejo (retrocompatibilidad total).
+
+**Lo que SÍ se construyó:**
+
+| # | Pieza | Archivo | Test |
+|---|-------|---------|------|
+| 1 | Contrato `pagos[]` + `TicketSalida.payment_details` | `schemas.py` | `test_f9_1_pagos.py` (18) |
+| 2 | RN-94 (suma cuadra total, sin tolerancia) + RN-95 (métodos válidos) | `rules/registry.py` | `test_f9_1_pagos.py` |
+| 3 | Normalización del cobro viejo → `pagos[]` | `routers/pos.py` | `test_f9_1_pagos.py` |
+| 4 | **Arqueo lee N pagos y suma SOLO el efectivo (RN-53)** | `routers/cash.py` | `test_f9_1_arqueo.py` (4) |
+| 5 | Servicio + hook de cobro (`construirPaymentDetails`) | `checkoutService.js` | `checkoutService.f9_1_2.test.jsx` (22) |
+| 6 | UI de abonos (agregar/editar/quitar) | `CheckoutScreen.jsx` | `CheckoutScreen.f9_1_3.test.jsx` (10) |
+| 7 | Desglose de pagos en el ticket impreso | `ticketGenerator.js` | `ticketGenerator.f9_1_4.test.jsx` (8) |
+
+**La corrección crítica (F9.1.1):** el arqueo sumaba el **total** del ticket al esperado en
+efectivo, aunque parte se hubiera pagado con tarjeta. Ahora lee los N pagos y suma **solo los
+abonos en efectivo** (RN-53). Un ticket $40 efectivo + $60 tarjeta sube el esperado **solo $40**.
+
+**La lección de integración (F9.1.4a):** el cobro mixto **persistía** `payment_details` en la
+base, pero `TicketSalida` **no lo exponía** — el dato nunca llegaba al cliente, así que el ticket
+impreso jamás podría mostrar el desglose. Es la **misma clase de defecto** que el `GestorDeCaja`
+huérfano (F4.5): *el componente existe y pasa su test, pero el usuario no puede llegar a él*.
+Confirma §10.6.1: **el paso de INTEGRACIÓN también es una compuerta.**
+
+**Criterio de aceptación — ✅ LOS 10 SE CUMPLEN:**
+- Un pago mixto que cuadra el total se acepta; cobrar de menos/más se rechaza con 400
+- Sin tolerancia de punto flotante (0.01 de diferencia falla) — dinero en `Decimal` (DT-02)
+- Un método inválido en cualquier abono se rechaza (RN-95)
+- El arqueo suma SOLO el efectivo del mixto (RN-53)
+- Retrocompatibilidad total con el cobro viejo de un solo método
+- La UI permite agregar/editar/quitar abonos hasta cuadrar
+- El ticket impreso muestra el desglose de pagos
+- `TicketSalida` expone `payment_details`
+- `npm run ci` verde (lint 0 errores + todos los tests + los 7 guards limpios)
+- Ficha de cierre + §7 del Plan Maestro + commits/push en ambos repos
+
+> **Evidencia:** [`FICHA_F9_1_PAGOS_MIXTOS.md`](../../NUEVO-POS/docs/05-plan-de-construccion/FICHA_F9_1_PAGOS_MIXTOS.md)
 
 ---
 
