@@ -288,26 +288,43 @@ Cada uno de esos es un caso del mismo error: **una decisión transversal tomada 
 
 ### DT-06.1 — La regla
 
-> **Los valores que afectan a todos los módulos (zona horaria, moneda, sucursal) se declaran una sola vez, en el módulo Vista General, y se persisten en `system_settings`. Ningún módulo los define por su cuenta. Ningún módulo los sobrescribe.**
+> **Los valores que afectan a todos los módulos (zona horaria, moneda, sucursal, política de pago de pedidos) se declaran una sola vez, en el módulo Vista General, y se persisten en `system_settings`. Ningún módulo los define por su cuenta. Ningún módulo los sobrescribe.**
 
 ### DT-06.2 — El ancla
 
 | Capa | Archivo | Qué hace |
 |---|---|---|
-| Almacenamiento | `system_settings` (tabla) | Guarda `business_timezone`, `business_currency`, `sucursal_id` |
+| Almacenamiento | `system_settings` (tabla) | Guarda `business_timezone`, `business_currency`, `sucursal_id`, `orders.payment_policy`, `orders.deposit_percent` |
 | Selección | **Módulo Vista General** | La interfaz donde el humano elige |
 | Distribución | `apps/shared/TimezoneContext.jsx` | Contexto global de tiempo (existe hoy) |
 | Distribución | `apps/shared/MoneyContext.jsx` | Contexto global de dinero (**por crear**) |
+| Distribución | `services/politica_pedidos.py` (backend) | Lector de la política de pago con **default seguro** (**por crear**, F7.5.1) |
 | Consumo | Cada módulo | Lee el contexto; nunca define el valor |
+
+**Los 4 valores transversales declarados:**
+
+| Clave en `system_settings` | Tipo | Valores | Default seguro |
+|---|---|---|---|
+| `business_timezone` | texto | Zona IANA (ej. `America/Mexico_City`) | `America/Mexico_City` |
+| `business_currency` | texto | Código ISO (ej. `MXN`) | `MXN` |
+| `sucursal_id` | texto | Identificador de sucursal | La sucursal principal |
+| `orders.payment_policy` | enum | `SIN_PAGO` \| `ANTICIPO` \| `PAGO_COMPLETO` | **`PAGO_COMPLETO`** |
+| `orders.deposit_percent` | entero (0–100) | Solo aplica si `payment_policy = ANTICIPO` | `50` |
+
+> **La política de pago de pedidos** (añadida el 30 Sep 2026 por decisión del dueño) define **cuándo
+> el POS puede proyectar un pedido a `orders`**: sin pago (`SIN_PAGO`), con anticipo (`ANTICIPO` +
+> `deposit_percent`), o solo cubierto al 100% (`PAGO_COMPLETO`). El POS la **lee**; nunca la define.
+> Ver [`PLAN_DE_ABORDAJE_FASE_7_5_PEDIDOS.md`](./05-plan-de-construccion/PLAN_DE_ABORDAJE_FASE_7_5_PEDIDOS.md) §0.
 
 ### DT-06.3 — Las reglas derivadas
 
 1. **Vista General es un módulo del ERP, no del POS.** Es hermano del POS, no hijo. El POS lo consume, no lo contiene.
-2. **Vista General es el único lugar donde se declaran los valores transversales.** No hay un selector de zona horaria en Caja, ni un selector de moneda en Almacenes.
+2. **Vista General es el único lugar donde se declaran los valores transversales.** No hay un selector de zona horaria en Caja, ni un selector de moneda en Almacenes, ni un selector de política de pago en el POS.
 3. **El valor se persiste en `system_settings`.** No se persiste en el frontend, ni en `localStorage`, ni en cada módulo.
 4. **El frontend lo distribuye por contexto.** Un contexto por valor transversal (`TimezoneContext`, `MoneyContext`). Los componentes lo consumen con un hook (`useTimezone()`, `useMoney()`).
 5. **El valor tiene un solo endpoint de lectura.** `GET /settings` (o `GET /settings/timezone` + `GET /settings/currency`). No hay un endpoint por módulo.
 6. **Cambiar el valor no cambia los datos guardados.** Cambiar la zona horaria cambia cómo se **muestra** el tiempo; no reescribe los timestamps. Cambiar la moneda cambia el **símbolo**; no reescribe los montos. (Esto es la cara de configuración de DT-01 y DT-02.)
+7. **La ausencia de un valor transversal degrada al default seguro, nunca al permisivo.** Si un módulo no puede leer un valor (porque Vista General no existe todavía o el endpoint falla), asume el valor **más conservador** y **nunca bloquea la operación**. Ejemplo: si el POS no puede leer `orders.payment_policy`, asume `PAGO_COMPLETO` — no regala comida. (Esto es DT-07 aplicado a la configuración.)
 
 ### DT-06.4 — La verificación
 
@@ -316,15 +333,16 @@ Cada uno de esos es un caso del mismo error: **una decisión transversal tomada 
 | V-20 | Existe un solo lugar donde se declaran los valores transversales | Búsqueda estática: un solo componente selector |
 | V-21 | Los valores se persisten en `system_settings` | Revisión del modelo de datos |
 | V-22 | Existe un contexto por valor transversal | Búsqueda estática: `TimezoneContext`, `MoneyContext` |
-| V-23 | Ningún módulo define su propio valor transversal | Búsqueda estática: no hay `business_timezone`/`business_currency` fuera de `system_settings` |
+| V-23 | Ningún módulo define su propio valor transversal | Búsqueda estática: no hay `business_timezone`/`business_currency`/`orders.payment_policy` fuera de `system_settings` |
 | V-24 | Cambiar el valor no altera los datos guardados | Prueba: cambiar zona horaria no modifica timestamps en BD |
+| V-25 | La ausencia de un valor transversal degrada al default seguro | Prueba: sin fila en `system_settings`, el lector devuelve `PAGO_COMPLETO` (no lanza) |
 
 ### DT-06.5 — La matriz de cumplimiento
 
 | Módulo | Cumple | Evidencia / Deuda |
 |---|---|---|
-| Vista General | ✅ | **FASE 1 completada** (22 Sep 2026) — ver [`ESPECIFICACION_FUNCIONAL_VISTA_GENERAL.md`](./ESPECIFICACIONES%20DEL%20PROYECTO/ESPECIFICACION_FUNCIONAL_VISTA_GENERAL.md). Declara zona horaria, moneda y sucursal; 35 reglas VG; 4 interfaces |
-| POS | ✅ | Consume `TimezoneContext`; no define zona horaria |
+| Vista General | ✅ | **FASE 1 completada** (22 Sep 2026) — ver [`ESPECIFICACION_FUNCIONAL_VISTA_GENERAL.md`](./ESPECIFICACIONES%20DEL%20PROYECTO/ESPECIFICACION_FUNCIONAL_VISTA_GENERAL.md). Declara zona horaria, moneda y sucursal; 35 reglas VG; 4 interfaces. **Deuda:** la UI para `orders.payment_policy` se añade al reconstruirse (F7.5b) |
+| POS | ✅ | Consume `TimezoneContext`; no define zona horaria. **Deuda:** lee `orders.payment_policy` con default seguro (F7.5.1); no la define |
 | Caja | ✅ | Consume el contexto; no define valores |
 | Resto | ⚠️ Parcial | Pendiente de verificar que ninguno define valores transversales |
 
