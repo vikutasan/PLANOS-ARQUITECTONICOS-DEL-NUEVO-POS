@@ -1,7 +1,7 @@
 # 🏗️ PLAN MAESTRO DEFINITIVO — POS Nuevo "R de Rico"
 
-> **Fecha:** 28 Sep 2026 (última actualización: 29 Sep 2026)
-> **Versión del plan:** 1.7
+> **Fecha:** 28 Sep 2026 (última actualización: 30 Sep 2026)
+> **Versión del plan:** 1.8
 > **Autor:** Antigravity + Víctor (dueño de R de Rico)
 
 ### Repositorios del proyecto
@@ -30,16 +30,28 @@ Esta nueva versión:
 
 ---
 
-## 2. REGLA DURA INQUEBRANTABLE
+## 2. REGLAS DURAS INQUEBRANTABLES
 
 > [!CAUTION]
-> **PROHIBIDO tocar, modificar o interrumpir el ERP de R de Rico que corre en este servidor.**
-> 
+> **REGLA DURA 1 — PROHIBIDO tocar, modificar o interrumpir el ERP de R de Rico que corre en este servidor.**
+>
 > - El ERP viejo corre en `localhost:5000` (frontend) y `localhost:5001` (API) con PostgreSQL en `5433`
 > - El POS nuevo corre en `localhost:5100` (frontend) y `localhost:5101` (API) con su **propia** base de datos
 > - **Cero dependencias cruzadas.** Este proyecto corre 100% en paralelo sin estorbar al otro
 > - El POS nuevo tiene su propio repo (`NUEVO-POS`), su propio `package.json`, su propio backend
 > - Cuando esté listo, **reemplazará** al viejo. Hasta entonces, no lo toca.
+
+> [!CAUTION]
+> **REGLA DURA 2 — VERIFICAR, NO ASUMIR.**
+>
+> **Ninguna afirmación sobre el código, el esquema o el estado del sistema se escribe sin haberla verificado contra la fuente real.**
+>
+> - Un plan que **nombra** una tabla, un modelo, un campo, un contrato o un endpoint **debe verificar que existe** antes de nombrarlo. Si no existe, se declara como trabajo a construir — no se asume.
+> - Un plan que **afirma** que una función hace algo (p. ej. "hace commit al final") **debe leer la función** y citar la línea. No se infiere por el nombre.
+> - Un plan que **cuenta** campos, reglas o estados **debe abrir el contrato/registro** y contarlos. No se estima de memoria.
+> - Cuando la verificación contradice el plan, **manda la verificación**. El plan se corrige; no se ejecuta sobre una suposición.
+> - **Origen:** autocrítica del plan F7.5 (v3.0 → v3.1). El plan v3.0 nombró `system_settings` (que no existía), afirmó que `crear_ticket` era "misma transacción" (hacía `commit()` temprano), contó 9 campos donde el contrato exige 10, e ignoró el default de `order_status`. Los 4 defectos se detectaron **solo al verificar contra el código real**. La lección: *"Un plan que nombra una tabla debe verificar que la tabla existe."*
+> - **Cómo se verifica:** con las herramientas de lectura (`read_file`, `search_files`, `list_files`) sobre el repo real, citando archivo y línea. La evidencia de la verificación se registra en la ficha de la fase.
 
 ---
 
@@ -104,6 +116,7 @@ Extraídas de 7 meses de operación real + 1 error de construcción del POS nuev
 
 | Regla | Origen | Implementación |
 |---|---|---|
+| **Verificar, no asumir** | Autocrítica F7.5 v3.0→v3.1 (4 defectos) | Antes de nombrar una tabla/campo/contrato/endpoint en un plan, verificar que existe (archivo + línea). Antes de afirmar qué hace una función, leerla. Antes de contar campos/reglas/estados, abrirlos y contarlos. Si la verificación contradice el plan, manda la verificación |
 | **Contrato de resultado discriminado** | Incidente v7.0.3 (cuentas perdidas) | Toda función de persistencia retorna `{ outcome, reason }`. PROHIBIDO asumir "no lanzar excepción" = éxito |
 | **Verificación post-envío** | Incidente $453 (cuenta fantasma) | Después de HTTP 200, verificar que el ticket existe en la BD |
 | **withRetries centralizado** | Asimetría v7.0.1 | Todas las operaciones usan el mismo patrón: 3 intentos, backoff 1s/2s/3s |
@@ -705,6 +718,7 @@ Cada fase internamente sigue:
 6. Leer tablas de otro módulo
 7. Avanzar de fase con pruebas fallando
 8. Decir "ya funciona" sin mostrar evidencia
+9. **Asumir sin verificar** — nombrar una tabla/campo/contrato/endpoint sin comprobar que existe, afirmar qué hace una función sin leerla, o contar campos/reglas/estados sin abrirlos y contarlos (REGLA DURA 2)
 
 ---
 

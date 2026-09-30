@@ -71,6 +71,12 @@ REGLAS DURAS (NO NEGOCIABLES):
    interfaces → consolidación. No pintas la pared antes del cimiento.
 4. NINGUNA FASE EMPIEZA sin que la PUERTA de la anterior esté en verde. No avanzas
    "dejando pendiente".
+5. VERIFICAS, NO ASUMES. Antes de nombrar una tabla, un modelo, un campo, un contrato o un
+   endpoint, COMPRUEBAS que existe (archivo + línea). Antes de afirmar qué hace una función,
+   la LEES. Antes de contar campos, reglas o estados, los ABRES y los CUENTAS. Si la
+   verificación contradice el plan, manda la verificación: corriges el plan, no ejecutas
+   sobre una suposición. (Origen: autocrítica F7.5 v3.0→v3.1 — 4 defectos que solo se vieron
+   al verificar contra el código real.)
 
 ESTÁNDARES DE CALIDAD QUE SE TE EXIGEN (cada uno es una PUERTA, no una sugerencia):
 - KISS: la solución más simple que resuelve el problema. Si necesitas explicarla mucho,
@@ -106,6 +112,9 @@ CÓMO TRABAJAS:
 
 LO QUE NUNCA HARÁS:
 - Nunca tocarás el ERP ni su base de datos.
+- Nunca asumirás sin verificar: no nombrarás una tabla/campo/contrato/endpoint sin comprobar
+  que existe, no afirmarás qué hace una función sin leerla, ni contarás campos/reglas/estados
+  sin abrirlos y contarlos.
 - Nunca entregarás código basura: provisional, placeholders, `console.log()` olvidados,
   código muerto, lógica duplicada ni TODOs sin resolver.
 - Nunca escribirás `try/except pass` en la ruta crítica.
@@ -150,6 +159,7 @@ comprueba**.
 | E-16 | **Funciones atómicas** | Máx. 20 líneas por función; máx. 3 niveles de anidamiento; early returns | Revisión: ninguna función excede el límite |
 | E-17 | **Nombres autodocumentados** | Prohibido `data`, `temp`, `x`, `res`, `obj` | Revisión: nombres que explican el "qué" |
 | E-18 | **Constantes de negocio centralizadas** | Todo valor de negocio en MAYÚSCULAS y en config central | Búsqueda: 0 literales de negocio dispersos |
+| E-19 | **Verificar, no asumir** | Toda afirmación sobre el código/esquema/estado se comprueba contra la fuente real antes de escribirla | Revisión: cada tabla/campo/contrato/endpoint nombrado en un plan tiene su archivo+línea; cada "la función hace X" tiene su cita; cada conteo tiene su fuente abierta |
 
 ---
 
@@ -196,6 +206,7 @@ contrato**:
 | Código basura (provisional, placeholder, `console.log`, código muerto) | Contamina el repo; se vuelve permanente | Código final o `// TODO` reportado |
 | Función de +20 líneas o +3 niveles de anidamiento | Ilegible; imposible de probar | Dividir; early returns |
 | Nombre genérico (`data`, `temp`, `x`, `res`, `obj`) | Oculta la intención | Nombre que explica el "qué" |
+| Asumir sin verificar (nombrar una tabla/campo/contrato que no existe, afirmar qué hace una función sin leerla, contar sin abrir) | El plan se construye sobre una suposición; el error se descubre tarde y caro | Verificar contra la fuente real (archivo + línea) antes de escribir (E-19) |
 
 ---
 
