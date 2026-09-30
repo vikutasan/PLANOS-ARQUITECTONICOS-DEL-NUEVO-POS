@@ -1,8 +1,14 @@
 # 🏗️ PLAN MAESTRO DEFINITIVO — POS Nuevo "R de Rico"
 
 > **Fecha:** 28 Sep 2026 (última actualización: 30 Sep 2026)
-> **Versión del plan:** 2.0
+> **Versión del plan:** 2.1
 > **Autor:** Antigravity + Víctor (dueño de R de Rico)
+>
+> **Cambios v2.1:** Micro-fase correctiva **F4.5 "Montaje del Gestor de Caja"**
+> cerrada. Se documenta en §10.6.1 la lección de INTEGRACIÓN: *"el componente
+> existe y pasa su test" ≠ "el usuario puede llegar a él"*. El `GestorDeCaja`
+> era un componente huérfano; ahora tiene punto de entrada (botón "Caja" en el
+> header) y guarda de cobro proactiva (RN-49).
 
 ### Repositorios del proyecto
 
@@ -755,6 +761,56 @@ Cada fase internamente sigue:
 ```
 
 > **En resumen:** DeepSeek proponía construir TODOS los cimientos, luego TODAS las paredes, luego TODOS los techos. Nosotros construimos una habitación completa a la vez (cimiento + pared + techo), pero cada habitación respeta el mismo orden interno. El resultado final es el mismo edificio — la diferencia es que el nuestro se puede ir probando habitación por habitación.
+
+---
+
+#### 10.6.1 LA LECCIÓN DE LA MICRO-FASE F4.5 — el paso de INTEGRACIÓN también es una compuerta
+
+> **Origen:** Micro-fase correctiva F4.5 "Montaje del Gestor de Caja" (30 Sep 2026).
+> **Ficha:** `FICHA_F4_5_MONTAJE_CAJA.md`.
+
+El principio "de adentro hacia afuera" tiene un **riesgo latente** que se
+materializó en la Fase 4 y que esta micro-fase cierra:
+
+**El hecho:** el `GestorDeCaja.jsx` (467 líneas) se construyó, se probó y pasó su
+compuerta en verde. El backend de caja (`cash.py`, 6 endpoints) y el servicio
+(`cashService.js`) también. **Pero nadie lo montó en la pantalla.** El componente
+quedó **huérfano**: existía, estaba probado, y **ningún usuario podía llegar a
+él**.
+
+**El impacto:** RN-49 exige una sesión de caja `OPEN` para cobrar. Sin punto de
+entrada para abrir el turno, **el POS no podía cobrar**. Un sistema con todas sus
+piezas verdes era, sin embargo, funcionalmente inoperante.
+
+**La causa raíz:** cada sub-fase pasó su compuerta **en aislamiento**. La
+compuerta de F4.3 verificaba "el componente funciona"; la de F4.4 verificaba "el
+corte se genera". **Ninguna compuerta verificaba "el usuario puede llegar al
+componente".** El paso de INTEGRACIÓN no estaba declarado como compuerta.
+
+**La lección (regla nueva):**
+
+> *"el componente existe y pasa su test" ≠ "el usuario puede llegar a él".*
+>
+> Toda sub-fase que construye un **componente de superficie** (una pantalla, un
+> panel, un overlay) debe declarar explícitamente **su punto de entrada** — el
+> botón, el gesto o la ruta que lo hace alcanzable — y **probarlo**. La
+> integración no es un detalle de cierre: es una compuerta más.
+
+**Cómo se previene en adelante:**
+
+1. En el plan de cada fase, la sub-fase de superficie debe responder por escrito:
+   *"¿desde dónde llega el usuario a este componente?"*.
+2. El test de integración debe montar la **pantalla real** (no el componente
+   aislado) y verificar que el punto de entrada existe y abre el componente.
+3. Al cerrar una fase, revisar que **ningún componente construido quede sin
+   punto de entrada** (grep de imports vs. renders).
+
+**Corolario operativo:** una guarda nueva en la ruta crítica (como la de F4.5.3,
+que exige turno abierto para cobrar) **obliga** a revisar todos los tests que
+tocan esa ruta. En F4.5 esto rompió dos tests existentes (`f8_6` y `f3_cierre`)
+que cobraban sin declarar el contrato de caja; se corrigieron sembrando el turno
+`OPEN`. La guarda era correcta; lo que faltaba era que los tests declararan el
+contrato que la pantalla ahora consume.
 
 ### 10.7 Documentos de referencia obligatoria por fase
 
