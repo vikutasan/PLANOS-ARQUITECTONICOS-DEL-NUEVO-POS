@@ -837,7 +837,7 @@ propia (F11)**, no un parche dentro del cierre del POS.
 
 ## 9. RESULTADO ESPERADO
 
-Cuando las 8 fases estén completas, al abrir `localhost:5100/` verás:
+Cuando las 10 fases estén completas, al abrir `localhost:5100/` verás:
 
 1. **Landing** → Selector de terminales (tarjetas con estado libre/mío/ajeno)
 2. **Login** → El cajero se identifica
@@ -860,11 +860,13 @@ Cuando las 8 fases estén completas, al abrir `localhost:5100/` verás:
 
 Los siguientes puntos provienen de los planes de DeepSeek (`PLAN_DE_CONSTRUCCION`, `PLAN_ACCION_ARQUITECTONICO`, `PLAN_DE_IMPLEMENTACION_UI`) y son demasiado valiosos para perderse. Quedan incorporados a este Plan Maestro:
 
-### 10.1 Las 81 reglas de negocio se portan CON su test (A-01)
+### 10.1 Las reglas de negocio se portan CON su test (A-01)
 
 > **Origen:** PLAN_ACCION_ARQUITECTONICO, Acción A-01
 
-La unidad de migración **no es la regla, es la regla + su prueba**. Cada una de las 81 reglas (RN-01 a RN-81) documentadas en `ESPECIFICACION_FUNCIONAL_POS_INGENIERIA_INVERSA.md` se implementa con su test correspondiente.
+La unidad de migración **no es la regla, es la regla + su prueba**. Cada una de las 81 reglas heredadas (RN-01 a RN-81) documentadas en `ESPECIFICACION_FUNCIONAL_POS_INGENIERIA_INVERSA.md` se implementa con su test correspondiente.
+
+> **Actualización (F11.0, 30 Sep 2026):** el registro real hoy tiene **95 reglas** (RN-01 a RN-95). Las RN-82..RN-88 nacieron en F8.0 (CRM/Notificaciones) y las RN-89..RN-95 en F8.0/F9.1. De las RN-89..RN-93, solo están **declaradas** (levantan `NotImplementedError`); su implementación pertenece a los módulos futuros del ERP (CRM/Notificaciones), fuera del alcance del POS.
 
 **Reglas sin test hoy (riesgo de pérdida):** RN-37 a RN-40 (anti-degradación), RN-44 a RN-48 (limpieza de borradores), RN-81 (cero offsets). Se les escribe test ANTES de implementar.
 
@@ -922,9 +924,11 @@ F5. TODAS las 26 interfaces                        ← superficie completa
 F6. Consolidación central                          ← techo
 ```
 
+> **Nota (F11.0, 30 Sep 2026):** este diagrama describe el plan **propuesto por DeepSeek** y se conserva como historia. La realidad construida difiere: **29 contratos** (no 17), **95 reglas** (no 81) y **24 interfaces** (no 26 — el "DEFECTO DEL PLANO 26 vs 24" quedó registrado en `FICHA_F5_SUPERFICIE.md`). De esas 24, **15 se portaron** y **9 se DESCARTARON** por pertenecer a otros módulos (Grandeza, RRHH, Centro IA, KDS/Mesas, Gestión Productos).
+
 **Ventaja de este enfoque:** garantiza que nunca construyes una pared sin cimiento. Es académicamente puro.
 
-**Desventaja:** hasta completar F5 (la 5ª capa), no tienes NADA usable. No puedes enseñarle una pantalla funcional al dueño del negocio hasta que hayas construido las 17 tablas, los 17 contratos y las 81 reglas. Eso puede tardar semanas sin mostrar progreso visible.
+**Desventaja:** hasta completar F5 (la 5ª capa), no tienes NADA usable. No puedes enseñarle una pantalla funcional al dueño del negocio hasta que hayas construido las 17 tablas, los 17 contratos y las 81 reglas. Eso puede tardar semanas sin mostrar progreso visible. (Cifras del plan original de DeepSeek; la realidad construida fue 29 contratos y 95 reglas — ver nota arriba.)
 
 ---
 
@@ -1275,11 +1279,11 @@ auditadas.
 
 ### 11.1 Qué se debe producir
 
-Al terminar las 8 fases, se redacta **UNA documentación nueva, única y actualizada del POS nuevo**, que **fusiona dos fuentes**:
+Al terminar las 10 fases, se redacta **UNA documentación nueva, única y actualizada del POS nuevo**, que **fusiona dos fuentes**:
 
 | Fuente | Qué aporta | Dónde vive |
 |---|---|---|
-| **Documentación del POS viejo** | La **intención**: qué debía hacer el sistema, las 81 reglas de negocio, las cicatrices, el cementerio de bugs, las especificaciones funcionales | `ERP-R-DE-RICO` → `ESPECIFICACIONES DEL PROYECTO/` |
+| **Documentación del POS viejo** | La **intención**: qué debía hacer el sistema, las 95 reglas de negocio, las cicatrices, el cementerio de bugs, las especificaciones funcionales | `ERP-R-DE-RICO` → `ESPECIFICACIONES DEL PROYECTO/` |
 | **Documentación generada durante la construcción** | La **realidad**: qué se construyó de verdad, con qué evidencia, qué se dejó fuera y por qué | `NUEVO-POS` → `docs/05-plan-de-construccion/FICHA_F*.md` + `PLANOS-ARQUITECTONICOS` |
 
 **El resultado NO es "pegar los dos documentos".** Es un documento nuevo que integra ambas capas y las reconcilia.
@@ -1309,7 +1313,7 @@ Toda decisión documentada debe responder estas preguntas:
 
 - **El cementerio de bugs** — cada bug resuelto, con su síntoma, su causa raíz y su blindaje actual.
 - **Las cicatrices** — los incidentes de producción (T5/CAJA, v6.1 $453, etc.) y qué regla nació de cada uno.
-- **Las 81 reglas de negocio (RN-01 a RN-81)** — con su enunciado, su origen y su test.
+- **Las 95 reglas de negocio (RN-01 a RN-95)** — con su enunciado, su origen y su test. (Las RN-01..RN-81 son las heredadas del POS viejo; RN-82..RN-95 nacieron en F8.0 y F9.1.)
 - **Las 6 prohibiciones absolutas** — con el caso real que las originó.
 - **Las 10 reglas arquitectónicas derivadas de la batalla** — con su historia.
 - **Los 16 estándares de calidad (E-01 a E-16)** — con su criterio de verificación.
@@ -1338,16 +1342,16 @@ Para lograrlo, la documentación final debe ser **legible por una IA sin context
 | Tomo | Contenido | Fuente principal |
 |---|---|---|
 | **I. Visión y arquitectura** | Objetivo, las 6 prohibiciones, las 10 reglas de batalla, los 16 estándares, el principio "de adentro hacia afuera" | Plan Maestro §1–§5, §10 |
-| **II. Las 81 reglas de negocio** | RN-01 a RN-81, cada una con origen + test | Especificación funcional vieja + `rules/registry.py` |
+| **II. Las 95 reglas de negocio** | RN-01 a RN-95, cada una con origen + test | Especificación funcional vieja + `rules/registry.py` |
 | **III. El cementerio de bugs y las cicatrices** | Cada bug/incidente: síntoma, causa, blindaje | Documentación vieja + fichas de fase |
-| **IV. Contratos y fronteras** | Los 23 contratos, con firma, garantías y errores | `contracts/registry.py` |
-| **V. Superficie e interfaces** | Las 24 interfaces, los 6 flujos, la paleta canónica | `superficie/registry.py` |
+| **IV. Contratos y fronteras** | Los 29 contratos, con firma, garantías y errores | `contracts/registry.py` |
+| **V. Superficie e interfaces** | Las 24 interfaces declaradas (15 portadas + 9 DESCARTADAS por pertenecer a otros módulos), los 6 flujos, la paleta canónica | `superficie/registry.py` |
 | **VI. El acta de obra** | Las fichas de cada sub-fase: qué se construyó, con qué evidencia | `docs/05-plan-de-construccion/FICHA_F*.md` |
 | **VII. Guía para la próxima IA** | Cómo leer esta documentación, qué está prohibido, dónde está cada test | Síntesis de todo lo anterior |
 
 ### 11.6 Cuándo se ejecuta
 
-- **No antes.** Se redacta **al cerrar la Fase 8**, cuando ya existe el acta de obra completa.
+- **No antes.** Se redacta **al cerrar la Fase 10** (y tras la verificación F11.0 plan-vs-realidad), cuando ya existe el acta de obra completa.
 - **Durante la construcción**, cada ficha de fase ya va acumulando el material crudo (decisiones, defectos hallados, evidencia). Esa es la materia prima del Tomo VI.
 - **Al final**, se hace la síntesis y la reconciliación con la documentación del POS viejo.
 
