@@ -126,6 +126,7 @@ Cada uno de esos es un caso del mismo error: **una decisión transversal tomada 
 4. **El selector de moneda declara, no convierte.** Cambiar la moneda cambia el **símbolo**, nunca el **número**. Un selector que cambia el número es un conversor de divisas, y un conversor de divisas descuadra la caja.
 5. **La moneda se guarda una sola vez, en la configuración del negocio.** No se guarda por ticket, ni por producto, ni por sucursal (salvo que la sucursal opere en otra moneda, lo cual es una decisión explícita y documentada).
 6. **El dinero no se suma en el frontend.** Los totales vienen del backend. El frontend solo formatea.
+7. **El dinero que llega de la API viaja como STRING, y se coercionar antes de operarlo.** Pydantic serializa `Decimal` como **cadena** (`"price":"12.00"`), no como número, para **preservar la precisión decimal** (evitar el error de coma flotante). Es correcto y **no se cambia en el backend**. La consecuencia es del lado del consumidor: **todo valor de dinero que llega por el cable se coercionar con `Number()` antes de operarlo** (formatear, comparar, sumar). Un `|| 0` **no protege**: un string no vacío es *truthy*, así que `"12.00" || 0` evalúa a `"12.00"` (el string), y `.toFixed` —que solo existe en `Number`— lanza `TypeError`. **Origen de esta regla:** HALLAZGO 5 (F7.7e, 30 Sep 2026) — `ProductCard.jsx` hacía `(producto.price || 0).toFixed(2)` y tumbó la pantalla completa del POS.
 
 ### DT-02.4 — La verificación
 
@@ -136,8 +137,13 @@ Cada uno de esos es un caso del mismo error: **una decisión transversal tomada 
 | V-08 | Existe un solo `formatMoney` | Búsqueda estática: `formatMoney` |
 | V-09 | El redondeo está declarado | Prueba: `formatMoney(0.125)` → `0.13` (half-up), no `0.12` |
 | V-10 | El selector no convierte | Prueba: cambiar moneda no altera el valor numérico |
+| V-11 | Ningún `.toFixed()` se aplica sobre un valor sin coercionar | Búsqueda estática de `.toFixed(` + **prueba con precio STRING** (el valor tal como lo devuelve la API) |
 
-**Prueba de referencia:** por crear — `apps/api/tests/test_money_rounding.py` y `apps/shared/money.test.js`.
+**Nota sobre V-07 y V-11 (por qué V-07 sola no basta):** V-07 detecta que existe un `toFixed(2)`, pero **no distingue si es seguro**. El bug de HALLAZGO 5 (`(producto.price || 0).toFixed(2)`) pasaba V-07 sin problema: el `toFixed(2)` estaba ahí, y el grep lo encontraba. Lo que V-07 no ve es que el valor **podía ser un string**. V-11 cierra ese hueco: no pregunta *"¿usas `toFixed`?"* sino *"¿coercionaste antes de usarlo?"*.
+
+**Nota sobre los fixtures de dinero (regla de testing):** los fixtures de los gates usan el dinero **como STRING**, igual que la API real (`price: '12.00'`, no `price: 12.00`). Un fixture numérico **oculta** el bug: un número sí tiene `.toFixed`, así que la prueba pasa aunque el código real falle. **Origen:** HALLAZGO 5 — el gate de F7.7e no existía, y los gates previos usaban precios numéricos, por eso el bug solo apareció con datos reales.
+
+**Prueba de referencia:** por crear — `apps/api/tests/test_money_rounding.py` y `apps/shared/money.test.js`. **Ya existe (POS nuevo):** `apps/pos/src/components/ProductCard.f7_7e.test.jsx` (8 tests con precios STRING) es la primera prueba de V-11 en el POS nuevo.
 
 ### DT-02.5 — La matriz de cumplimiento
 
@@ -152,7 +158,8 @@ Cada uno de esos es un caso del mismo error: **una decisión transversal tomada 
 | Pedidos | ✅ | **Migrado en V23** (22 Sep 2026): `orders.delivery_fee` a `Numeric(12,2)` |
 | Almacenes | ⚠️ Parcial | `cantidad_actual`, `stock_minimo` en `Float` (cantidades, no dinero — pero conviene revisar) |
 | Producción | ⚠️ Parcial | Pesos y gramos en `Float` (correcto para pesos, no para dinero) |
-| Frontend (todos) | ❌ No cumple | 80 `toFixed(2)` en 12 componentes; no existe `formatMoney` |
+| Frontend (ERP viejo) | ❌ No cumple | 80 `toFixed(2)` en 12 componentes; no existe `formatMoney` |
+| Frontend (POS nuevo) | ⚠️ Parcial | Ya tiene formateadores que coercionan con `Number()` (`formatearMoneda` en `SalesReceipt`/`POSOverlays`/`TicketTemplate`/`CorteTicketTemplate`; `formatearPrecio` en `ProductCard`). **Falta** el `formatMoney` único compartido (`apps/shared/money.js`, V24) y migrar los formateadores locales a él. |
 
 **Deuda saldada (V23, 22 Sep 2026):** la migración `apps/api/migrations_applied/migrate_float_to_decimal.py` cubría solo **10 columnas** (tickets, ticket_items, products, cash_sessions, cash_movements). V23 la extendió con **36 columnas más** (Grandeza 13, RRHH 22, Pedidos 1), todas a `Numeric(12,2)`. Se conservaron deliberadamente en `Float` **9 columnas no monetarias** (GPS, distancias, porcentajes, puntajes). Respaldo previo: `database_backups/backup_pre_v23_decimal_20260922.sql`.
 
@@ -509,7 +516,7 @@ Este documento existe porque el mismo error se cometió muchas veces en lugares 
 | ID | Directriz | Estado |
 |---|---|---|
 | DT-01 | Tiempo: UTC almacena, local muestra | Vigente |
-| DT-02 | Dinero: `Numeric(12,2)` guarda, un formateador muestra, el selector declara | Vigente |
+| DT-02 | Dinero: `Numeric(12,2)` guarda, un formateador muestra, el selector declara; **el dinero viaja como STRING por el cable y se coercionar con `Number()`** | Vigente |
 | DT-03 | Identidad: UUID identifica, folio comunica | Vigente |
 | DT-04 | Inventario: ledger inmutable, solo el dueño escribe | Vigente |
 | DT-05 | Auditoría: quién, cuándo, qué — transaccional | Vigente |
