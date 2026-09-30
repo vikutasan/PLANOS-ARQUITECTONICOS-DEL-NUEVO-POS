@@ -1047,6 +1047,86 @@ Cada sub-fase pasa su compuerta; ninguna compuerta compara el inventario complet
 primero. Se escribe sobre un sistema **verificado completo**, no sobre uno que
 "parece" completo porque todas sus piezas verdes pasaron sus tests.
 
+#### 10.6.3 LA LECCIÓN DE LA FASE 10.4 — el inventario de componentes no ve las integraciones
+
+> **Origen:** Fase 10.4 "Contexto diario post-corte" (30 Sep 2026).
+> **Ficha:** `FICHA_F10_4_CONTEXTO_DIARIO.md`.
+
+La auditoría de paridad de F10 inventarió **componentes** (¿existe el botón?
+¿existe el modal?). Pero el dueño, al **probar** la auditoría, encontró una pieza
+que el inventario no veía: el **"Contexto diario post-corte"** (clima, día atípico,
+notas) que el viejo POS escribía en la tabla `daily_contexts` del módulo de
+Estadísticas.
+
+**El hecho:** no era un componente del POS. Era una **escritura del POS hacia la
+tabla de OTRO módulo**. El inventario de componentes del POS no la contenía, porque
+no es un componente del POS — es un **puente entre módulos**.
+
+**La lección (regla nueva):**
+
+> *"el inventario de componentes no ve las integraciones."*
+
+> La auditoría de paridad debe inventariar no solo los **componentes**, sino también
+> **los flujos de datos entre módulos** (escrituras del POS hacia el ERP). Un POS
+> puede tener todos sus componentes y aun así faltarle un **puente entre módulos**.
+
+**Cómo se previene en adelante:**
+
+1. Al inventariar la paridad, incluir una columna de **"escrituras hacia otros
+   módulos"** (no solo pantallas y botones).
+2. Cada escritura del POS hacia el ERP se declara como **contrato** (frontera A-02),
+   aunque su implementación viva en el otro módulo.
+3. Si el endpoint del otro módulo aún no está profesionalizado, el contrato se
+   declara con `estado_hoy="Deuda"` y se acopla en la fase del módulo destino.
+
+#### 10.6.4 LA LECCIÓN DE LA FASE 10.5 — el inventario de componentes no ve los FLUJOS DE DATOS
+
+> **Origen:** Fase 10.5 "Paridad de datos de caja" (30 Sep 2026).
+> **Ficha:** `FICHA_F10_5_PARIDAD_DE_DATOS_DE_CAJA.md`.
+
+La lección de §10.6.3 ("el inventario no ve las integraciones") tenía una **tercera
+mitad** que se materializó en F10.5, a partir de la **analogía del trasplante de
+corazón** del dueño: *"el nuevo POS debe recibir la misma 'presión sanguínea'
+(datos) que el viejo, o el cuerpo (ERP) rechazará el órgano."*
+
+**El hecho:** el viejo `CashSummaryResponse` devolvía **8 campos**; el nuevo
+`ResumenTurnoSalida` (contrato 12) devolvía **2** (`esperado`, `movimientos`).
+**7 campos faltaban.** El componente existía, pasaba su test y aun así **consumía
+menos datos** que su equivalente viejo. Y el nombre del cajero (`usuario_nombre`)
+tampoco viajaba al abrir el turno (contrato 10).
+
+**La causa raíz — la misma clase de defecto, quinta instancia:**
+
+| # | Instancia | Fase | Qué pasó |
+|---|-----------|------|----------|
+| 1 | `GestorDeCaja` huérfano | F4.5 | El componente existía, pero **nadie llegaba a él**. |
+| 2 | `payment_details` no expuesto | F9.1.4a | El dato se persistía, pero **no se exponía**. |
+| 3 | "Copiar URL" omitido | F10 | La pieza existía en el viejo, pero **nunca se construyó**. |
+| 4 | "Contexto diario" ausente | F10.4 | La **integración POS→ERP** no se portó. |
+| 5 | Resumen de caja incompleto | F10.5 | El **flujo de datos** del contrato estaba incompleto. |
+
+**La lección (regla nueva):**
+
+> *"el inventario de componentes no ve los FLUJOS DE DATOS."*
+
+> Un componente puede existir, pasar su test y aun así **consumir menos datos** que
+> su equivalente viejo. La auditoría de paridad debe comparar **el payload de cada
+> contrato** (entrada y salida) contra el del módulo viejo, **campo por campo**. Un
+> contrato "que funciona" puede estar **incompleto**.
+
+**Cómo se previene en adelante:**
+
+1. Al inventariar la paridad, incluir una columna de **"campos del payload"** por
+   cada contrato (entrada y salida), comparando viejo vs nuevo.
+2. Todo campo que el viejo exponía y el nuevo no, se cierra o se documenta como
+   **DESCARTADA** con su razón.
+3. La comparación de payloads se ejecuta **antes** de la documentación final, junto
+   con la auditoría de componentes (§10.6.2) y de integraciones (§10.6.3).
+
+**Corolario:** la paridad tiene **tres dimensiones**, no una: **componentes**
+(§10.6.2), **integraciones** (§10.6.3) y **flujos de datos** (§10.6.4). Un módulo
+solo está completo cuando las tres están auditadas.
+
 ### 10.7 Documentos de referencia obligatoria por fase
 
 | Antes de construir... | Consultar... |
