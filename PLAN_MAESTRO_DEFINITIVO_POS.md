@@ -655,6 +655,64 @@ Confirma §10.6.1: **el paso de INTEGRACIÓN también es una compuerta.**
 
 ---
 
+### Fase 10 — Auditoría de Paridad (viejo POS vs. nuevo POS) — ✅ CERRADA (30 Sep 2026)
+
+> [!IMPORTANT]
+> **ESTADO: CERRADA.** La auditoría de paridad se ejecutó **antes** de declarar el POS
+> por concluido y de redactar la documentación final (§11). Evidencia completa en
+> [`FICHA_F10_PARIDAD.md`](../../NUEVO-POS/docs/05-plan-de-construccion/FICHA_F10_PARIDAD.md).
+> Sub-fases: F10.0 (inventario crudo) · F10.1 (triaje) · F10.2 (cierre de brechas) · F10.3 (cierre).
+
+**Contexto — por qué existe esta fase:** el dueño detectó, al revisar el Gestor de Terminales,
+que el botón **"Copiar URL"** del viejo POS **no existía** en el nuevo. Ese hallazgo disparó una
+pregunta legítima: *si se omitió una cosa, ¿cuántas más se omitieron?* En vez de declarar el POS
+terminado y escribir la documentación sobre un sistema incompleto, se ejecutó una **auditoría de
+paridad sistemática** contra el viejo POS.
+
+**El diagnóstico del caso "Copiar URL":** no era un problema de "falta el botón pero la lógica
+está". Se verificó el código y **ni el botón ni la lógica** existían en el nuevo POS. Fue una
+**OMISIÓN completa** — la misma clase de defecto que el `GestorDeCaja` huérfano (F4.5) y que
+`payment_details` no expuesto (F9.1.4a).
+
+**Las 4 categorías de paridad:**
+
+| Categoría | Significado |
+|---|---|
+| **PORTADA** | Existe en el viejo y en el nuevo, y funciona. |
+| **OMITIDA** | Existe en el viejo, **no** en el nuevo. Es la brecha a cerrar. |
+| **HUÉRFANA** | La lógica existe en el nuevo, pero **sin punto de entrada**. |
+| **DESCARTADA** | Se decidió **no** portarla, con una razón documentada. |
+
+**El triaje (F10.1) — 11 brechas verificadas:**
+
+| # | Brecha | Categoría | Decisión |
+|---|--------|-----------|----------|
+| B-01 | Botón "Copiar URL" en el Gestor de Terminales | OMITIDA | **PORTAR** (cerrada en F10.2) |
+| V-01 | Zero-Auto-Restore de sesión (localStorage) | DESCARTADA | No aplica: el nuevo POS no persiste sesión en localStorage |
+| V-02 | `getProductEmoji` | PORTADA | Reubicada al backend (`producto.icono`) |
+| V-03 | `handleImageUpload` de terminales | DESCARTADA | Diseño distinto: `PRESET_ICONS` |
+| V-04 | `loadTerminalsConfig` | PORTADA | `fetchTerminalConfig()` |
+| V-05 | `DEFAULT_TERMINALS` | PORTADA | `TERM-01..TERM-06` |
+| V-06 | `ForceLogoutModal` | DESCARTADA | Reemplazada por el heartbeat con TTL (`useTerminalLocking`) |
+| V-07 | `OfflineBanner` con `pendingCount` | DESCARTADA | Intencional: el nuevo POS **no** tiene cola local (decisión v1.1) |
+| V-08 | `useVisitDraft` | DESCARTADA | Fuera de alcance (pertenece a Grandeza) |
+| V-09 | `calcularDenominaciones` | DESCARTADA | No aplica: el nuevo usa `BILLETES_RAPIDOS` |
+| V-10 | `calcularPuntosAGanar` | DESCARTADA | La lealtad es del CRM, no del POS |
+
+**Resultado:** 1 brecha portada (B-01), 4 ya portadas, 6 descartadas con razón. **El POS nuevo
+está en paridad funcional con el viejo** en todo lo que importa.
+
+**La brecha cerrada (F10.2 — B-01):** se portó la **integración** (el botón) y se reescribió la
+**implementación** (Clipboard API con fallback a `execCommand`, siguiendo §6.8). Test dedicado
+`TerminalSelector.f10_2.test.jsx` (4/4 verde). `npm run ci` verde.
+
+**La lección (F10.3):** ver §10.6.1 — *"el componente existe y pasa su test" ≠ "el conjunto está
+completo"*.
+
+> **Evidencia:** [`FICHA_F10_PARIDAD.md`](../../NUEVO-POS/docs/05-plan-de-construccion/FICHA_F10_PARIDAD.md)
+
+---
+
 ## 8. DECISIONES ARQUITECTÓNICAS
 
 | Decisión | Elección | Por qué |
@@ -870,6 +928,58 @@ tocan esa ruta. En F4.5 esto rompió dos tests existentes (`f8_6` y `f3_cierre`)
 que cobraban sin declarar el contrato de caja; se corrigieron sembrando el turno
 `OPEN`. La guarda era correcta; lo que faltaba era que los tests declararan el
 contrato que la pantalla ahora consume.
+
+#### 10.6.2 LA LECCIÓN DE LA FASE 10 — la COMPLETITUD del conjunto también es una compuerta
+
+> **Origen:** Fase 10 "Auditoría de Paridad" (30 Sep 2026).
+> **Ficha:** `FICHA_F10_PARIDAD.md`.
+
+La lección de §10.6.1 ("el componente existe y pasa su test" ≠ "el usuario puede
+llegar a él") tenía una **segunda mitad** que se materializó en la Fase 10:
+
+> *"el componente existe y pasa su test" ≠ "el conjunto está completo".*
+
+**El hecho:** el dueño, revisando el Gestor de Terminales, notó que el botón
+**"Copiar URL"** del viejo POS **no existía** en el nuevo. Se verificó el código:
+**ni el botón ni la lógica** estaban. No era un componente huérfano — era una
+**pieza que nunca se construyó**, porque ninguna sub-fase la había pedido
+explícitamente.
+
+**La causa raíz — la misma clase de defecto, tercera instancia:**
+
+| # | Instancia | Fase | Qué pasó |
+|---|-----------|------|----------|
+| 1 | `GestorDeCaja` huérfano | F4.5 | El componente existía y pasaba su test, pero **nadie podía llegar a él**. |
+| 2 | `payment_details` no expuesto | F9.1.4a | El dato se persistía, pero **no se exponía** en la salida. |
+| 3 | "Copiar URL" omitido | F10 | La pieza existía en el viejo POS, pero **nunca se construyó** en el nuevo. |
+
+Las tres comparten la raíz: **"de adentro hacia afuera" verifica cada pieza en
+aislamiento, pero no verifica la COMPLETITUD del conjunto contra el viejo POS.**
+Cada sub-fase pasa su compuerta; ninguna compuerta compara el inventario completo.
+
+**La lección (regla nueva):**
+
+> *"el componente existe y pasa su test" ≠ "el conjunto está completo".*
+>
+> Antes de declarar un módulo terminado, se debe ejecutar una **auditoría de
+> paridad** contra el sistema de referencia: inventariar **todo** lo que el viejo
+> hacía, clasificar cada pieza (PORTADA / OMITIDA / HUÉRFANA / DESCARTADA) y
+> **cerrar cada OMITIDA o justificarla por escrito**. La completitud no se asume:
+> se audita.
+
+**Cómo se previene en adelante:**
+
+1. Al cerrar un módulo, ejecutar una **auditoría de paridad** contra el sistema
+   de referencia (el viejo POS, el ERP, el contrato). No basta con que "todo lo
+   construido pase": hay que verificar que **nada de lo esperado falte**.
+2. Cada pieza del inventario se clasifica en una de las 4 categorías, y cada
+   **OMITIDA** se cierra o se documenta como **DESCARTADA** con su razón.
+3. La auditoría se ejecuta **antes** de la documentación final: no se documenta
+   un sistema sin verificar que está completo.
+
+**Corolario:** la documentación final (§11) es el **último** entregable, no el
+primero. Se escribe sobre un sistema **verificado completo**, no sobre uno que
+"parece" completo porque todas sus piezas verdes pasaron sus tests.
 
 ### 10.7 Documentos de referencia obligatoria por fase
 
