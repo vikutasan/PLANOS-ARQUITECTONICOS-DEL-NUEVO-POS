@@ -1,7 +1,7 @@
 # 🏗️ PLAN MAESTRO DEFINITIVO — POS Nuevo "R de Rico"
 
 > **Fecha:** 28 Sep 2026 (última actualización: 30 Sep 2026)
-> **Versión del plan:** 1.9
+> **Versión del plan:** 2.0
 > **Autor:** Antigravity + Víctor (dueño de R de Rico)
 
 ### Repositorios del proyecto
@@ -527,6 +527,66 @@ Son **2 componentes** y **2 llamadas a contrato**. Nada más.
 > **Regla para el futuro:** los números de contrato y de regla se asignan **al momento de
 > declararlos**, nunca al momento de proponerlos. La propuesta es un documento de intención;
 > el `registry.py` es la fuente de verdad.
+
+---
+
+### Fase 9 — Rescate de UX del viejo POS (y afinado de la UI por defecto) — ✅ CERRADA (30 Sep 2026)
+> **Se rescatan tres piezas de UX del viejo POS antes de congelar la UI por defecto del módulo nuevo.**
+
+> [!IMPORTANT]
+> **ESTADO: CERRADA.** Los 8 criterios de aceptación se cumplen, los 7 guardianes están
+> limpios y todos los tests están en verde. Evidencia completa en
+> [`FICHA_F9_UX_RESCATE.md`](../../NUEVO-POS/docs/05-plan-de-construccion/FICHA_F9_UX_RESCATE.md).
+> Sub-fases: F9.0.1 (modal de salida) · F9.0.2 (teclado numérico) · F9.0.3 (OfflineBanner) · F9.0.4 (cierre).
+
+> [!NOTE]
+> Esta fase **no bloquea** las fases 1–8. Es una **micro-fase de afinado operativo**: no añade
+> capacidad de negocio nueva, solo rescata UX que el usuario ya pagó y valoró.
+
+**Contexto:** el usuario invirtió mucho en la UX del viejo POS (`apps/pos/` del ERP). Antes de
+definir la UI por defecto del POS nuevo, pidió comparar ambas UX y rescatar lo que valga la pena
+**sin mayor problema**. La comparación archivo por archivo arrojó que **el POS nuevo ya heredó
+~80% de la UX del viejo** (§6.8 cumplido). Quedaban tres piezas concretas de bajo riesgo.
+
+**Lo que SÍ se construye en esta fase (3 piezas, 100% frontend):**
+
+| # | Pieza | Origen (viejo POS) | Destino (nuevo POS) | Test |
+|---|-------|--------------------|---------------------|------|
+| 1 | Modal de salida "Cuenta sin enviar" | `RetailVisionPOS.jsx` (modal inline) | `ExitAccountModal.jsx` | `ExitAccountModal.f9_0_1.test.jsx` |
+| 2 | Teclado numérico + cambio en vivo | `CheckoutScreen.jsx` (teclado) | `TecladoNumerico.jsx` | `TecladoNumerico.f9_0_2.test.jsx` |
+| 3 | `OfflineBanner` (solo estado de red) | `POSOverlays.jsx` (`OfflineBanner` con `pendingCount`) | `POSOverlays.jsx` (`OfflineBanner` sin conteo) | `POSOverlays.f9_0_3.test.jsx` |
+
+**Lo que NO se construye en esta fase (explícito):**
+
+| Elemento | Por qué NO | Dónde va |
+|---|---|---|
+| Pagos mixtos (efectivo + tarjeta) | Toca el contrato de cobro y las RN | **F9.1** (plan propio) |
+| Cola local (offline-first) | Contradice "el servidor es la única verdad"; reintroduce el riesgo de la cicatriz de $453; toca caja/folios/multi-terminal | Fase propia si el dolor de red es real y medido (p. ej. "F10") |
+| Conteo de pendientes en el banner | No existe cola local que lo respalde (verificado, REGLA DURA 2) | No aplica |
+| Cambio de colores/temas | El nuevo POS usa tokens; el viejo usaba colores hardcodeados | No aplica |
+| Revertir el layout responsivo | El viejo era desktop-only; el nuevo es fluido | No aplica |
+
+> **DECISIÓN ARQUITECTÓNICA (F9.0.3) — No se construye cola local.** Se verificó contra el código
+> real (REGLA DURA 2) que el POS nuevo **no tiene cola local**: persiste directo contra la API en
+> cada acción ([`useCart.anadirLinea`](../../NUEVO-POS/apps/pos/src/hooks/useCart.js:122) →
+> `cliente.anadirItem`). Lo único en `localStorage` son preferencias de UI (`pos.tema`,
+> `pos.ordenTerminales`), no operaciones. Por tanto, el `OfflineBanner` muestra **solo el estado de
+> red**, sin conteo. Construir una cola local sería un motor offline-first que contradice el modelo
+> "el servidor es la única fuente de verdad", reintroduce el riesgo de la cicatriz de $453 (cobrar
+> sin red) y toca caja, folios y multi-terminal. Si algún día el dolor de red es real y medido, se
+> abrirá una **fase propia**, no un parche de UX.
+
+**Criterio de aceptación — ✅ LOS 8 SE CUMPLEN:**
+- Las 3 piezas están implementadas y cableadas en la pantalla real
+- Cada pieza tiene su test verde (30/30)
+- `npm run ci` verde (lint 0 errores + todos los tests + los 7 guards limpios)
+- La ficha de cierre existe y está completa
+- §7 del Plan Maestro actualizado
+- Commits + push en ambos repos
+- **Ningún** cambio en backend, contratos ni reglas de negocio
+- **Ningún** color hardcodeado nuevo (se usan los tokens del tema)
+
+> **Evidencia:** [`FICHA_F9_UX_RESCATE.md`](../../NUEVO-POS/docs/05-plan-de-construccion/FICHA_F9_UX_RESCATE.md)
 
 ---
 
