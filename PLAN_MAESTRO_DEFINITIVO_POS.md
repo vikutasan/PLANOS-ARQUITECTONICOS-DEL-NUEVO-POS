@@ -670,7 +670,8 @@ Confirma §10.6.1: **el paso de INTEGRACIÓN también es una compuerta.**
 > **ESTADO: CERRADA.** La auditoría de paridad se ejecutó **antes** de declarar el POS
 > por concluido y de redactar la documentación final (§11). Evidencia completa en
 > [`FICHA_F10_PARIDAD.md`](../../NUEVO-POS/docs/05-plan-de-construccion/FICHA_F10_PARIDAD.md).
-> Sub-fases: F10.0 (inventario crudo) · F10.1 (triaje) · F10.2 (cierre de brechas) · F10.3 (cierre).
+> Sub-fases: F10.0 (inventario crudo) · F10.1 (triaje) · F10.2 (cierre de brechas) · F10.3 (cierre) ·
+> F10.4 (contexto diario post-corte) · F10.5 (paridad de datos de caja) · F10.6 (paridad de operación de caja).
 
 **Contexto — por qué existe esta fase:** el dueño detectó, al revisar el Gestor de Terminales,
 que el botón **"Copiar URL"** del viejo POS **no existía** en el nuevo. Ese hallazgo disparó una
@@ -715,10 +716,22 @@ está en paridad funcional con el viejo** en todo lo que importa.
 **implementación** (Clipboard API con fallback a `execCommand`, siguiendo §6.8). Test dedicado
 `TerminalSelector.f10_2.test.jsx` (4/4 verde). `npm run ci` verde.
 
-**La lección (F10.3):** ver §10.6.1 — *"el componente existe y pasa su test" ≠ "el conjunto está
-completo"*.
+**Las brechas cerradas después del triaje inicial (F10.4–F10.6):** la auditoría no terminó en
+F10.3. Al comparar el POS viejo con el nuevo **en operación** aparecieron brechas que el inventario
+de componentes no veía:
+
+| Sub-fase | Brecha cerrada | Lección |
+|----------|----------------|---------|
+| **F10.4** | "Contexto diario post-corte" (B-02): la integración POS→Estadísticas no se portó | §10.6.3 — *el inventario no ve las integraciones* |
+| **F10.5** | Paridad de datos de caja: el resumen (contrato 12) devolvía 2 campos de 8; faltaba `usuario_nombre` en el contrato 10 | §10.6.4 — *el inventario no ve los FLUJOS DE DATOS* |
+| **F10.6** | Paridad de operación de caja: teclado táctil, eliminar movimiento (contrato 29), hora/concepto del movimiento, impresión del corte | §10.6.5 — *el inventario no ve la PARIDAD DE OPERACIÓN* |
+
+**Las lecciones (F10.3 → F10.6):** ver §10.6.1 a §10.6.5. La paridad tiene **cuatro dimensiones**:
+**componentes** (§10.6.2), **integraciones** (§10.6.3), **flujos de datos** (§10.6.4) y
+**operación** (§10.6.5). Un módulo solo está completo cuando las cuatro están auditadas.
 
 > **Evidencia:** [`FICHA_F10_PARIDAD.md`](../../NUEVO-POS/docs/05-plan-de-construccion/FICHA_F10_PARIDAD.md)
+> · [`FICHA_F10_6_PARIDAD_DE_OPERACION_DE_CAJA.md`](../../NUEVO-POS/docs/05-plan-de-construccion/FICHA_F10_6_PARIDAD_DE_OPERACION_DE_CAJA.md)
 
 ---
 
@@ -1126,6 +1139,79 @@ tampoco viajaba al abrir el turno (contrato 10).
 **Corolario:** la paridad tiene **tres dimensiones**, no una: **componentes**
 (§10.6.2), **integraciones** (§10.6.3) y **flujos de datos** (§10.6.4). Un módulo
 solo está completo cuando las tres están auditadas.
+
+#### 10.6.5 LA LECCIÓN DE LA FASE 10.6 — el inventario de componentes no ve la PARIDAD DE OPERACIÓN
+
+> **Origen:** Fase 10.6 "Paridad de operación de caja" (30 Sep 2026).
+> **Ficha:** `FICHA_F10_6_PARIDAD_DE_OPERACION_DE_CAJA.md`.
+
+La lección de §10.6.4 ("el inventario no ve los flujos de datos") tenía una
+**cuarta mitad** que se materializó en F10.6, al auditar el **Gestor de Caja** no
+como un componente ni como un contrato, sino como una **operación real de
+mostrador**.
+
+**El hecho:** el `GestorDeCaja` nuevo existía, pasaba sus tests, estaba integrado
+y recibía el payload completo (F10.5). Y aun así **no reproducía la operación**
+que el cajero ejecuta en el viejo POS:
+
+1. **Teclado táctil ausente (F10.6.1):** el viejo POS captura montos con un
+   **teclado numérico en pantalla** (pantalla táctil, sin teclado físico). El
+   nuevo usaba `<input type="number">`. El componente "funcionaba", pero **no se
+   podía operar** en el hardware real.
+2. **Eliminar movimiento ausente (F10.6.2):** el viejo POS permite **borrar** un
+   movimiento de caja mientras el turno está abierto (RN-52). El nuevo **no tenía
+   endpoint ni botón**. Faltaba una **operación completa** (contrato 29).
+3. **Hora y concepto del movimiento ausentes (F10.6.3):** el viejo POS muestra
+   **cuándo** y **por qué** se registró cada movimiento. El nuevo exponía el monto
+   pero **no el `motivo` ni el `creado_en`** (contrato 12 incompleto).
+4. **Impresión del corte no cableada (F10.6.4):** el viejo POS **imprime el
+   corte** al cerrar el turno. El nuevo tenía el generador térmico
+   (`generarCorteHTML`) y el servicio (`imprimirCorte`), pero **nadie los
+   llamaba** desde el botón de cierre. La pieza existía; la **operación** no.
+
+**La causa raíz — la misma clase de defecto, sexta y séptima instancias:**
+
+| # | Instancia | Fase | Qué pasó |
+|---|-----------|------|----------|
+| 1 | `GestorDeCaja` huérfano | F4.5 | El componente existía, pero **nadie llegaba a él**. |
+| 2 | `payment_details` no expuesto | F9.1.4a | El dato se persistía, pero **no se exponía**. |
+| 3 | "Copiar URL" omitido | F10 | La pieza existía en el viejo, pero **nunca se construyó**. |
+| 4 | "Contexto diario" ausente | F10.4 | La **integración POS→ERP** no se portó. |
+| 5 | Resumen de caja incompleto | F10.5 | El **flujo de datos** del contrato estaba incompleto. |
+| 6 | Operación de caja incompleta | F10.6.1–3 | El componente existía y recibía datos, pero **no se podía operar** como el viejo. |
+| 7 | Impresión del corte no cableada | F10.6.4 | La pieza existía, pero **la operación no la invocaba**. |
+
+**La lección (regla nueva):**
+
+> *"el inventario de componentes no ve la PARIDAD DE OPERACIÓN."*
+
+> Un componente puede existir, pasar su test, estar integrado y recibir el payload
+> correcto, y aun así **no reproducir la operación real** para la que fue diseñado.
+> La auditoría de paridad debe comparar **cómo se opera** el módulo viejo (qué
+> gestos, qué hardware, qué acciones, qué salidas físicas) contra el nuevo,
+> **paso a paso**.
+
+**Cómo se previene en adelante:**
+
+1. Al inventariar la paridad, incluir una columna de **"operación"** por cada
+   pantalla: qué hace el usuario, con qué hardware, y qué produce (impresión,
+   sonido, movimiento de caja).
+2. Toda operación del viejo que el nuevo no reproduzca se cierra o se documenta
+   como **DESCARTADA** con su razón.
+3. La comparación de operaciones se ejecuta **antes** de la documentación final,
+   junto con la auditoría de componentes (§10.6.2), integraciones (§10.6.3) y
+   flujos de datos (§10.6.4).
+
+**Refinamiento de §6.8:** la regla *"la integración se hereda, la implementación
+se reescribe"* es correcta, pero **incompleta**: algunas decisiones operativas
+viven **dentro de la implementación** (el teclado táctil, el borrado, la
+impresión) y **se pierden en la reescritura** si no se auditan explícitamente.
+Heredar la integración **no basta**; hay que heredar también la **operación**.
+
+**Corolario:** la paridad tiene **cuatro dimensiones**, no tres: **componentes**
+(§10.6.2), **integraciones** (§10.6.3), **flujos de datos** (§10.6.4) y
+**operación** (§10.6.5). Un módulo solo está completo cuando las cuatro están
+auditadas.
 
 ### 10.7 Documentos de referencia obligatoria por fase
 
