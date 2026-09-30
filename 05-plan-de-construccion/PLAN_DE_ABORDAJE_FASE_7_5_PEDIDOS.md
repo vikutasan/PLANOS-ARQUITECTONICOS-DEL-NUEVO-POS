@@ -1,11 +1,12 @@
 # 📋 PLAN DE ABORDAJE — FASE 7.5: PEDIDOS PROGRAMADOS (el puente POS → Pedidos → Producción)
 
-**Versión:** 3.0 (política de pago configurable desde Vista General — DT-06)
+**Versión:** 3.1 (correcciones de la autocrítica verificadas contra el código)
 **Fecha:** 30 Sep 2026
 **Autor:** Arquitecto del Nuevo POS
 **Estado:** Propuesta — pendiente de aprobación del dueño
 **Precedente:** `PLAN_DE_ABORDAJE_FASE_7_POR_PARTES.md` §12.3 (lo diferido)
-**Cambios vs v2.0:** ver §12 (registro de cambios)
+**Autocrítica que origina esta versión:** `AUTOCRITICA_PLAN_F7_5_V3.md` (4 defectos, 1 crítico)
+**Cambios vs v3.0:** ver §12 (registro de cambios)
 
 ---
 
@@ -66,6 +67,27 @@ exista, **el POS no se toca**: empieza a leer la política real.
 | ¿Necesito el endpoint `GET /settings`? | **NO.** Se lee con fallback; si no existe, usa `PAGO_COMPLETO`. |
 | ¿Cambia el trabajo del POS cuando Vista General exista? | **NO.** El POS ya lee la política; solo cambia el valor que recibe. |
 
+### §0.5 La infraestructura de almacenamiento: `system_settings` (corrección D-4)
+
+> **La autocrítica D-4 reveló que `system_settings` NO EXISTE en el código.**
+> Los 17 modelos de [`models/__init__.py`](../NUEVO-POS/apps/api/models/__init__.py:17) no la incluyen.
+> `SystemSetting` aparece **solo en comentarios** de `consolidacion/registry.py`.
+
+**Esto obliga a declarar un entregable nuevo:** crear la tabla `system_settings`. Y hay que decir
+**por qué no es una invasión de frontera**:
+
+| Pregunta | Respuesta |
+|---|---|
+| ¿`system_settings` es de Vista General? | **NO.** Es la **capa de almacenamiento** que DT-06.2 ya declaró. |
+| ¿Vista General qué es entonces? | La **UI** que escribe en `system_settings`. |
+| ¿Quién más la usa? | Todos los módulos que consumen valores transversales (Consolidación ya la referencia). |
+| ¿Crearla ahora viola la frontera? | **NO.** Es crear la infraestructura compartida, no la UI de otro módulo. |
+
+> **Analogía:** crear `system_settings` es como tender la tubería. Vista General es la llave que la
+> abre. El POS es un grifo que la consume. Tender la tubería no es "ser Vista General".
+
+**Esta es la primera piedra de Vista General en el nuevo POS, y se declara como tal.**
+
 ---
 
 ## §1. EL HALLAZGO QUE ORIGINA ESTA FASE
@@ -95,15 +117,68 @@ exista, **el POS no se toca**: empieza a leer la política real.
 
 **La v1.0 de este plan dijo que el cimiento era `models/orders.py`. Era incompleto.**
 
-El cimiento real son **DOS** estructuras, y la primera ya está completa:
+El cimiento real son **TRES** estructuras, y las dos primeras ya existen:
 
 | Estructura | Qué es | Estado |
 |---|---|---|
-| **`tickets.order_*`** (9 campos) | La **copia de trabajo del POS**. El POS la captura y la muestra. | **YA EXISTE** ([`models/pos.py`](../NUEVO-POS/apps/api/models/pos.py:75)) |
-| **`orders`** | La **proyección gobernada por Pedidos**. Tiene el ciclo de 14 estados y el `earliest_ready_at` autoritativo. | **YA EXISTE** ([`models/orders.py`](../NUEVO-POS/apps/api/models/orders.py:21)) |
+| **`tickets.order_*`** (9 campos) | La **copia de trabajo del POS**. El POS la captura y la muestra. | **YA EXISTE** ([`models/pos.py:75-89`](../NUEVO-POS/apps/api/models/pos.py:75)) |
+| **`orders`** | La **proyección gobernada por Pedidos**. Tiene el ciclo de 14 estados y el `earliest_ready_at` autoritativo. | **YA EXISTE** ([`models/orders.py:21`](../NUEVO-POS/apps/api/models/orders.py:21)) |
+| **`system_settings`** | La **capa de almacenamiento de DT-06**. Guarda la política de pago. | **NO EXISTE** — se crea en F7.5.1a (D-4) |
 
-**El contrato 15 es el puente entre ambas.** El POS escribe `tickets.order_*` (su propia tabla,
-sin violar la frontera) y **proyecta** a `orders` vía el contrato.
+**Los 9 campos de `tickets.order_*`** (verificados en [`models/pos.py:75-89`](../NUEVO-POS/apps/api/models/pos.py:75)):
+
+| # | Campo | Tipo | Default |
+|---|---|---|---|
+| 1 | `order_type` | String NOT NULL | `VENTA_DIRECTA` |
+| 2 | `order_status` | String NOT NULL | `PROGRAMADO PARA SER PREPARADO` |
+| 3 | `delivery_type` | String NULL | — |
+| 4 | `customer_name` | String NULL | — |
+| 5 | `customer_phone` | String NULL | — |
+| 6 | `committed_at` | DateTime(tz) NULL | — |
+| 7 | `packaging_type` | String NULL | — |
+| 8 | `delivery_address` | Text NULL | — |
+| 9 | `order_notes` | Text NULL | — |
+
+**El contrato 15 es el puente entre `tickets.order_*` y `orders`.** El POS escribe `tickets.order_*`
+(su propia tabla, sin violar la frontera) y **proyecta** a `orders` vía el contrato.
+
+### §1.5 Los 10 campos del contrato 15 (corrección D-6)
+
+> **La autocrítica D-6 reveló que el plan hablaba de "9 campos" pero el contrato 15 exige 10.**
+
+El contrato 15 ([`registry.py:353-364`](../NUEVO-POS/apps/api/contracts/registry.py:353)) declara:
+
+| # | Campo de entrada | Origen en el POS |
+|---|---|---|
+| 1 | `ticket_id` | `ticket.id` |
+| 2 | `order_type` | `tickets.order_type` |
+| 3 | **`status_ticket`** | **`tickets.status`** (`OPEN`/`PAID`) — **el 10.º, que la v3.0 omitía** |
+| 4 | `delivery_type` | `tickets.delivery_type` |
+| 5 | `customer_name` | `tickets.customer_name` |
+| 6 | `customer_phone` | `tickets.customer_phone` |
+| 7 | `committed_at` | `tickets.committed_at` |
+| 8 | `packaging_type` | `tickets.packaging_type` |
+| 9 | `delivery_address` | `tickets.delivery_address` |
+| 10 | `notes` | `tickets.order_notes` |
+
+**`status_ticket` NO es una columna nueva:** se **deriva** de `tickets.status`. El proveedor lo usa
+para mapear (`OPEN → TENTATIVO`, `PAID → PAGADO`). El POS lo envía; no lo almacena.
+
+### §1.6 El destino de `tickets.order_status` (corrección D-7)
+
+> **La autocrítica D-7 reveló que `Ticket.order_status` ya tiene un default que el plan ignoraba.**
+
+[`Ticket.order_status`](../NUEVO-POS/apps/api/models/pos.py:78) tiene
+`default="PROGRAMADO PARA SER PREPARADO"`. Hay **dos** estados en juego y no se deben confundir:
+
+| Campo | Dónde vive | Quién lo gobierna | Qué hace el POS |
+|---|---|---|---|
+| `tickets.order_status` | La copia de trabajo del POS | **El POS** (es su tabla) | Lo deja en su **default**; **no** lo usa para proyectar |
+| `orders.status` | La proyección | **Pedidos** (14 estados) | Lo **recibe** del proveedor; no lo inventa |
+
+> **Decisión explícita:** el POS **no escribe** `tickets.order_status` (queda en su default) y **no lo
+> usa** para la proyección. La proyección usa `tickets.status` (`OPEN`/`PAID`), que es lo que el
+> contrato 15 pide como `status_ticket`. Esto elimina la ambigüedad que la v3.0 dejaba abierta.
 
 ---
 
@@ -137,6 +212,37 @@ falla, se registra el error y se reconcilia después, **sin deshacer el cobro**.
 > **El POS es un CONSUMIDOR de la política, nunca su dueño.** No la define, no la persiste, no la
 > sobrescribe. La lee de `system_settings` (vía Vista General) y la acata.
 
+### §2.5 La atomicidad exige reestructurar los commits (corrección D-5)
+
+> **La autocrítica D-5 reveló que `crear_ticket` hace `commit()` temprano, y la verificación
+> adicional reveló que `cobrar_ticket` también.**
+
+| Endpoint | Línea | Problema |
+|---|---|---|
+| [`crear_ticket`](../NUEVO-POS/apps/api/routers/pos.py:294) | 294–295 | `db.add(ticket)` → `await db.commit()` — cierra la transacción antes de poder proyectar |
+| [`cobrar_ticket`](../NUEVO-POS/apps/api/routers/pos.py:350) | 350 | `await db.commit()` — cierra la transacción antes de poder proyectar |
+
+**La corrección:** en ambos, reemplazar `commit()` por `flush()` + proyección + `commit()`:
+
+```python
+# crear_ticket (SIN_PAGO proyecta aquí)
+db.add(ticket)
+await db.flush()              # ← obtiene el id SIN cerrar la transacción
+await proyectar_pedido(db, ticket, politica)   # ← misma transacción
+await db.commit()
+
+# cobrar_ticket (PAGO_COMPLETO / ANTICIPO proyectan aquí)
+ticket.status = rn14_ciclo_de_vida("PAID")
+...
+await db.flush()              # ← persiste el cambio de estado SIN cerrar
+await proyectar_pedido(db, ticket, politica)   # ← misma transacción
+await db.commit()
+```
+
+> **Riesgo declarado:** `crear_ticket` tiene un gate de Fase 3.2 (persistencia atómica) y
+> `cobrar_ticket` tiene gates de Fase 3.2 y 4.0. Tocarlos puede romperlos. **El gate de F7.5.2 debe
+> incluir la verificación de que esos gates siguen verdes.**
+
 ---
 
 ## §3. ALCANCE DEFINIDO
@@ -146,14 +252,16 @@ falla, se registra el error y se reconcilia después, **sin deshacer el cobro**.
 | # | Entregable | Descripción |
 |---|---|---|
 | 1 | **Extender `POST /pos/tickets`** | Acepta y persiste los 9 campos del pedido en `tickets.order_*` |
-| 2 | **Lector de política con default seguro** | `services/politica_pedidos.py` — lee `orders.payment_policy` de `system_settings`; si falta, `PAGO_COMPLETO` |
-| 3 | **Servicio interno de proyección** | `services/pedidos.py` — proyecta `tickets.order_*` → `orders` (contrato 15), **en la misma transacción**, **cuando la política lo permite** |
-| 4 | **Endpoints 15/16** | `POST /orders/from-ticket` y `GET /orders/by-ticket/{ticket_id}` — para **consumidores externos** (Pedidos, CRM), no para el POS |
-| 5 | **Hook `useOrderProgramming`** | Estado local del pedido (tipo, datos, cálculo de `earliest_ready_at` para mostrar) |
-| 6 | **Modal heredado** | `ProgramacionPedidoModal.jsx` — **UX heredada del POS viejo** (§6.8 del Plan Maestro) |
-| 7 | **Botón "PEDIDO" en el header** | `POSHeader.jsx` — el toggle VENTA_DIRECTA ↔ PEDIDO |
-| 8 | **Panel de pedido en el checkout** | Muestra el pedido programado antes de cobrar |
-| 9 | **Gates** | API + frontend, con los criterios corregidos (§5) |
+| 2 | **Crear `system_settings`** | Modelo + migración + seed del default (D-4) — la infraestructura de DT-06 |
+| 3 | **Lector de política con default seguro** | `services/politica_pedidos.py` — lee `orders.payment_policy` de `system_settings`; si falta, `PAGO_COMPLETO` |
+| 4 | **Servicio interno de proyección** | `services/pedidos.py` — proyecta `tickets.order_*` → `orders` (contrato 15), **en la misma transacción**, **cuando la política lo permite** |
+| 5 | **Reestructurar `crear_ticket` y `cobrar_ticket`** | `commit()` → `flush()` + proyección + `commit()` (D-5) |
+| 6 | **Endpoints 15/16** | `POST /orders/from-ticket` y `GET /orders/by-ticket/{ticket_id}` — para **consumidores externos** (Pedidos, CRM), no para el POS |
+| 7 | **Hook `useOrderProgramming`** | Estado local del pedido (tipo, datos, cálculo de `earliest_ready_at` para mostrar) |
+| 8 | **Modal heredado** | `ProgramacionPedidoModal.jsx` — **UX heredada del POS viejo** (§6.8 del Plan Maestro) |
+| 9 | **Botón "PEDIDO" en el header** | `POSHeader.jsx` — el toggle VENTA_DIRECTA ↔ PEDIDO |
+| 10 | **Panel de pedido en el checkout** | Muestra el pedido programado antes de cobrar |
+| 11 | **Gates** | API + frontend, con los criterios corregidos (§5) |
 
 ### §3.2 Lo que NO entra en F7.5a (explícito)
 
@@ -167,7 +275,7 @@ falla, se registra el error y se reconcilia después, **sin deshacer el cobro**.
 | 6 | **Pedidos creados por otros canales** | El POS solo proyecta lo suyo; otros canales son de Pedidos |
 | 7 | **La UI de Vista General para editar la política** | Es de Vista General (F7.5b) |
 
-> **Nota crítica:** los entregables 1–9 funcionan **hoy**, sin depender de módulos inexistentes.
+> **Nota crítica:** los entregables 1–11 funcionan **hoy**, sin depender de módulos inexistentes.
 > El servicio de proyección es autocontenido: escribe la tabla `orders` que ya existe. Cuando el
 > módulo Pedidos real se construya, **solo cambia quién implementa el contrato** — el POS no se toca.
 
@@ -221,19 +329,43 @@ tiene** los props `orderType` / `orderData` / `onOrderTypeChange`. Hay que **añ
 
 **Entregables:**
 - Extender `CrearTicketEntrada` en [`schemas.py`](../NUEVO-POS/apps/api/schemas.py:100) con los
-  9 campos opcionales del pedido.
+  **9 campos** del pedido (opcionales).
 - Extender `crear_ticket` en [`pos.py`](../NUEVO-POS/apps/api/routers/pos.py:244) para persistirlos
   en `tickets.order_*`.
+- **Declarar explícitamente** que `tickets.order_status` **queda en su default** y **no se usa** para
+  proyectar (D-7).
 - **Gate:** criterios:
   1. `POST /pos/tickets` con `order_type=PEDIDO` **persiste los 9 campos**.
   2. `POST /pos/tickets` sin campos de pedido deja los defaults (`VENTA_DIRECTA`, etc.).
   3. Un `order_type` inválido es **422**.
   4. `delivery_type` inválido (no PICKUP/DOMICILIO) es **422**.
   5. `packaging_type` inválido (no PROPIO/VENTA) es **422**.
+  6. **`order_status` queda en su default** `"PROGRAMADO PARA SER PREPARADO"` (D-7).
 
-**Por qué primero:** sin esto, el modal captura datos que se pierden (D-2 de la autocrítica).
+**Por qué primero:** sin esto, el modal captura datos que se pierden (D-2 de la autocrítica v1.0).
 
-### §5.1 — Lector de política con default seguro (API) + gate
+### §5.1a — Crear `system_settings` (API) + gate
+
+**Objetivo:** crear la **capa de almacenamiento de DT-06** (D-4).
+
+**Entregables:**
+- `models/settings.py` con `SystemSetting`:
+  - `clave` (String, PK) — clave punteada (ej. `orders.payment_policy`).
+  - `valor` (Text) — el valor serializado.
+  - `updated_at` (DateTime(tz)).
+- Registrarlo en [`models/__init__.py`](../NUEVO-POS/apps/api/models/__init__.py:17) (pasa de 17 a 18 modelos).
+- Migración Alembic.
+- **Seed del default:** `orders.payment_policy = 'PAGO_COMPLETO'` y `orders.deposit_percent = '50'`.
+- **Gate:** criterios:
+  1. La tabla `system_settings` existe y tiene las columnas `clave`, `valor`, `updated_at`.
+  2. El seed inserta `orders.payment_policy = 'PAGO_COMPLETO'`.
+  3. El seed inserta `orders.deposit_percent = '50'`.
+  4. Insertar una clave duplicada falla (PK).
+
+> **Nota de frontera:** crear `system_settings` **no es invadir Vista General** (§0.5). Es la
+> infraestructura compartida que DT-06.2 ya declaró.
+
+### §5.1b — Lector de política con default seguro (API) + gate
 
 **Objetivo:** `services/politica_pedidos.py` — lee la política de `system_settings` (DT-06).
 
@@ -260,12 +392,14 @@ proyectar. Sin el lector, la proyección no sabe cuándo actuar.
 - `services/pedidos.py` con `proyectar_pedido(db, ticket, politica)`:
   - Idempotente por `ticket_id` (si existe, actualiza).
   - Calcula `earliest_ready_at` (autoritativo).
+  - **Envía los 10 campos del contrato 15**, incluido `status_ticket` derivado de `tickets.status` (D-6).
   - **Decide el estado según la política** (§0.2):
     - `SIN_PAGO` → proyecta al crear, `TENTATIVO`.
     - `ANTICIPO` → proyecta cuando `pagado ≥ deposit_percent %`, `TENTATIVO`.
     - `PAGO_COMPLETO` → proyecta solo en `PAID`, `PAGADO`.
   - **Se ejecuta en la misma transacción** del guardado/cobro.
-- Invocación desde `crear_ticket` y `cobrar_ticket` en [`pos.py`](../NUEVO-POS/apps/api/routers/pos.py:244).
+- **Reestructurar `crear_ticket` y `cobrar_ticket`** en [`pos.py`](../NUEVO-POS/apps/api/routers/pos.py:294):
+  `commit()` → `flush()` + proyección + `commit()` (D-5).
 - **Gate:** criterios:
   1. Con `PAGO_COMPLETO`: cobrar un ticket PEDIDO **crea la fila en `orders`** con `status=PAGADO`.
   2. Con `PAGO_COMPLETO`: cobrar un ticket VENTA_DIRECTA **no crea fila** en `orders` (RN-59).
@@ -275,6 +409,8 @@ proyectar. Sin el lector, la proyección no sabe cuándo actuar.
   6. `earliest_ready_at` se calcula y se persiste.
   7. Si la proyección falla, **el cobro se completa** (DT-07) y se registra el error.
   8. `delivery_fee` se persiste como `Numeric(12,2)` (no Float).
+  9. **`status_ticket` se deriva de `tickets.status`** y determina el mapeo (D-6).
+  10. **Los gates de F3.2 (atómico) y F4.0 (caja) siguen verdes** tras reestructurar los commits (D-5).
 
 ### §5.3 — Endpoints 15/16 para consumidores externos (API) + gate
 
@@ -291,6 +427,7 @@ proyectar. Sin el lector, la proyección no sabe cuándo actuar.
   5. `GET /orders/by-ticket/{ticket_id}` devuelve la **proyección** (no la fila completa).
   6. `delivery_fee` viaja como **STRING** en el cable (DT-02, regla derivada 7).
   7. Un ticket sin pedido responde **404**.
+  8. **`status_ticket` viaja en la entrada** y determina el mapeo del estado (D-6).
 
 ### §5.4 — El hook `useOrderProgramming` (frontend)
 
@@ -301,7 +438,7 @@ proyectar. Sin el lector, la proyección no sabe cuándo actuar.
   - `orderType` (`VENTA_DIRECTA` | `PEDIDO`) + `setOrderType`.
   - `orderData` + `guardarPedido(datos)` / `limpiarPedido()`.
   - `calcularEarliestReady(lineas)` — espejo local para **mostrar** antes de cobrar.
-  - `camposParaTicket()` — devuelve los 9 campos para incluirlos en `POST /pos/tickets`.
+  - `camposParaTicket()` — devuelve los **9 campos** para incluirlos en `POST /pos/tickets`.
 - **Gate:** criterios:
   1. `orderType` arranca en `VENTA_DIRECTA`.
   2. `calcularEarliestReady` devuelve la fecha correcta según el lead time máximo.
@@ -311,7 +448,7 @@ proyectar. Sin el lector, la proyección no sabe cuándo actuar.
 
 ### §5.5 — El modal heredado (frontend)
 
-**Objetivo:** `components/ProgramacionPedidoModal.jsx` con la UX del POS viejo, reescrito.
+**Objetivo:** `components/ProgramacionPedidoModal.jsx` con la UX del POS viejo, reescrita.
 
 **Entregables:**
 - El modal con: toggle PICKUP/DOMICILIO, banner de "listo a partir de", input `committed_at`,
@@ -363,10 +500,11 @@ proyectar. Sin el lector, la proyección no sabe cuándo actuar.
 | Regla / Directriz | Sub-fase que la cumple |
 |---|---|
 | **A-02 / P-01** (frontera por contratos) | F7.5.2 (proyección interna) + F7.5.6 (el frontend no llama a Pedidos) |
-| **DT-06** (configuración en Vista General) | F7.5.1 (el POS **lee** la política, no la define) |
-| **DT-06.3.2** (un solo lugar de declaración) | F7.5.1 (el POS no tiene selector de política) |
-| **DT-07** (degradación: la venta nunca se bloquea) | F7.5.1 (default seguro) + F7.5.2 (criterio 7) |
-| **Política `PAGO_COMPLETO`** (default seguro) | F7.5.1 (criterio 1) + F7.5.2 (criterios 1–2) |
+| **DT-06** (configuración en Vista General) | F7.5.1a (crear `system_settings`) + F7.5.1b (el POS **lee** la política, no la define) |
+| **DT-06.2** (la capa de almacenamiento) | F7.5.1a (la tabla `system_settings`) |
+| **DT-06.3.2** (un solo lugar de declaración) | F7.5.1b (el POS no tiene selector de política) |
+| **DT-07** (degradación: la venta nunca se bloquea) | F7.5.1b (default seguro) + F7.5.2 (criterio 7) |
+| **Política `PAGO_COMPLETO`** (default seguro) | F7.5.1b (criterio 1) + F7.5.2 (criterios 1–2) |
 | **Política `SIN_PAGO`** | F7.5.2 (criterio 3) |
 | **Política `ANTICIPO`** | F7.5.2 (criterio 4) |
 | **RN-55** (el pedido se deriva del ticket) | F7.5.2 (mapeo del estado) |
@@ -379,6 +517,8 @@ proyectar. Sin el lector, la proyección no sabe cuándo actuar.
 | **§6.8** (UX heredada del viejo POS) | F7.5.5 + F7.5.6 |
 | **R-04** (target ≥44px) | F7.5.5 (criterio 5) |
 | **A-01** (regla con su test) | Todas las sub-fases |
+| **Contrato 15** (los 10 campos) | F7.5.0 (9 persistidos) + F7.5.2 (criterio 9: `status_ticket`) + F7.5.3 (criterio 8) |
+| **F3.2 / F4.0** (atomicidad y caja) | F7.5.2 (criterio 10: los gates siguen verdes) |
 
 ---
 
@@ -393,7 +533,9 @@ proyectar. Sin el lector, la proyección no sabe cuándo actuar.
 | `delivery_fee` se envía como número y rompe el contrato | Media | Medio | El gate lo verifica (F7.5.3 criterio 6) |
 | El frontend llama a Pedidos por error (viola la frontera) | Media | Alto | El gate lo verifica (F7.5.6 criterio 6) |
 | **El POS hardcodea la política de pago** | Media | **Alto** | **DT-06: el POS la lee; el gate verifica que no la define (F7.5.6 criterio 7)** |
-| **La política corrupta rompe el POS** | Baja | **Alto** | **Default seguro `PAGO_COMPLETO`; el gate lo verifica (F7.5.1 criterios 1 y 4)** |
+| **La política corrupta rompe el POS** | Baja | **Alto** | **Default seguro `PAGO_COMPLETO`; el gate lo verifica (F7.5.1b criterios 1 y 4)** |
+| **Reestructurar `crear_ticket`/`cobrar_ticket` rompe los gates de F3.2/F4.0** | Media | **Alto** | **El gate de F7.5.2 criterio 10 verifica que siguen verdes; cambio quirúrgico (`commit()` → `flush()`)** |
+| **Crear `system_settings` se percibe como invadir Vista General** | Baja | Medio | **§0.5 lo declara: es la infraestructura de DT-06.2, no la UI** |
 
 ---
 
@@ -402,18 +544,22 @@ proyectar. Sin el lector, la proyección no sabe cuándo actuar.
 La Fase 7.5a está terminada cuando:
 
 1. ✅ `POST /pos/tickets` **persiste** los 9 campos del pedido en `tickets.order_*`.
-2. ✅ El POS **lee** la política de `system_settings`; si falta, asume `PAGO_COMPLETO`.
-3. ✅ Con `PAGO_COMPLETO`: cobrar un ticket PEDIDO **proyecta** a `orders` con `status=PAGADO`, en la misma transacción.
-4. ✅ Con `SIN_PAGO` y `ANTICIPO`: la proyección respeta el modo (gate F7.5.2 criterios 3–4).
-5. ✅ Cobrar un ticket VENTA_DIRECTA **no** proyecta (RN-59).
-6. ✅ El POS **nunca** importa `Order` ni escribe `orders` (verificado por el guard de frontera).
-7. ✅ El POS **nunca** define ni persiste la política (verificado por el gate F7.5.6 criterio 7).
-8. ✅ El frontend **nunca** llama a `/orders/from-ticket` (verificado por el gate).
-9. ✅ Si la proyección falla, la venta se completa igual (DT-07).
-10. ✅ El operador puede marcar un ticket como PEDIDO, programarlo y cobrarlo.
-11. ✅ Todos los gates verdes; CI completo verde.
-12. ✅ La ficha documenta la evidencia.
-13. ✅ El plan de Fase 7 §12.3 marca lo diferido como resuelto.
+2. ✅ La tabla `system_settings` **existe** con el seed del default (D-4).
+3. ✅ El POS **lee** la política de `system_settings`; si falta, asume `PAGO_COMPLETO`.
+4. ✅ Con `PAGO_COMPLETO`: cobrar un ticket PEDIDO **proyecta** a `orders` con `status=PAGADO`, en la misma transacción.
+5. ✅ Con `SIN_PAGO` y `ANTICIPO`: la proyección respeta el modo (gate F7.5.2 criterios 3–4).
+6. ✅ Cobrar un ticket VENTA_DIRECTA **no** proyecta (RN-59).
+7. ✅ El POS **nunca** importa `Order` ni escribe `orders` (verificado por el guard de frontera).
+8. ✅ El POS **nunca** define ni persiste la política (verificado por el gate F7.5.6 criterio 7).
+9. ✅ El frontend **nunca** llama a `/orders/from-ticket` (verificado por el gate).
+10. ✅ Si la proyección falla, la venta se completa igual (DT-07).
+11. ✅ El operador puede marcar un ticket como PEDIDO, programarlo y cobrarlo.
+12. ✅ **Los gates de F3.2 y F4.0 siguen verdes** tras reestructurar los commits (D-5).
+13. ✅ **`status_ticket` se deriva de `tickets.status`** y viaja en el contrato 15 (D-6).
+14. ✅ **`tickets.order_status` queda en su default** y no se usa para proyectar (D-7).
+15. ✅ Todos los gates verdes; CI completo verde.
+16. ✅ La ficha documenta la evidencia.
+17. ✅ El plan de Fase 7 §12.3 marca lo diferido como resuelto.
 
 ---
 
@@ -422,7 +568,8 @@ La Fase 7.5a está terminada cuando:
 1. **El módulo Pedidos/Producción no existe todavía.** Esta fase implementa el **contrato**, no el
    módulo. El pedido se guarda en `orders`; la máquina de 14 estados y el KDS son de otra fase.
 2. **Vista General no existe todavía.** El POS lee la política con un **default seguro**
-   (`PAGO_COMPLETO`). La UI para cambiarla es de Vista General (F7.5b).
+   (`PAGO_COMPLETO`). La UI para cambiarla es de Vista General (F7.5b). **La tabla `system_settings`
+   sí se crea** (es la infraestructura), pero su UI no.
 3. **El reparto no funciona.** `delivery_fee` queda en 0; no hay geocodificación ni rutas.
 4. **El cliente no recibe notificación.** Eso es la Fase 8 (CRM + Notificaciones).
 5. **Los pedidos de otros canales (teléfono, WhatsApp) no se crean aquí.** El POS solo proyecta
@@ -463,7 +610,25 @@ política, la frontera estaría mal trazada. Con este diseño:
 
 ---
 
-## §12. REGISTRO DE CAMBIOS (v2.0 → v3.0)
+## §12. REGISTRO DE CAMBIOS (v3.0 → v3.1)
+
+| # | Cambio | Defecto que corrige |
+|---|---|---|
+| 1 | **Dividida F7.5.1 en F7.5.1a (crear `system_settings`) + F7.5.1b (el lector)** | D-4 (CRÍTICA) |
+| 2 | **Añadida §0.5:** crear `system_settings` es la infraestructura de DT-06, no una invasión de Vista General | D-4 |
+| 3 | **Añadido a F7.5.2: reestructurar `crear_ticket` Y `cobrar_ticket` (`flush()` + proyección + `commit()`)** | D-5 |
+| 4 | **Añadida §2.5** con el detalle de los dos commits tempranos y el código de la corrección | D-5 |
+| 5 | **Añadido el riesgo "tocar los commits puede romper los gates de F3.2/F4.0"** | D-5 |
+| 6 | **Añadido el criterio 10 a F7.5.2** (los gates de F3.2/F4.0 siguen verdes) | D-5 |
+| 7 | **Añadida §1.5:** los 10 campos del contrato 15, con `status_ticket` derivado de `tickets.status` | D-6 |
+| 8 | **Añadido el criterio 9 a F7.5.2 y el criterio 8 a F7.5.3** (`status_ticket`) | D-6 |
+| 9 | **Añadida §1.6:** el destino de `tickets.order_status` (queda en su default, no se usa) | D-7 |
+| 10 | **Añadido el criterio 6 a F7.5.0** (`order_status` queda en su default) | D-7 |
+| 11 | **Actualizado el cimiento (§1.4):** ahora son TRES estructuras (se añade `system_settings`) | D-4 |
+| 12 | **Actualizado el DoD** (17 criterios, incluye D-4/D-5/D-6/D-7) | Todos |
+| 13 | **Actualizada la trazabilidad** (DT-06.2, contrato 15, F3.2/F4.0) | Todos |
+
+### Cambios heredados de v2.0 → v3.0 (se conservan)
 
 | # | Cambio | Origen |
 |---|---|---|
@@ -492,4 +657,4 @@ política, la frontera estaría mal trazada. Con este diseño:
 
 ---
 
-**FIN DEL PLAN — FASE 7.5: PEDIDOS PROGRAMADOS (v3.0)**
+**FIN DEL PLAN — FASE 7.5: PEDIDOS PROGRAMADOS (v3.1)**
