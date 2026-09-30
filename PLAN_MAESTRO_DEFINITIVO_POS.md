@@ -1,8 +1,17 @@
 # 🏗️ PLAN MAESTRO DEFINITIVO — POS Nuevo "R de Rico"
 
 > **Fecha:** 28 Sep 2026 (última actualización: 30 Sep 2026)
-> **Versión del plan:** 2.2
+> **Versión del plan:** 2.3
 > **Autor:** Antigravity + Víctor (dueño de R de Rico)
+>
+> **Cambios v2.3:** Se añade **§8.2 "El ERP viejo existe, pero su arquitectura es
+> parchada — se rehará módulo por módulo"**. Corrige el supuesto más peligroso del
+> plan: los módulos del ERP **no están vacíos** (Estadísticas, CRM, Almacenes, RRHH,
+> etc. existen y funcionan), pero se construyeron **sobre la marcha** con arquitectura
+> parchada. El trabajo del dueño es rehacer cada módulo con el método del POS e
+> integrarlos **uno a uno**. Regla: *"El ERP viejo es el ORÁCULO, no el MODELO."*
+> Aplicación inmediata: F10.4 (Contexto diario) se acopla por contrato al módulo
+> Estadísticas que **ya existe**; "profesionalizar/acoplar Estadísticas" es **F11**.
 >
 > **Cambios v2.2:** Fase **9.1 "Pagos mixtos"** cerrada. Un ticket puede cobrarse
 > con varios métodos a la vez (efectivo + tarjeta + transferencia). El arqueo
@@ -740,19 +749,76 @@ completo"*.
 1. **Esto no es un proyecto del POS.** Es el **primer módulo** de una reconstrucción del ERP
    completo. El método que se usa aquí (diagnóstico → plan por partes → sub-fases con gate →
    ficha → commit) se **replicará** en cada módulo del ERP.
-2. **El POS se integra con módulos del ERP que aún no existen**, siempre **por contrato**:
+2. **El POS se integra con los demás módulos del ERP**, siempre **por contrato**:
    - **Centro de IA** (voz, visión, OCR, NLU) — ver **DT-07**.
    - **CRM / Notificaciones** (clientes, lealtad, envío de tickets) — ver **Fase 8**.
    - **Vista General** (zona horaria, moneda, sucursal) — ver **DT-06**.
-3. **Lo que sí podemos hacer ahora** es **dejar el POS preparado** para que, cuando esos módulos
-   existan, la integración sea limpia y no haya que reescribir el POS. Eso significa:
+   - **Estadísticas** (contexto diario, resúmenes de venta) — ver **§8.2** y **F10.4**.
+   > **Corrección importante (v2.3):** estos módulos **NO están vacíos**. Existen y funcionan
+   > en el ERP viejo, pero con **arquitectura parchada**. Ver **§8.2** para el hecho completo.
+3. **Lo que sí podemos hacer ahora** es **dejar el POS preparado** para que, cuando cada módulo
+   sea rehecho (uno a uno, por el dueño), la integración sea limpia y no haya que reescribir el POS. Eso significa:
    - **Declarar los contratos** que faltan (empezando por los de IA en F7.0).
    - **No inventar** el motor de IA, ni el CRM, ni el selector de valores transversales dentro del POS.
+   - **Acoplar por contrato** a los módulos viejos que ya existen (p. ej. Estadísticas en F10.4),
+     sin heredar su arquitectura parchada.
    - **Respetar la degradación elegante**: si un módulo del ERP cae, el POS sigue vendiendo.
 
 **La regla que lo resume:**
 
 > **El POS es hermano de los demás módulos del ERP, no su padre. Consume por contrato; nunca los contiene.**
+
+---
+
+## 8.2 EL ERP VIEJO EXISTE, PERO SU ARQUITECTURA ES PARCHADA — SE REHARÁ MÓDULO POR MÓDULO
+
+> **Aclaración explícita del dueño (30 Sep 2026).** Se documenta aquí, junto a §8.1, porque
+> corrige el supuesto más peligroso que se podría hacer al leer este Plan Maestro.
+
+**El hecho, sin adornos:**
+
+1. **El ERP que corre el POS viejo NO está vacío.** Existe, funciona, y tiene módulos reales
+   (Estadísticas, CRM, Almacenes, RRHH, Auditoría, Reparto Grandeza, etc.). **No hay que
+   inventarlos desde cero.**
+2. **Pero ese ERP se construyó SOBRE LA MARCHA**, módulo por módulo, según las necesidades
+   operativas del día a día, **agregando y modificando cosas** sin una arquitectura planificada
+   de antemano. Es, en palabras del dueño, una **"arquitectura parchada"**.
+3. **Consecuencia directa:** cada módulo viejo arrastra los mismos vicios que el POS viejo
+   arrastraba (acoplamiento, tablas compartidas, lógica duplicada, ausencia de contratos,
+   ausencia de tests). **No se puede asumir que un módulo viejo es "la versión buena" solo
+   porque existe y funciona.**
+4. **El trabajo del dueño es explícito y secuencial:** construir la **versión mejorada de cada
+   módulo** (con el mismo método de este Plan Maestro: diagnóstico → plan por partes → sub-fases
+   con gate → ficha → commit) e **irlos integrando UNO A UNO** con el POS nuevo.
+
+**Lo que esto cambia en la forma de trabajar:**
+
+| Antes (supuesto incorrecto) | Ahora (hecho documentado) |
+|---|---|
+| "Los módulos del ERP aún no existen; el POS se prepara para cuando existan." | "Los módulos existen, pero están parchados; el POS se integra con ellos **por contrato** y cada uno se rehará a su tiempo." |
+| "Integrar = esperar a que el módulo nazca." | "Integrar = **acoplar por contrato** al módulo viejo hoy, y **rehacerlo** cuando le toque su fase." |
+| "Si el módulo viejo funciona, sirve tal cual." | "Que funcione no significa que sirva: hay que **profesionalizarlo y acoplarlo**." |
+
+**La regla que lo resume:**
+
+> **El ERP viejo es el ORÁCULO, no el MODELO.** Se le consulta qué debe hacer cada módulo
+> (su comportamiento, sus reglas, su UX heredada); **no** se le copia su arquitectura parchada.
+> Cada módulo se rehará con el método del POS, uno a uno, y se acoplará por contrato.
+
+**Corolario operativo (evita dos errores opuestos):**
+
+- **Error A — "hay que inventar el módulo":** falso. El módulo existe; hay que **profesionalizarlo
+  y acoplarlo**, no construirlo de cero.
+- **Error B — "el módulo viejo ya sirve":** falso. Su arquitectura es parchada; **no se hereda
+  su implementación, solo su comportamiento** (misma lógica que §6.8: *la integración se hereda,
+  la implementación se reescribe*).
+
+**Aplicación inmediata (F10.4):** el "Contexto diario post-corte" (B-02) es el primer caso de
+este patrón. El módulo **Estadísticas ya existe** (backend `apps/api/modules/analytics/` +
+frontend `apps/analytics/` + tabla `daily_contexts` + endpoints `GET/PUT /analytics/context`).
+Por lo tanto **no se inventa nada**: el POS nuevo **se acopla por contrato** al endpoint que
+Estadísticas ya expone. "Profesionalizar y acoplar Estadísticas" al nuevo ERP es una **fase
+propia (F11)**, no un parche dentro del cierre del POS.
 
 ---
 
