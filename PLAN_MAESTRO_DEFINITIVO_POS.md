@@ -1,7 +1,7 @@
 # 🏗️ PLAN MAESTRO DEFINITIVO — POS Nuevo "R de Rico"
 
 > **Fecha:** 28 Sep 2026 (última actualización: 30 Sep 2026)
-> **Versión del plan:** 1.8
+> **Versión del plan:** 1.9
 > **Autor:** Antigravity + Víctor (dueño de R de Rico)
 
 ### Repositorios del proyecto
@@ -452,8 +452,15 @@ Gate de **7 criterios / 11 tests** en verde; CI completo verde. Evidencia:
 
 ---
 
-### Fase 8 — Integración con CRM y Notificaciones (lado POS)
+### Fase 8 — Integración con CRM y Notificaciones (lado POS) — ✅ CERRADA (30 Sep 2026)
 > **El POS se prepara para hablar con dos módulos futuros del ERP: Clientes (CRM) y Notificaciones.**
+
+> [!IMPORTANT]
+> **ESTADO: CERRADA.** Los 9 criterios de aceptación se cumplen, los 7 guardianes están
+> limpios y todos los tests están en verde. Evidencia completa en
+> [`FICHA_F8_CRM_NOTIFICACIONES.md`](../../NUEVO-POS/docs/05-plan-de-construccion/FICHA_F8_CRM_NOTIFICACIONES.md).
+> Sub-fases: F8.0 (`e594de0`) · F8.1 (`b894f1d`) · F8.2 (`c42d83c`) · F8.3 (`e20a9a2`) ·
+> F8.4 (`70685f5`) · F8.5 (`d8bf8ca`) · F8.6 (`99e94cb`) · F8.7 (cierre).
 
 > [!IMPORTANT]
 > **Aclaración de alcance:** El CRM y Notificaciones son **módulos independientes del ERP**, no son parte del POS. Tendrán su propio plan, sus propias tablas, su propio código. Lo que esta fase construye es **solo el lado del POS** — los puntos de contacto para comunicarse con esos módulos cuando existan.
@@ -492,27 +499,30 @@ Son **2 componentes** y **2 llamadas a contrato**. Nada más.
 - El POS muestra los beneficios que el CRM devuelve pero **nunca los calcula**
 - Los descuentos se agregan como líneas negativas al ticket (el total se recalcula desde ítems persistidos)
 
-**Criterio de aceptación (lado POS):**
+**Criterio de aceptación (lado POS) — ✅ LOS 9 SE CUMPLEN:**
 - El botón "Cliente" permite identificar por teléfono y ver beneficios
 - El paso de entrega ofrece Imprimir / WhatsApp / Email
 - Si el CRM está caído, la venta continúa sin beneficios
 - Si Notificaciones está caído, la venta continúa con impresión
+- El POS nunca importa `Order` ni escribe `customers`/`notification_outbox` (Guard E-15)
+- El POS nunca define ni persiste la política de lealtad
+
+> **Evidencia:** [`FICHA_F8_CRM_NOTIFICACIONES.md`](../../NUEVO-POS/docs/05-plan-de-construccion/FICHA_F8_CRM_NOTIFICACIONES.md)
 
 ---
 
-> [!WARNING]
-> **NOTA DE COHERENCIA — RENUMERACIÓN PENDIENTE (añadida 29 Sep 2026).**
+> [!NOTE]
+> **NOTA DE COHERENCIA — RENUMERACIÓN RESUELTA EN F8.0 (actualizada 30 Sep 2026).**
 > La [`PROPUESTA_CRM_Y_NOTIFICACIONES_DEL_NUEVO_POS.md`](./PROPUESTA_CRM_Y_NOTIFICACIONES_DEL_NUEVO_POS.md)
-> se redactó cuando el plan iba en **17 contratos** y **73 reglas**. Desde entonces el POS
-> creció: hoy tiene **23 contratos** (25 tras F7.0) y **81 reglas** (RN-74..81 ya ocupadas por
-> visión, auditoría y zona horaria). Por lo tanto, **los números de la propuesta ya no cuadran**
-> y deben renumerarse al abrir la Fase 8:
+> se redactó cuando el plan iba en **17 contratos** y **73 reglas**. Al abrir la Fase 8, el POS
+> ya tenía **25 contratos** y **81 reglas** (RN-74..81 ocupadas por visión, auditoría y zona
+> horaria). La renumeración se ejecutó en **F8.0** (`e594de0`):
 >
-> | Elemento | Número en la propuesta | Número real al abrir F8 | Motivo |
+> | Elemento | Número en la propuesta | Número real declarado en F8.0 | Motivo |
 > |---|---|---|---|
-> | Contrato `clientes.beneficios_para_ticket` | #18 | **#26** | Los contratos 18–23 ya existen (F3.2 atómico + F5.0 cuentas) |
-> | Contrato `notificaciones.encolar_ticket` | #19 | **#27** | Idem |
-> | Reglas de lealtad/notificaciones | RN-74..RN-85 | **RN-82..RN-93** | RN-74..81 ya están declaradas en [`rules/registry.py`](../../NUEVO-POS/apps/api/rules/registry.py:596) |
+> | Contrato `clientes.beneficios_para_ticket` | #18 | **#26** ✅ | Los contratos 18–23 ya existían (F3.2 atómico + F5.0 cuentas) |
+> | Contrato `notificaciones.encolar_ticket` | #19 | **#27** ✅ | Idem |
+> | Reglas de lealtad/notificaciones | RN-74..RN-85 | **RN-82..RN-93** ✅ | RN-74..81 ya estaban declaradas en [`rules/registry.py`](../../NUEVO-POS/apps/api/rules/registry.py:596) |
 >
 > **Regla para el futuro:** los números de contrato y de regla se asignan **al momento de
 > declararlos**, nunca al momento de proponerlos. La propuesta es un documento de intención;
