@@ -21,6 +21,7 @@ Se creó un Plan Maestro Definitivo que integra las lecciones de batalla del POS
 | 🏗️ [**PLAN MAESTRO DEFINITIVO**](./PLAN_MAESTRO_DEFINITIVO_POS.md) | El plan de 7 fases para construir el 80% faltante. Integra las 5 prohibiciones absolutas y las reglas arquitectónicas del cementerio de bugs |
 | 🔍 [**AUDITORÍA POS VIEJO vs NUEVO**](./AUDITORIA_POS_VIEJO_VS_NUEVO.md) | Comparación archivo por archivo del módulo "Punto de Venta IA" (SOLO ese módulo, excluyendo Grandeza y otros) |
 | 📋 [**EVALUACIÓN DOCUMENTACIÓN**](./EVALUACION_DOCUMENTACION_DEEPSEEK.md) | Evaluación de los 30 documentos de DeepSeek: 12 vigentes, 10 parciales, 5 propuestas futuras, 3 herramientas, 0 obsoletos |
+| 🛡️ [**HALLAZGOS AUDITORÍA DE BRECHAS**](./HALLAZGOS_AUDITORIA_BRECHAS_POS.md) | **LECTURA OBLIGATORIA.** Evalúa 4 brechas entre POS viejo y nuevo. Documenta por qué `usePOSSession` NO se debe portar (D-12), por qué `SalesReceipt` ya tiene paridad, y qué sí falta (cableado de `useBeforeUnload` + tests guardianes de `sessionReset`) |
 
 ### Repositorios del proyecto
 

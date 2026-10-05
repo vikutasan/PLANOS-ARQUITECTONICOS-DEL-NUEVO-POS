@@ -1,4 +1,4 @@
-# DIRECTRICES TRANSVERSALES DEL ERP
+﻿# DIRECTRICES TRANSVERSALES DEL ERP
 
 **Documento 12 del proyecto del Nuevo POS**
 **Estado:** Vigente
@@ -621,77 +621,7 @@ Para erradicar definitivamente los incidentes histÃ³ricos de estaciones bloque
    - **Inmutabilidad del Estado de SesiÃ³n:** Queda estrictamente prohibido utilizar objetos volÃ¡tiles o referencias dinÃ¡micas de React directamente en los arrays de dependencia de los ciclos de vida (`useEffect`) que controlan las peticiones de desbloqueo.
    - Se deben emplear exclusivamente primitivos estables (`usuarioRef.current`, `terminalRef.current`) para garantizar que la comunicaciÃ³n en segundo plano corra de forma limpia sin interrumpir al cajero ni disparar Ã³rdenes de `unlock` accidentales durante la venta.
 
-3. **Ciclo de Cierre y Liberacion Atomica (Corte de Caja)**
-   - **Retorno Obligatorio al Estado Base:** El flujo operativo de una caja debe concluir formalmente mediante un proceso de cierre explicito (ej. `ESTADOS.CIERRE` en el Corte de Caja).
-   - Una vez cotejado el flujo fisico (dinero en caja) contra el sistema y confirmado el cierre del turno, la aplicacion debe disparar de forma atomica la orden de liberacion (`liberarLock`), apagando el latido y devolviendo inmediatamente la terminal al pool general (estado `free`), dejandola limpia y disponible para el siguiente operador o turno.
-
----
-
-## SECCION 14 -- DT-09: RESPONSIVIDAD Y LENGUAJE VISUAL
-
-### DT-09.1 -- La regla
-
-> **Todo componente del ERP nace responsivo desde el primer className, respeta los 3 modos de layout -- MOVIL / COMPACTO / MOSTRADOR --, cumple las 4 reglas duras de ergonomia tactil R-01 a R-04, y usa exclusivamente los tokens de diseno de la nueva arquitectura. Un componente que viole cualquiera de estas reglas NO se acepta.**
-
-### DT-09.2 -- El ancla
-
-El ERP historico tenia una asimetria de responsividad: los modulos de gestion usaban breakpoints Tailwind correctamente, pero el POS era desktop-only. El Nuevo POS corrigio esto, y esta directriz **eleva la correccion a regla transversal**: NINGUN modulo del ERP, presente o futuro, se exime de la responsividad.
-
-**Documento fuente:** `ESPECIFICACION_RESPONSIVA_Y_ERGONOMIA_TACTIL.md` -- contiene la especificacion completa con inventario de contenedores, breakpoints y ejemplos de codigo.
-
-### DT-09.3 -- Las 4 reglas duras
-
-| Regla | Que exige | Prohibicion |
-|-------|-----------|-------------|
-| **R-01** | CERO anchos absolutos en contenedores raiz | `w-[420px]` -- usar `w-full lg:w-[420px]` |
-| **R-02** | Tipografia que escala, minimo `text-[10px]` | `text-[7px]`, `text-[8px]`, `text-[9px]` prohibidos |
-| **R-03** | Los 3 modos son explicitos -- MOVIL base, `md:` COMPACTO, `lg:` MOSTRADOR | "Que se acomode solo" no se acepta |
-| **R-04** | Targets tactiles de al menos 44x44px | `px-1 py-0.5` en botones -- usar `min-h-[44px] min-w-[44px]` |
-
-### DT-09.4 -- Los breakpoints
-
-| Modo | Breakpoint Tailwind | Ancho | Comportamiento |
-|------|-------------------|-------|----------------|
-| MOVIL | base, sin prefijo | menor a 640px | Apilado vertical, botones colapsados a iconos |
-| COMPACTO | `sm:` y `md:` | 640 a 1023px | Layout intermedio, texto condensado |
-| MOSTRADOR | `lg:` y `xl:` | 1024px o mas | Layout completo, sin cambios visuales |
-
-### DT-09.5 -- Tokens de diseno obligatorios
-
-Todo modulo del ERP debe usar los tokens semanticos definidos en el theme engine, NO colores hardcodeados:
-
-| Token | Para que | Prohibicion |
-|-------|----------|-------------|
-| `bg-fondo-profundo` | Fondo principal | `bg-black`, `bg-gray-900` hardcodeados |
-| `bg-fondo-panel` | Paneles y cards | `bg-[#1a1a1a]` |
-| `text-crema-ticket` | Texto principal | `text-white` generico |
-| `text-acento` | Acciones y highlights | `text-[#c1d72e]` |
-| `text-peligro` | Errores y alertas | `text-red-500` generico |
-| `min-h-tactil` | Altura minima tactil | `min-h-[44px]` escrito a mano |
-
-**Excepcion:** los modulos del viejo ERP que aun no migran al theme engine conservan sus colores actuales temporalmente. La migracion se hara modulo por modulo. Esta excepcion NO aplica a codigo nuevo.
-
-### DT-09.6 -- La verificacion
-
-Checklist de aceptacion de cualquier componente:
-
-- [ ] **R-01:** El contenedor raiz no tiene `w-[...px]` fijo.
-- [ ] **R-02:** No hay `text-[7px]`, `text-[8px]` ni `text-[9px]` -- excepto plantillas de impresion.
-- [ ] **R-03:** El componente declara explicitamente su comportamiento en los 3 modos.
-- [ ] **R-04:** Todo target interactivo mide al menos 44x44px.
-- [ ] **Tokens:** Usa tokens semanticos, no colores hardcodeados.
-- [ ] **Visual:** El diseno se ve premium en MOSTRADOR y funcional en MOVIL.
-
-### DT-09.7 -- Advertencia para futuras IAs
-
-> **NINGUN componente nuevo del ERP se acepta si viola R-01 a R-04.**
->
-> Esta es una REGLA DURA, no una sugerencia. Fue elevada de especificacion del POS
-> a directriz transversal del ERP el 5 Oct 2026 por decision del dueno del proyecto.
->
-> **NO se acepta** "luego lo hago responsivo". Se nace responsivo o no se acepta.
->
-> **El responsive se logra AGREGANDO modos, no DEGRADANDO el modo existente.**
-> El modo MOSTRADOR se conserva intacto. Los modos COMPACTO y MOVIL son adiciones.
-
+3. **Ciclo de Cierre y LiberaciÃ³n AtÃ³mica (Corte de Caja)**
+   - **Retorno Obligatorio al Estado Base:** El flujo operativo de una caja debe concluir formalmente mediante un proceso de cierre explÃ­cito (ej. `ESTADOS.CIERRE` en el Corte de Caja).
+   - Una vez cotejado el flujo fÃ­sico (dinero en caja) contra el sistema y confirmado el cierre del turno, la aplicaciÃ³n debe disparar de forma atÃ³mica la orden de liberaciÃ³n (`liberarLock`), apagando el latido y devolviendo inmediatamente la terminal al pool general (estado `free`), dejÃ¡ndola limpia y disponible para el siguiente operador o turno.
 

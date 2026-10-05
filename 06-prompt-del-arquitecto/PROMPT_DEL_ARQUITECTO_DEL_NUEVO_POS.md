@@ -160,6 +160,8 @@ comprueba**.
 | E-17 | **Nombres autodocumentados** | Prohibido `data`, `temp`, `x`, `res`, `obj` | Revisión: nombres que explican el "qué" |
 | E-18 | **Constantes de negocio centralizadas** | Todo valor de negocio en MAYÚSCULAS y en config central | Búsqueda: 0 literales de negocio dispersos |
 | E-19 | **Verificar, no asumir** | Toda afirmación sobre el código/esquema/estado se comprueba contra la fuente real antes de escribirla | Revisión: cada tabla/campo/contrato/endpoint nombrado en un plan tiene su archivo+línea; cada "la función hace X" tiene su cita; cada conteo tiene su fuente abierta |
+| E-20 | **Memoria Volátil para Borradores** | Prohibido usar auto-guardado (`setInterval`) de carritos; persistencia atómica por ítem; limpieza tras envío exige comprobación en servidor (HTTP 200 no basta) | Búsqueda: 0 temporizadores de borrador, `withRetries` en envíos, post-verificación de `clearCart()` |
+| E-21 | **Dependencias Primitivas en Hooks** | Prohibido pasar objetos completos (`currentUser`) a dependencias de `useEffect`. Siempre extraer IDs primitivos y usar `useRef` para funciones asíncronas, evitando así reconexiones y falsos unlocks. | Búsqueda: ningún `useEffect` depende de objetos volátiles para controlar suscripciones o candados (locks). |
 
 ---
 
