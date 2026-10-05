@@ -77,12 +77,47 @@ Entrada ADITIVA: el bucle `seed_settings` solo inserta si la clave no existe.
      *"Para enviar este pedido se requiere al menos el X% ($Y). Monto recibido: $Z."*
    - Si cumple → procesa normalmente.
 
-## 4. Nota sobre pagos parciales
+## 4. Cierre de Gaps (commit `d8eec93`)
 
-La guardia P5 está lista para cuando se implemente **pago parcial de pedidos**
-en el CheckoutScreen. Actualmente el checkout siempre requiere pago completo
-(para todas las transacciones). Cuando se permita pagar un anticipo (ej. 50%),
-la guardia P5 será la frontera que valide que el anticipo cumple con la política.
+### Gap 1 — CheckoutScreen acepta pago parcial para PEDIDOS ✅
 
-**Trabajo pendiente:** Modificar CheckoutScreen para aceptar montos < total
-cuando el tipo es PEDIDO y la política lo permite.
+**Problema:** El checkout siempre exigía pago completo (`recibido >= total`).
+El botón "CONFIRMAR PAGO" se deshabilitaba si el efectivo era menor al total.
+
+**Solución:** Nuevo prop `montoMinimo` en `CheckoutScreen.jsx`:
+- Si `montoMinimo` está definido y es < total, el checkout lo usa como umbral.
+- El botón se habilita cuando `recibido >= montoMinimo`.
+- El mensaje de validación muestra el mínimo, no el total.
+- Para pagos con tarjeta/transferencia, el monto cobrado es `montoMinimo`.
+- `RetailVisionPOS.jsx` pasa `montoMinimo = total * (pct / 100)` solo cuando
+  es un PEDIDO con política < 100%.
+
+### Gap 2 — Ticket refleja porcentaje cubierto ✅
+
+**Problema:** `ticket.payment_covered_pct` nunca se seteaba. El generador
+siempre caía al default de 100%.
+
+**Solución:** Al montar `TicketDeliveryPanel`, se calcula el `pctCubierto`
+real desde `payment_details` del ticket:
+- Se suman todos los montos pagados (`p.monto ?? p.recibido`).
+- Se divide entre el total del ticket.
+- Se inyecta como `payment_covered_pct` en el ticket antes de pasarlo al panel.
+
+### Flujo end-to-end ahora funcional:
+
+```
+Vista General              POS al montar              PEDIDO al cobrar
+─────────────              ──────────────             ────────────────
+order_min_payment_pct      Lee → politicaPagoPedido    CheckoutScreen:
+  value: "50"                → 50                       montoMinimo = total * 0.5
+                                                        Cajero paga el 50%
+                                                        ↓
+                                                      confirmarCobro:
+                                                        guardia P5 ✅ (50% >= 50%)
+                                                        ↓
+                                                      Ticket impreso:
+                                                        ⚠️ PAGO PARCIAL
+                                                        CUBIERTO (50%): $250
+                                                        RESTANTE (50%): $250
+                                                        COBRAR RESTANTE AL RECOGER
+```
