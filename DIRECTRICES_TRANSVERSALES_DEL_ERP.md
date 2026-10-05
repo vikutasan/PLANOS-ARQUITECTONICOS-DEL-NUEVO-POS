@@ -694,4 +694,69 @@ Checklist de aceptacion de cualquier componente:
 > **El responsive se logra AGREGANDO modos, no DEGRADANDO el modo existente.**
 > El modo MOSTRADOR se conserva intacto. Los modos COMPACTO y MOVIL son adiciones.
 
+---
 
+## SECCION 15 -- DT-10: CONTRATO OBLIGATORIO EN TODA COMUNICACION INTER-MODULAR
+
+### DT-10.1 -- La regla
+
+> **Toda funcionalidad que cruce la frontera de un modulo monolitico DEBE tener su
+> contrato redactado en `CONTRATOS_ENTRE_MODULOS_DEL_NUEVO_POS.md` ANTES de
+> considerarse terminada.**
+
+### DT-10.2 -- El ancla
+
+Esta regla nace del hallazgo P5 (5 Oct 2026): se implemento la politica de pago
+minimo para pedidos (Vista General -> POS) con seed, API client, guardia y modal,
+pero el contrato formal casi se omitio. Sin el contrato, la funcionalidad habria
+quedado como **deuda invisible**: un acoplamiento inter-modular sin documentar
+que viola la Regla de Oro P-01/P-02/P-03 del documento de contratos.
+
+### DT-10.3 -- Que cuenta como "cruce de frontera"
+
+Un cruce de frontera ocurre cuando:
+
+1. **Un modulo LEE datos de otro** (ej. el POS lee un setting de Vista General).
+2. **Un modulo ESCRIBE datos en otro** (ej. el POS crea un pedido en el modulo Pedidos).
+3. **Un modulo DISPARA una accion en otro** (ej. el cobro descuenta stock en Almacenes).
+
+Si tu codigo tiene un `fetch`, `import`, o `await servicio.X()` que toca un
+endpoint de OTRO modulo, necesitas un contrato.
+
+### DT-10.4 -- Que debe contener el contrato
+
+Siguiendo el formato del documento de contratos (Seccion 0):
+
+```
+CONTRATO <nombre_modulo>.<operacion>
+  Consumidor:     <quien pide>
+  Proveedor:      <quien entrega>
+  Operacion:      <verbo HTTP + ruta>
+  Entrada:        <parametros>
+  Salida:         <estructura de respuesta>
+  Garantias:      <que promete el proveedor>
+  Errores:        <que devuelve cuando no puede>
+  Default:        <que hace el consumidor si el proveedor no responde>
+```
+
+### DT-10.5 -- Checklist de cierre
+
+Una funcionalidad inter-modular NO esta terminada hasta que:
+
+- [ ] El contrato esta escrito en `CONTRATOS_ENTRE_MODULOS_DEL_NUEVO_POS.md`.
+- [ ] El contrato tiene un numero en la Matriz de Contratos (Seccion 10).
+- [ ] El estado del contrato esta marcado en la matriz ("Ya existe", "Deuda", etc.).
+- [ ] Los hallazgos estan documentados en su archivo `HALLAZGOS_*.md`.
+
+### DT-10.6 -- Advertencia para futuras IAs
+
+> **NINGUNA funcionalidad inter-modular se acepta sin su contrato formal.**
+>
+> Esta es una REGLA DURA. Fue elevada a directriz transversal del ERP el
+> 5 Oct 2026 por decision del dueno del proyecto.
+>
+> **NO se acepta** "el contrato se escribe despues". Se escribe el contrato
+> como parte de la implementacion, o la implementacion no se considera terminada.
+>
+> **El contrato protege la arquitectura.** Sin contrato, cada cruce de frontera
+> se convierte en deuda invisible que erosiona la separacion modular.
