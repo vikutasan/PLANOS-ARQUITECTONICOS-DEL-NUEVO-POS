@@ -1,7 +1,10 @@
 # HALLAZGOS — Evaluación del Proceso de Pedidos (5 Oct 2026)
 
 **Sesión:** Antigravity — Evaluación funcional del flujo de pedidos viejo POS vs nuevo POS.
-**Commit:** `4bfea16` — P1: guardia de empaque en 2 capas.
+**Commits:**
+- `4bfea16` — P1: guardia de empaque en 2 capas.
+- `f85c36d` — P5: política de pago mínimo (Vista General → POS).
+- `c0b2732` — P5c: ticket de pedido con estado de pago condicional.
 **Repositorio:** `github.com/vikutasan/NUEVO-POS`.
 
 ---
@@ -89,4 +92,51 @@ quedar stale si otra terminal lo modificó). El nuevo POS hace un GET separado
 | Archivo | Cambio |
 |---------|--------|
 | `POSHeader.jsx` | Props `empaqueRequerido` + `empaqueEnCarrito`, badge condicional |
-| `RetailVisionPOS.jsx` | Estado `avisoEmpaque`, `abrirCheckoutConGuardia()`, modal de advertencia |
+| `RetailVisionPOS.jsx` | Estado `avisoEmpaque`, `abrirCheckoutConGuardia()`, modal de advertencia, `politicaPagoPedido`, guardia P5 |
+| `client.js` | `getSettingValue(key)` — lectura fail-safe de settings de Vista General |
+| `OrderProgrammingModal.jsx` | Prop `porcentajePagoMinimo`, texto de confirmación dinámico |
+| `ticketGenerator.js` | `bloqueEstadoPagoPedido()` — estado de pago condicional (100% limpio / parcial con desglose) |
+| `service.py` (ERP) | Seed `order_min_payment_pct` en `system_settings` |
+
+---
+
+## 4. Hallazgos de Política de Pago (P5)
+
+### P5 — ⛔ No existía política configurable de pago para pedidos (CORREGIDA)
+
+**Hallazgo:** Ni el viejo POS ni el nuevo tenían una forma de configurar qué
+porcentaje del pago se requiere para enviar un pedido a preparación. El texto
+"100%" estaba hardcodeado.
+
+**Decisión:** Crear contrato #18 (`configuracion.leer_politica`): el POS lee
+la política de Vista General al montar. Default seguro: 100% si no hay conexión.
+Se sembraron las siguientes piezas:
+
+1. **ERP viejo:** seed `order_min_payment_pct = "100"` en `system_settings`.
+2. **POS:** `getSettingValue()` en client + estado `politicaPagoPedido` + guardia en `confirmarCobro`.
+3. **Modal:** texto dinámico de confirmación (100% vs "al menos el X%").
+
+### P5c — ⛔ Ticket de pedido no reflejaba el estado de pago (CORREGIDA)
+
+**Hallazgo:** El ticket siempre decía "PAGADO - PENDIENTE DE RECOLECCIÓN"
+sin importar si el pago era total o parcial.
+
+**Decisión (Opción C):** Formato condicional:
+- **Pago completo (≥100%):** Muestra "PAGADO AL 100% - PENDIENTE DE RECOLECCIÓN/ENTREGA"
+  (sin ruido de porcentajes — limpio).
+- **Pago parcial (<100%):** Muestra desglose:
+  - `CUBIERTO (X%): $monto`
+  - `RESTANTE (Y%): $monto`
+  - `COBRAR RESTANTE AL RECOGER/ENTREGAR`
+
+El porcentaje se pasa por `ticket.payment_covered_pct` (default 100).
+Hoy siempre es 100% porque el checkout no permite pagos parciales aún.
+Cuando se implemente, el ticket lo refleja automáticamente.
+
+---
+
+## 5. DT-10 — Contrato obligatorio
+
+Esta sesión originó la directriz transversal **DT-10**: toda funcionalidad
+inter-modular DEBE tener su contrato formal en `CONTRATOS_ENTRE_MODULOS_DEL_NUEVO_POS.md`
+antes de considerarse terminada. Nació del near-miss de P5.
