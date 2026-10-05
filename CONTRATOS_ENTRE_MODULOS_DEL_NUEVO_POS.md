@@ -644,6 +644,68 @@ CONTRATO vision.reconocer_producto
 
 ---
 
+## SECCIÓN 9B — CONTRATO DE CONFIGURACIÓN (Vista General → POS)
+
+### 9B.1 Acoplamiento actual
+
+```
+Hoy el POS no lee políticas de negocio de Vista General.
+Los valores operativos están hardcodeados en el código del POS:
+  - "100%" de pago para enviar pedido  →  OrderProgrammingModal.jsx:223  (HARDCODE)
+  - No hay endpoint de configuración consumido por el POS.
+```
+
+**Problema.** El dueño del negocio no puede cambiar políticas operativas (como el
+porcentaje mínimo de pago para procesar un pedido) sin modificar código. Eso obliga
+a un deploy por cada cambio de política, lo que es inaceptable en producción.
+
+### 9B.2 Contrato nuevo — leer configuración de negocio
+
+```
+CONTRATO configuracion.leer_politica
+  Consumidor:   POS
+  Proveedor:    Vista General (módulo Settings del ERP)
+  Operación:    GET /api/v1/settings/{key}
+  Entrada:      key (string) — clave del setting (ej. 'order_min_payment_pct')
+  Salida:       {
+                  id:          Integer
+                  key:         String
+                  value:       String
+                  description: String NULL
+                  category:    String   (default 'general')
+                  input_type:  String   (default 'text')
+                }
+  Garantías:
+    - El proveedor SIEMPRE devuelve la versión más reciente del setting.
+    - Si la clave no existe, devuelve 404 (no un valor por defecto).
+    - El valor es SIEMPRE un String: la interpretación (Number, JSON, Boolean)
+      es responsabilidad del consumidor.
+    - La escritura del setting es responsabilidad de Vista General, NO del POS.
+  Errores:
+    - 404 si la clave no existe.
+    - 500 si hay error interno del servidor.
+  Default del consumidor:
+    - Si el POS no puede leer el setting (red caída, 404, 500), aplica un
+      default seguro definido en código (ej. 100% para order_min_payment_pct).
+    - El POS NUNCA lanza ni bloquea si no puede leer un setting: es fail-safe.
+```
+
+### 9B.3 Settings vigentes
+
+| Clave | Valor por defecto | Categoría | Consumidor | Propósito |
+|-------|-------------------|-----------|------------|-----------|
+| `order_min_payment_pct` | `"100"` | `orders` | POS | Porcentaje mínimo de pago para enviar pedido a preparación (0–100) |
+
+**Nota de diseño.** Este contrato es **extensible**: cualquier módulo del ERP puede
+agregar nuevos settings al seed sin romper al POS. El POS solo lee las claves que
+conoce; las demás las ignora. Esto permite que Vista General acumule configuraciones
+de todos los módulos y las exponga en una sola interfaz.
+
+**Nota de seguridad.** El contrato es de LECTURA. El POS nunca escribe settings.
+La autoridad para cambiar la política vive en Vista General (con su permiso propio).
+
+---
+
 ## SECCIÓN 10 — MATRIZ DE CONTRATOS
 
 | # | Contrato | Consumidor | Proveedor | Reemplaza a | Estado hoy |
@@ -665,10 +727,11 @@ CONTRATO vision.reconocer_producto
 | 15 | `pedidos.registrar_desde_ticket` | POS | Pedidos | Escritura directa de `orders` | **Deuda** |
 | 16 | `pedidos.pedido_del_ticket` | POS | Pedidos | Lectura de `orders` | **Deuda** |
 | 17 | `vision.reconocer_producto` | POS | Visión | Motor interno del POS | **Deuda** |
+| 18 | `configuracion.leer_politica` | POS | Vista General | Hardcodes en el POS | **Ya existe** |
 
-**Lectura de la matriz.** De 17 contratos: **1 es cicatriz** (se conserva), **1 ya existe
-parcial** (catálogo, se formaliza), **6 ya existen completos** (Caja, se documentan como
-referencia) y **9 son deuda** (se corrigen en el POS nuevo).
+**Lectura de la matriz.** De 18 contratos: **1 es cicatriz** (se conserva), **1 ya existe
+parcial** (catálogo, se formaliza), **7 ya existen completos** (Caja + Configuración, se
+documentan como referencia) y **9 son deuda** (se corrigen en el POS nuevo).
 
 **Lo notable:** el módulo de Caja es el **único módulo que ya cumple la Regla de Oro #5 al
 100%**. El POS nunca lee sus tablas. Es la prueba de que el patrón funciona y el modelo a
