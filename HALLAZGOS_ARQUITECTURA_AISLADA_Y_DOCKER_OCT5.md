@@ -49,3 +49,20 @@ Si un usuario reporta que el POS nuevo no carga productos, no permite cobrar o m
 2. Verifica que el contenedor `nuevo_pos_api` esté corriendo en el puerto `5101`.
 3. Verifica que el script `seed_demo.py` haya sido ejecutado.
 4. Recuerda que los NIPs de prueba y los folios de terminal deben existir en la tabla `terminal_sessions` de la base de datos `nuevo_pos`.
+
+## 5. El Incidente del Ticket Vacío y la Persistencia Atómica (Error 422)
+**Síntoma:** Al dar clic en un producto en el frontend, se mostraba un modal con el error `[object Object]` y la API devolvía un `422 Unprocessable Entity` en `POST /pos/tickets`.
+
+**Causa Raíz:** Una regresión de validación heredada del paradigma monolítico.
+- En la **Fase 3.4**, el POS migró a un modelo de **Persistencia Atómica por Ítem** (Modelo SaaS v6.0). En este modelo, el frontend primero crea el "cascarón" del ticket (DRAFT) llamando a `POST /pos/tickets` con `items=[]`, y luego añade los ítems uno por uno con `POST /pos/tickets/{id}/items`.
+- Sin embargo, el esquema Pydantic en `apps/api/schemas.py` (`CrearTicketEntrada`) aún exigía `items: list[LineaEntrada] = Field(min_length=1)`. Esta validación chocaba de frente con el nuevo paradigma, impidiendo que nacieran tickets vacíos.
+
+**Resolución:**
+Se modificó `schemas.py` para relajar la restricción:
+`items: list[LineaEntrada] = Field(default_factory=list)`
+
+**Justificación Arquitectónica:**
+Este cambio NO rompe la calidad ni contradice el plan original. De hecho, lo **habilita**:
+1. El Plano Arquitectónico (RN-25) y `HALLAZGOS_AUDITORIA_BRECHAS_POS.md` dictan que *"Un ticket recién creado (al reservar folio) es un ticket vacío (sin ítems, total cero)"*. 
+2. La creación atómica exige separar el nacimiento del ticket (reserva de folio) de la inyección de líneas.
+3. No hay riesgo de "cobrar basura", ya que el endpoint de cobro (`POST /pos/tickets/{id}/pay`) rechaza transacciones con total cero.
