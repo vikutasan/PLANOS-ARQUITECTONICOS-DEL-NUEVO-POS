@@ -122,7 +122,7 @@ Y una cuarta familia, que no es una decisión sino su **consecuencia histórica*
 
 ---
 
-## SECCIÓN 7 — REGISTRO DE BUGS RECIENTES (BUG-01 … BUG-05)
+## SECCIÓN 7 — REGISTRO DE BUGS RECIENTES (BUG-01 … BUG-08)
 
 > **Fuente canónica:** las fichas `FICHA_FIX_*` del repo [`NUEVO-POS`](https://github.com/vikutasan/NUEVO-POS) (`docs/05-plan-de-construccion/`) y el [`TOMO_III`](./08-documentacion-final/TOMO_III_CEMENTERIO_DE_BUGS_Y_CICATRICES.md).
 >
@@ -135,6 +135,9 @@ Y una cuarta familia, que no es una decisión sino su **consecuencia histórica*
 | **BUG-03** | La paleta de colores del post-it no coincidía con el diseño; la asignación debía ser manual | `FICHA_F12_6_PARIDAD_PIZARRON.md` §BUG-03 + `PLAN_SELECTOR_COLOR_POST_IT.md` + `FICHA_F13_3_SELECTOR_COLOR_POST_IT.md` | Una paleta de diseño se adopta completa (21 colores), no por aproximación |
 | **BUG-04** | La fecha de compromiso (`committed_at`) no se restauraba al recuperar un pedido del pizarrón | `FICHA_FIX_BUG04_FECHA_COMPROMISO.md` | El bloque `order_*` (contrato 3) nombra las notas `order_notes`, no `notes`; leer el campo equivocado deja el dato vacío |
 | **BUG-05** | `CAJA` se trataba como una terminal (corrompía `terminal_config.json`) y el botón «Guardar cambios» del gestor parecía muerto | `FICHA_FIX_BUG05_CAJA_NO_ES_TERMINAL.md` + `ARQUITECTURA_TERMINALES_Y_CAJA.md` + `LECCIONES_DE_UI.md` | **Toda terminal es una caja en potencia; `CAJA` no es una terminal.** Y un `return` temprano puede dejar fuera un elemento transversal (el toast) |
+| **BUG-06** | Al enviar un ticket desde TERM-06 aparecía «hay productos sin guardar en el servidor» aunque el ticket estaba completo | `FICHA_FIX_BUG06_VERIFY_POR_COBERTURA.md` | La verificación post-envío debe comparar lo que el servidor **tiene**, no lo que el cliente **cree** que envió |
+| **BUG-07** | Un producto repetido en el carrito bloqueaba el envío: la verificación comparaba LÍNEAS del carrito contra FILAS del servidor, pero RN-17 fusiona duplicados en una sola fila | `FICHA_FIX_BUG07_VERIFY_POR_UNIDADES.md` | Verificar por **UNIDADES**, no por líneas: el servidor fusiona (RN-17) y la comparación debe respetar esa regla |
+| **BUG-08** | Al cobrar una cuenta ajena desde otra terminal aparecía «No hay turno de caja abierto para esta terminal»: el backend derivaba el turno de caja de la terminal de **ORIGEN** del ticket, no de la que **COBRA** | `FICHA_FIX_BUG08_CAJA_COBRA_CUENTAS_AJENAS.md` + `ARQUITECTURA_TERMINALES_Y_CAJA.md` §10 | **El turno de caja pertenece a la terminal que COBRA, no a la del ticket.** El cliente declara `cash_session_id`; el backend lo **valida** (E-13) y **nunca** sobreescribe el `terminal_id` del ticket (RN-12) |
 
 > **Deuda de nomenclatura detectada:** BUG-02 y BUG-03 no siguen la convención `FICHA_FIX_BUG0N_*`. Este registro los hace localizables sin renombrar archivos (renombrar rompería enlaces relativos y referencias en tests). Si en el futuro se decide uniformar, este documento es el punto de partida.
 
