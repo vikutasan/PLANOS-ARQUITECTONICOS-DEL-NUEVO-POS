@@ -122,7 +122,7 @@ Y una cuarta familia, que no es una decisión sino su **consecuencia histórica*
 
 ---
 
-## SECCIÓN 7 — REGISTRO DE BUGS RECIENTES (BUG-01 … BUG-09)
+## SECCIÓN 7 — REGISTRO DE BUGS RECIENTES (BUG-01 … BUG-10)
 
 > **Fuente canónica:** las fichas `FICHA_FIX_*` del repo [`NUEVO-POS`](https://github.com/vikutasan/NUEVO-POS) (`docs/05-plan-de-construccion/`) y el [`TOMO_III`](./08-documentacion-final/TOMO_III_CEMENTERIO_DE_BUGS_Y_CICATRICES.md).
 >
@@ -139,6 +139,7 @@ Y una cuarta familia, que no es una decisión sino su **consecuencia histórica*
 | **BUG-07** | Un producto repetido en el carrito bloqueaba el envío: la verificación comparaba LÍNEAS del carrito contra FILAS del servidor, pero RN-17 fusiona duplicados en una sola fila | `FICHA_FIX_BUG07_VERIFY_POR_UNIDADES.md` | Verificar por **UNIDADES**, no por líneas: el servidor fusiona (RN-17) y la comparación debe respetar esa regla |
 | **BUG-08** | Al cobrar una cuenta ajena desde otra terminal aparecía «No hay turno de caja abierto para esta terminal»: el backend derivaba el turno de caja de la terminal de **ORIGEN** del ticket, no de la que **COBRA** | `FICHA_FIX_BUG08_CAJA_COBRA_CUENTAS_AJENAS.md` + `ARQUITECTURA_TERMINALES_Y_CAJA.md` §10 | **El turno de caja pertenece a la terminal que COBRA, no a la del ticket.** El cliente declara `cash_session_id`; el backend lo **valida** (E-13) y **nunca** sobreescribe el `terminal_id` del ticket (RN-12) |
 | **BUG-09** | Tras configurar el color de una terminal en el Gestor, los post-its del pizarrón seguían saliendo **amarillos** (color por defecto) incluso refrescando el navegador | `LECCIONES_DE_UI.md` §7 + test `terminalService.colores.test.jsx` | **Cambiar la FORMA de retorno de un servicio rompe a sus consumidores en silencio.** `fetchTerminalConfig()` pasó de devolver un arreglo a `{terminals, orden}`; el consumidor seguía iterándolo con `for...of` (lanza `TypeError` sobre un objeto) y un `catch {}` vacío lo tragaba, dejando el mapa de colores vacío. Centralizar la lectura en un helper tolerante a ambos formatos elimina la clase de bug |
+| **BUG-10** | Con muchas cuentas, el pizarrón se desbordaba pero **no aparecía barra de scroll lateral**, a diferencia del POS viejo | `LECCIONES_DE_UI.md` §8 + test `OpenAccountsCorkboard.f5_3.test.jsx` (criterio 9) | **Un contenedor que crece sin límite deja el scroll «invisible».** El tablero crecía con el contenido y el scroll quedaba en el overlay del modal. Para una barra visible y contenida, el marco acota su altura (`max-h-[85vh] flex-col overflow-hidden`) y el hijo que desborda lleva `flex-1 overflow-y-auto` |
 
 > **Deuda de nomenclatura detectada:** BUG-02 y BUG-03 no siguen la convención `FICHA_FIX_BUG0N_*`. Este registro los hace localizables sin renombrar archivos (renombrar rompería enlaces relativos y referencias en tests). Si en el futuro se decide uniformar, este documento es el punto de partida.
 >
