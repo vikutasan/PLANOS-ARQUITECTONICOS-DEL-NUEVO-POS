@@ -137,6 +137,8 @@ Extraídas de 7 meses de operación real + 1 error de construcción del POS nuev
 
 ## 5. REGLAS ARQUITECTÓNICAS DERIVADAS DE LA BATALLA
 
+> **Índice consolidado:** estas reglas, junto con las 6 prohibiciones absolutas (§4), las directrices transversales (DT-xx), las acciones de arquitectura (A-xx) y los estándares de BD (C-xx), están ordenadas y enlazadas en [`DECISIONES_ARQUITECTONICAS_DEL_NUEVO_POS.md`](./DECISIONES_ARQUITECTONICAS_DEL_NUEVO_POS.md). Ese documento es el punto de entrada único a las decisiones del proyecto; esta sección sigue siendo la fuente canónica de las reglas de batalla.
+
 | Regla | Origen | Implementación |
 |---|---|---|
 | **Verificar, no asumir** | Autocrítica F7.5 v3.0→v3.1 (4 defectos) | Antes de nombrar una tabla/campo/contrato/endpoint en un plan, verificar que existe (archivo + línea). Antes de afirmar qué hace una función, leerla. Antes de contar campos/reglas/estados, abrirlos y contarlos. Si la verificación contradice el plan, manda la verificación |
