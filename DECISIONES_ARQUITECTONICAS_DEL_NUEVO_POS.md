@@ -140,6 +140,8 @@ Y una cuarta familia, que no es una decisión sino su **consecuencia histórica*
 | **BUG-08** | Al cobrar una cuenta ajena desde otra terminal aparecía «No hay turno de caja abierto para esta terminal»: el backend derivaba el turno de caja de la terminal de **ORIGEN** del ticket, no de la que **COBRA** | `FICHA_FIX_BUG08_CAJA_COBRA_CUENTAS_AJENAS.md` + `ARQUITECTURA_TERMINALES_Y_CAJA.md` §10 | **El turno de caja pertenece a la terminal que COBRA, no a la del ticket.** El cliente declara `cash_session_id`; el backend lo **valida** (E-13) y **nunca** sobreescribe el `terminal_id` del ticket (RN-12) |
 
 > **Deuda de nomenclatura detectada:** BUG-02 y BUG-03 no siguen la convención `FICHA_FIX_BUG0N_*`. Este registro los hace localizables sin renombrar archivos (renombrar rompería enlaces relativos y referencias en tests). Si en el futuro se decide uniformar, este documento es el punto de partida.
+>
+> **Deuda de nomenclatura (DEUDA-BUG08 · Obs. 1):** el campo `cash_session_id` del contrato 33 (`pos.cobrar_ticket`) es **heredado** del POS viejo y **engañoso**: en el cobro ajeno no es «la sesión de caja del ticket», sino **el turno de la caja que COBRA**. Se conserva por retrocompatibilidad de contrato (está en el contrato 33, en el frontend y en los tests). El vocabulario correcto se documenta en `ARQUITECTURA_TERMINALES_Y_CAJA.md` §10.6 y §11.1 y en el propio contrato 33. Si en el futuro se decide renombrar (p. ej. `turno_de_caja_que_cobra`), este registro es el punto de partida.
 
 ---
 
