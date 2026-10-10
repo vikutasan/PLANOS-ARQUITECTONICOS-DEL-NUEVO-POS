@@ -122,7 +122,7 @@ Y una cuarta familia, que no es una decisión sino su **consecuencia histórica*
 
 ---
 
-## SECCIÓN 7 — REGISTRO DE BUGS RECIENTES (BUG-01 … BUG-10c)
+## SECCIÓN 7 — REGISTRO DE BUGS RECIENTES (BUG-01 … BUG-10d)
 
 > **Fuente canónica:** las fichas `FICHA_FIX_*` del repo [`NUEVO-POS`](https://github.com/vikutasan/NUEVO-POS) (`docs/05-plan-de-construccion/`) y el [`TOMO_III`](./08-documentacion-final/TOMO_III_CEMENTERIO_DE_BUGS_Y_CICATRICES.md).
 >
@@ -142,6 +142,7 @@ Y una cuarta familia, que no es una decisión sino su **consecuencia histórica*
 | **BUG-10** | Con muchas cuentas, el pizarrón se desbordaba pero **no aparecía barra de scroll lateral**, a diferencia del POS viejo | `LECCIONES_DE_UI.md` §8 + test `OpenAccountsCorkboard.f5_3.test.jsx` (criterio 9) | **Un contenedor que crece sin límite deja el scroll «invisible».** El tablero crecía con el contenido y el scroll quedaba en el overlay del modal. Para una barra visible y contenida, el marco acota su altura (`max-h-[85vh] flex-col overflow-hidden`) y el hijo que desborda lleva `flex-1 overflow-y-auto` |
 | **BUG-10b** | El primer arreglo de BUG-10 puso `flex-1 overflow-y-auto` **en el `<ul>` del grid**: en vez de aparecer la barra, los post-its se **encimaron** parcialmente unos sobre otros | `LECCIONES_DE_UI.md` §8 (segunda vuelta) + test `OpenAccountsCorkboard.f5_3.test.jsx` (criterio 9, actualizado) | **`flex-1` en un grid de tarjetas `aspect-square` comprime las filas y encima las tarjetas.** El scroll va en un **wrapper** de altura acotada (`flex-1 overflow-y-auto`); el grid dentro queda con alto automático (`content-start`, **sin** `flex-1` ni `overflow-y-auto`). Separación amplia (`gap-10`/`lg:gap-12`) para que la rotación (±3°) no toque al vecino |
 | **BUG-10c** | Con el scroll ya resuelto, el post-it se veía **demasiado largo**: un PEDIDO con poco texto quedaba estirado y el total se iba al fondo, dejando un hueco vacío enorme en medio | `LECCIONES_DE_UI.md` §8 (tercera vuelta) + test `OpenAccountsCorkboard.f5_3.test.jsx` (criterio 10) | **Un `min-h` fijo desacopla el alto del ancho de la columna.** Con `min-h-[11rem]` + `justify-between`, el contenido escaso deja el hueco en el centro. Para una tarjeta tipo post-it, usar `aspect-square` (alto = ancho de columna), como el POS viejo, **no** un `min-h` fijo |
+| **BUG-10d** | Tras BUG-10/10b/10c, la barra de scroll **seguía sin aparecer** y los post-its salían **«mordidos»** (recortados por abajo) | `LECCIONES_DE_UI.md` §8 (cuarta vuelta) + test `OpenAccountsCorkboard.f5_3.test.jsx` (criterio 9, actualizado) | **`flex-1` + `overflow-y-auto` solo desplazan si el padre flex tiene ALTURA DEFINIDA.** El tablero usaba `max-h-[85vh]` (un máximo, no una altura): `flex-1` resolvía a `auto`, el wrapper crecía y la barra nunca aparecía; y el `overflow-hidden` del marco recortaba las filas de abajo. Fix: `h-[85vh]` (altura definida) + `min-h-0` en el wrapper de scroll. El POS viejo no sufre esto porque su tablero es `aspect-[16/9]` |
 
 > **Deuda de nomenclatura detectada:** BUG-02 y BUG-03 no siguen la convención `FICHA_FIX_BUG0N_*`. Este registro los hace localizables sin renombrar archivos (renombrar rompería enlaces relativos y referencias en tests). Si en el futuro se decide uniformar, este documento es el punto de partida.
 >
